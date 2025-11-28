@@ -1,0 +1,25 @@
+[package]
+name = "lightdm-contest-rs-greeter"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+tokio = { version = "1", features = [
+    "rt-multi-thread",
+    "macros",
+    "signal",
+    "time",
+] }
+env_logger = "0.11"
+log = "0.4"
+anyhow = "1.0"
+libc = "0.2"
+glib-sys = "0.20"
+gio-sys = "0.20"
+gobject-sys = "0.20"
+gio = "0.20"
+gtk4 = "0.10.2"
+
+[build-dependencies]
+pkg-config = "0.3"
