@@ -2,6 +2,22 @@ use glib_sys::{GError, gboolean};
 use libc::c_char;
 
 #[repr(C)]
+#[allow(non_camel_case_types, dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum LightDMPromptType {
+    LIGHTDM_PROMPT_TYPE_QUESTION = 0,
+    LIGHTDM_PROMPT_TYPE_SECRET = 1,
+}
+
+#[repr(C)]
+#[allow(non_camel_case_types, dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum LightDMMessageType {
+    LIGHTDM_MESSAGE_TYPE_INFO = 0,
+    LIGHTDM_MESSAGE_TYPE_ERROR = 1,
+}
+
+#[repr(C)]
 pub struct LightDMGreeter {
     // GObject, we never touch the fields directly.
     _opaque: [u8; 0],

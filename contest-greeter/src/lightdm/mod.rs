@@ -1,6 +1,7 @@
 pub mod sys;
 
 use std::{
+    cell::Cell,
     ffi::{CStr, CString},
     fmt,
     marker::PhantomData,
@@ -8,7 +9,10 @@ use std::{
     rc::Rc,
 };
 
-use glib_sys::{GError, g_error_free, gboolean};
+use glib_sys::{GError, g_error_free, gboolean, gpointer};
+use gobject_sys::{GClosure, GConnectFlags, g_signal_connect_data, g_signal_handler_disconnect};
+use libc::c_ulong;
+use log::{debug, error};
 use sys as lightdm_sys;
 
 #[derive(Debug)]
@@ -22,8 +26,41 @@ impl fmt::Display for GreeterError {
 
 impl std::error::Error for GreeterError {}
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PromptType {
+    Question,
+    Secret,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MessageType {
+    Info,
+    Error,
+}
+
+impl From<lightdm_sys::LightDMMessageType> for MessageType {
+    fn from(value: lightdm_sys::LightDMMessageType) -> Self {
+        match value {
+            lightdm_sys::LightDMMessageType::LIGHTDM_MESSAGE_TYPE_INFO => MessageType::Info,
+            lightdm_sys::LightDMMessageType::LIGHTDM_MESSAGE_TYPE_ERROR => MessageType::Error,
+        }
+    }
+}
+
+impl From<lightdm_sys::LightDMPromptType> for PromptType {
+    fn from(value: lightdm_sys::LightDMPromptType) -> Self {
+        match value {
+            lightdm_sys::LightDMPromptType::LIGHTDM_PROMPT_TYPE_QUESTION => PromptType::Question,
+            lightdm_sys::LightDMPromptType::LIGHTDM_PROMPT_TYPE_SECRET => PromptType::Secret,
+        }
+    }
+}
+
 pub struct Greeter {
     ptr: NonNull<lightdm_sys::LightDMGreeter>,
+    prompt_handler: Cell<Option<c_ulong>>,
+    message_handler: Cell<Option<c_ulong>>,
+    auth_complete_handler: Cell<Option<c_ulong>>,
     // GObject/LightDM types are not generally Send/Sync; Rc makes us !Send + !Sync.
     _not_send_sync: PhantomData<Rc<()>>,
 }
@@ -40,6 +77,9 @@ impl Greeter {
                 // Safety: we just checked for null.
                 Ok(Greeter {
                     ptr: NonNull::new_unchecked(ptr),
+                    prompt_handler: Cell::new(None),
+                    message_handler: Cell::new(None),
+                    auth_complete_handler: Cell::new(None),
                     _not_send_sync: PhantomData,
                 })
             }
@@ -94,16 +134,86 @@ impl Greeter {
     }
 
     pub fn respond(&self, response: &str) -> Result<(), GreeterError> {
+        Self::respond_with_ptr(self.ptr, response)
+    }
+
+    pub fn set_prompt_responder<F>(&self, callback: F)
+    where
+        F: Fn(&str, PromptType) + 'static,
+    {
+        self.disconnect_prompt_handler();
+        let handler_id = unsafe { connect_show_prompt(self.ptr, callback) };
+        self.prompt_handler.set(Some(handler_id));
+    }
+
+    /// Respond to any secret prompt (usually the password) with the provided value.
+    pub fn respond_to_secret_prompts(&self, response: String) {
+        let greeter_ptr = self.ptr;
+        self.set_prompt_responder(move |prompt, prompt_type| {
+            if matches!(prompt_type, PromptType::Secret) {
+                debug!("Responding to prompt: {}", prompt);
+                if let Err(err) = Greeter::respond_with_ptr(greeter_ptr, &response) {
+                    error!("Failed to respond to prompt: {err}");
+                }
+            } else {
+                debug!("Ignoring non-secret prompt: {}", prompt);
+            }
+        });
+    }
+
+    fn disconnect_prompt_handler(&self) {
+        if let Some(id) = self.prompt_handler.take() {
+            unsafe {
+                g_signal_handler_disconnect(self.ptr.as_ptr() as *mut _, id);
+            }
+        }
+    }
+
+    pub fn set_message_handler<F>(&self, callback: F)
+    where
+        F: Fn(&str, MessageType) + 'static,
+    {
+        self.disconnect_message_handler();
+        let handler_id = unsafe { connect_show_message(self.ptr, callback) };
+        self.message_handler.set(Some(handler_id));
+    }
+
+    fn disconnect_message_handler(&self) {
+        if let Some(id) = self.message_handler.take() {
+            unsafe {
+                g_signal_handler_disconnect(self.ptr.as_ptr() as *mut _, id);
+            }
+        }
+    }
+
+    pub fn set_authentication_complete_handler<F>(&self, callback: F)
+    where
+        F: Fn(bool) + 'static,
+    {
+        self.disconnect_auth_complete_handler();
+        let handler_id = unsafe { connect_authentication_complete(self.ptr, callback) };
+        self.auth_complete_handler.set(Some(handler_id));
+    }
+
+    fn disconnect_auth_complete_handler(&self) {
+        if let Some(id) = self.auth_complete_handler.take() {
+            unsafe {
+                g_signal_handler_disconnect(self.ptr.as_ptr() as *mut _, id);
+            }
+        }
+    }
+
+    fn respond_with_ptr(
+        ptr: NonNull<lightdm_sys::LightDMGreeter>,
+        response: &str,
+    ) -> Result<(), GreeterError> {
         let response = CString::new(response)
             .map_err(|_| GreeterError("response contained a NUL byte".into()))?;
 
         unsafe {
             let mut error: *mut GError = ptr::null_mut();
-            let ok = lightdm_sys::lightdm_greeter_respond(
-                self.ptr.as_ptr(),
-                response.as_ptr(),
-                &mut error,
-            );
+            let ok =
+                lightdm_sys::lightdm_greeter_respond(ptr.as_ptr(), response.as_ptr(), &mut error);
 
             handle_gboolean(ok, error, "respond")
         }
@@ -188,9 +298,150 @@ impl Greeter {
 
 impl Drop for Greeter {
     fn drop(&mut self) {
+        self.disconnect_prompt_handler();
+        self.disconnect_message_handler();
+        self.disconnect_auth_complete_handler();
         unsafe {
             gobject_sys::g_object_unref(self.ptr.as_ptr() as *mut _);
         }
+    }
+}
+
+unsafe fn connect_show_prompt<F>(ptr: NonNull<lightdm_sys::LightDMGreeter>, callback: F) -> c_ulong
+where
+    F: Fn(&str, PromptType) + 'static,
+{
+    unsafe extern "C" fn show_prompt_trampoline<F>(
+        _greeter: *mut lightdm_sys::LightDMGreeter,
+        message: *const libc::c_char,
+        prompt_type: lightdm_sys::LightDMPromptType,
+        user_data: gpointer,
+    ) where
+        F: Fn(&str, PromptType) + 'static,
+    {
+        let callback = unsafe { &*(user_data as *const F) };
+        let message = unsafe { CStr::from_ptr(message) }
+            .to_string_lossy()
+            .into_owned();
+        callback(&message, PromptType::from(prompt_type));
+    }
+
+    unsafe extern "C" fn drop_closure<F>(data: gpointer, _: *mut GClosure)
+    where
+        F: Fn(&str, PromptType) + 'static,
+    {
+        unsafe {
+            drop(Box::from_raw(data as *mut F));
+        }
+    }
+
+    unsafe {
+        g_signal_connect_data(
+            ptr.as_ptr() as *mut _,
+            b"show-prompt\0".as_ptr() as *const _,
+            Some(std::mem::transmute::<
+                unsafe extern "C" fn(
+                    *mut lightdm_sys::LightDMGreeter,
+                    *const libc::c_char,
+                    lightdm_sys::LightDMPromptType,
+                    gpointer,
+                ),
+                unsafe extern "C" fn(),
+            >(show_prompt_trampoline::<F>)),
+            Box::into_raw(Box::new(callback)) as *mut _,
+            Some(drop_closure::<F>),
+            GConnectFlags::default(),
+        )
+    }
+}
+
+unsafe fn connect_show_message<F>(ptr: NonNull<lightdm_sys::LightDMGreeter>, callback: F) -> c_ulong
+where
+    F: Fn(&str, MessageType) + 'static,
+{
+    unsafe extern "C" fn show_message_trampoline<F>(
+        _greeter: *mut lightdm_sys::LightDMGreeter,
+        message: *const libc::c_char,
+        message_type: lightdm_sys::LightDMMessageType,
+        user_data: gpointer,
+    ) where
+        F: Fn(&str, MessageType) + 'static,
+    {
+        let callback = unsafe { &*(user_data as *const F) };
+        let message = unsafe { CStr::from_ptr(message) }
+            .to_string_lossy()
+            .into_owned();
+        callback(&message, MessageType::from(message_type));
+    }
+
+    unsafe extern "C" fn drop_closure<F>(data: gpointer, _: *mut GClosure)
+    where
+        F: Fn(&str, MessageType) + 'static,
+    {
+        unsafe {
+            drop(Box::from_raw(data as *mut F));
+        }
+    }
+
+    unsafe {
+        g_signal_connect_data(
+            ptr.as_ptr() as *mut _,
+            b"show-message\0".as_ptr() as *const _,
+            Some(std::mem::transmute::<
+                unsafe extern "C" fn(
+                    *mut lightdm_sys::LightDMGreeter,
+                    *const libc::c_char,
+                    lightdm_sys::LightDMMessageType,
+                    gpointer,
+                ),
+                unsafe extern "C" fn(),
+            >(show_message_trampoline::<F>)),
+            Box::into_raw(Box::new(callback)) as *mut _,
+            Some(drop_closure::<F>),
+            GConnectFlags::default(),
+        )
+    }
+}
+
+unsafe fn connect_authentication_complete<F>(
+    ptr: NonNull<lightdm_sys::LightDMGreeter>,
+    callback: F,
+) -> c_ulong
+where
+    F: Fn(bool) + 'static,
+{
+    unsafe extern "C" fn auth_complete_trampoline<F>(
+        greeter: *mut lightdm_sys::LightDMGreeter,
+        user_data: gpointer,
+    ) where
+        F: Fn(bool) + 'static,
+    {
+        let callback = unsafe { &*(user_data as *const F) };
+        let authed = unsafe { lightdm_sys::lightdm_greeter_get_is_authenticated(greeter) != 0 };
+        callback(authed);
+    }
+
+    unsafe extern "C" fn drop_closure<F>(data: gpointer, _: *mut GClosure)
+    where
+        F: Fn(bool) + 'static,
+    {
+        unsafe {
+            drop(Box::from_raw(data as *mut F));
+        }
+    }
+
+    unsafe {
+        g_signal_connect_data(
+            ptr.as_ptr() as *mut _,
+            b"authentication-complete\0".as_ptr() as *const _,
+            Some(std::mem::transmute::<
+                unsafe extern "C" fn(*mut lightdm_sys::LightDMGreeter, gpointer),
+                unsafe extern "C" fn(),
+            >(auth_complete_trampoline::<F>)),
+            Box::into_raw(Box::new(callback)) as *mut _,
+            Some(drop_closure::<F>),
+            GConnectFlags::default(),
+        )
     }
 }
 

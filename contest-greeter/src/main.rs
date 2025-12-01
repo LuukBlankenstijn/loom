@@ -3,41 +3,30 @@ mod lightdm;
 mod ui;
 
 use env_logger::Env;
+use lightdm_contest_rs_greeter::{CoreUICommand, UICoreCommand};
 use log::info;
-use tokio::signal;
+use tokio::{signal, sync::mpsc};
 
-use lightdm::Greeter;
-
-use crate::ui::run_ui;
+use core::run_core;
+use ui::run_ui;
 
 #[tokio::main]
 async fn main() {
     info!("Rust greeter starting up…");
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
-    match Greeter::new() {
-        Ok(greeter) => {
-            if let Err(e) = greeter.connect_to_daemon() {
-                eprintln!("Failed to connect to LightDM daemon: {e}");
-            }
+    let (core_tx, core_rx) = mpsc::unbounded_channel::<UICoreCommand>();
+    let (ui_tx, ui_rx) = mpsc::unbounded_channel::<CoreUICommand>();
 
-            let default_session = greeter
-                .default_session_hint()
-                .unwrap_or_else(|| "<none>".to_string());
-            let autologin_user = greeter
-                .autologin_user_hint()
-                .unwrap_or_else(|| "<none>".to_string());
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime");
+        rt.block_on(run_core(core_rx, ui_tx));
+    });
 
-            info!("Connected to LightDM daemon");
-            info!("  default_session_hint: {default_session}");
-            info!("  autologin_user_hint : {autologin_user}");
-        }
-        Err(e) => {
-            eprintln!("failed to construct greeter: {e}");
-        }
-    };
-
-    run_ui();
+    run_ui(core_tx, ui_rx);
 
     tokio::select! {
         _ = signal::ctrl_c() => {
