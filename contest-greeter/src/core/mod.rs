@@ -1,14 +1,14 @@
-use lightdm_contest_rs_greeter::{CoreUICommand, UICoreCommand};
 use log::error;
 use tokio::sync::mpsc;
+use types::core::UiMessage;
 
 use crate::core::greeter::{CoreCommand, Greeter};
 
 mod greeter;
 
 pub async fn run_core(
-    mut core_rx: mpsc::UnboundedReceiver<UICoreCommand>,
-    ui_tx: mpsc::UnboundedSender<CoreUICommand>,
+    mut core_rx: mpsc::UnboundedReceiver<types::ui::CoreMessage>,
+    ui_tx: mpsc::UnboundedSender<UiMessage>,
 ) {
     let (greeter_tx, mut greeter_rx) = mpsc::unbounded_channel::<CoreCommand>();
     let greeter = match Greeter::new() {
@@ -26,7 +26,7 @@ pub async fn run_core(
         tokio::select! {
             Some(command) = core_rx.recv() => {
                 match command {
-                    UICoreCommand::Login(username, password) => {
+                    types::ui::CoreMessage::Login(username, password) => {
                         greeter.authenticate(username, password);
                     },
                 }
@@ -35,7 +35,7 @@ pub async fn run_core(
             Some(command) = greeter_rx.recv() => {
                 match command {
                     CoreCommand::StartSession(session) => greeter.start_session(session.as_deref()),
-                    CoreCommand::SetError(error) => { let _ = ui_tx.send(CoreUICommand::SetError(error)); },
+                    CoreCommand::SetError(error) => { let _ = ui_tx.send(UiMessage::SetError(error)); },
                 }
 
             }

@@ -3,7 +3,6 @@ mod lightdm;
 mod ui;
 
 use env_logger::Env;
-use lightdm_contest_rs_greeter::{CoreUICommand, UICoreCommand};
 use log::info;
 use tokio::{signal, sync::mpsc};
 
@@ -15,8 +14,8 @@ async fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
     info!("Greeter starting up…");
 
-    let (core_tx, core_rx) = mpsc::unbounded_channel::<UICoreCommand>();
-    let (ui_tx, ui_rx) = mpsc::unbounded_channel::<CoreUICommand>();
+    let (core_tx, core_rx) = mpsc::unbounded_channel::<types::ui::CoreMessage>();
+    let (ui_tx, ui_rx) = mpsc::unbounded_channel::<types::core::UiMessage>();
 
     std::thread::spawn(move || {
         let rt = tokio::runtime::Builder::new_current_thread()

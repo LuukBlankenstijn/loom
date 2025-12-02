@@ -24,6 +24,7 @@ pub struct LightDMGreeter {
 }
 
 #[allow(dead_code)]
+#[link(name = "lightdm-gobject-1")]
 unsafe extern "C" {
     pub fn lightdm_greeter_new() -> *mut LightDMGreeter;
 

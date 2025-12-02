@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "types"]
+
 [package]
 name = "lightdm-contest-rs-greeter"
 version = "0.1.0"
@@ -15,6 +18,7 @@ gio-sys = "0.20"
 gobject-sys = "0.20"
 gio = "0.20"
 gtk4 = "0.10.2"
+types = { path = "./types" }
 
 [build-dependencies]
 pkg-config = "0.3"

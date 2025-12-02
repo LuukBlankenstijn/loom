@@ -11,13 +11,14 @@ use chain_listener::register_chain_listener;
 use log::debug;
 use login_ui::LoginUi;
 use tokio::sync::mpsc;
+use types::core::UiMessage;
+use types::ui::CoreMessage;
 
 use crate::ui::background::Background;
-use crate::{CoreUICommand, UICoreCommand};
 
 pub fn run_ui(
-    core_tx: mpsc::UnboundedSender<UICoreCommand>,
-    ui_rx: mpsc::UnboundedReceiver<CoreUICommand>,
+    core_tx: mpsc::UnboundedSender<CoreMessage>,
+    ui_rx: mpsc::UnboundedReceiver<UiMessage>,
 ) {
     gtk4::init().expect("init gtk");
 
@@ -33,8 +34,8 @@ pub fn run_ui(
 }
 
 fn build_ui(
-    core_tx: mpsc::UnboundedSender<UICoreCommand>,
-    mut ui_rx: mpsc::UnboundedReceiver<CoreUICommand>,
+    core_tx: mpsc::UnboundedSender<CoreMessage>,
+    mut ui_rx: mpsc::UnboundedReceiver<UiMessage>,
 ) {
     let window = Window::builder().title("lightdm-contest-greeter").build();
 
@@ -57,7 +58,7 @@ fn build_ui(
     idle_add_local(move || {
         while let Ok(ev) = ui_rx.try_recv() {
             match ev {
-                CoreUICommand::SetWallpaper(path_option) => match path_option {
+                UiMessage::SetWallpaper(path_option) => match path_option {
                     Some(path) => {
                         background.set_image(&path.to_string());
                     }
@@ -65,7 +66,7 @@ fn build_ui(
                         background.set_empty();
                     }
                 },
-                CoreUICommand::SetError(error) => {
+                UiMessage::SetError(error) => {
                     login_ui.set_error_text(&error.to_string());
                 }
             }
@@ -77,9 +78,9 @@ fn build_ui(
     window.fullscreen();
 }
 
-fn build_login_ui(core_tx: mpsc::UnboundedSender<UICoreCommand>) -> LoginUi {
+fn build_login_ui(core_tx: mpsc::UnboundedSender<CoreMessage>) -> LoginUi {
     let login_ui = LoginUi::new(Box::new(move |username, password| {
-        let _ = core_tx.send(UICoreCommand::Login(username, password));
+        let _ = core_tx.send(CoreMessage::Login(username, password));
     }));
     login_ui.init();
     login_ui
