@@ -1,12 +1,14 @@
-use gio::glib::idle_add_local;
-use gtk4::Application;
-use gtk4::ApplicationWindow;
+use gtk4::Window;
+use gtk4::gdk;
+use gtk4::glib::idle_add_local;
+use gtk4::glib::{ControlFlow, MainLoop};
 use gtk4::prelude::*;
 
 mod background;
 mod chain_listener;
 mod login_ui;
 use chain_listener::register_chain_listener;
+use log::debug;
 use login_ui::LoginUi;
 use tokio::sync::mpsc;
 
@@ -17,32 +19,27 @@ pub fn run_ui(
     core_tx: mpsc::UnboundedSender<UICoreCommand>,
     ui_rx: mpsc::UnboundedReceiver<CoreUICommand>,
 ) {
-    let application = Application::builder()
-        .application_id("nl.luukblankenstijn.lightdm-greeter")
-        .build();
+    gtk4::init().expect("init gtk");
 
     let ui_rx_cell = std::cell::RefCell::new(Some(ui_rx));
-    application.connect_activate(move |app| {
-        let ui_rx = ui_rx_cell
-            .borrow_mut()
-            .take()
-            .expect("take called more then once");
+    build_ui(
+        core_tx,
+        ui_rx_cell.borrow_mut().take().expect("ui_rx already taken"),
+    );
 
-        build_ui(app, core_tx.clone(), ui_rx)
-    });
-
-    application.run();
+    debug!("running ui main loop");
+    let main_loop = MainLoop::new(None, false);
+    main_loop.run();
 }
 
 fn build_ui(
-    application: &Application,
     core_tx: mpsc::UnboundedSender<UICoreCommand>,
     mut ui_rx: mpsc::UnboundedReceiver<CoreUICommand>,
 ) {
-    let window = ApplicationWindow::builder()
-        .application(application)
-        .title("lightdm-contest-greeter")
-        .build();
+    let window = Window::builder().title("lightdm-contest-greeter").build();
+
+    size_to_first_monitor(&window);
+    window.set_decorated(false);
 
     let background = Background::new();
     let background_overlay = background.get_overlay();
@@ -73,12 +70,11 @@ fn build_ui(
                 }
             }
         }
-        gio::glib::ControlFlow::Continue
+        ControlFlow::Continue
     });
 
-    // window.fullscreen();
-    window.set_decorated(false);
     window.present();
+    window.fullscreen();
 }
 
 fn build_login_ui(core_tx: mpsc::UnboundedSender<UICoreCommand>) -> LoginUi {
@@ -92,5 +88,19 @@ fn build_login_ui(core_tx: mpsc::UnboundedSender<UICoreCommand>) -> LoginUi {
 fn login_ui_widget_closure(login_ui: LoginUi) -> impl Fn() {
     move || {
         login_ui.toggle();
+    }
+}
+
+// since we cannot the the primary monitor we size to the first one
+fn size_to_first_monitor(window: &Window) {
+    if let Some(display) = gdk::Display::default() {
+        let monitors = display.monitors();
+        if let Some(monitor) = monitors
+            .item(0)
+            .and_then(|m| m.downcast::<gdk::Monitor>().ok())
+        {
+            let geometry = monitor.geometry();
+            window.set_default_size(geometry.width(), geometry.height());
+        }
     }
 }

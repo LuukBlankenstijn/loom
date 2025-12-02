@@ -1,9 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use gtk4::{ApplicationWindow, EventControllerKey, prelude::WidgetExt};
+use gtk4::{EventControllerKey, Window, prelude::WidgetExt};
 
 pub fn register_chain_listener(
-    window: &ApplicationWindow,
+    window: &Window,
     sequence: Vec<char>,
     callback: impl Fn() + 'static,
 ) {

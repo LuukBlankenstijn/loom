@@ -27,6 +27,8 @@ const BACKGROUND_CSS: &str = "
 impl Background {
     pub fn new() -> Self {
         let overlay = Overlay::new();
+        overlay.set_hexpand(true);
+        overlay.set_vexpand(true);
         let _empty = Label::new(Some("No Wallpaper"));
         _empty.style_context().add_class("watermark");
 

@@ -41,6 +41,8 @@ const LOGIN_CSS: &str = "
 impl LoginUi {
     pub fn new(login_callback: Box<dyn Fn(String, String)>) -> Self {
         let container = build_container();
+        container.set_hexpand(true);
+        container.set_vexpand(true);
         let content = build_content();
         load_css();
 

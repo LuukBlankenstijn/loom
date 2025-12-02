@@ -12,8 +12,8 @@ use ui::run_ui;
 
 #[tokio::main]
 async fn main() {
-    info!("Rust greeter starting up…");
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    info!("Greeter starting up…");
 
     let (core_tx, core_rx) = mpsc::unbounded_channel::<UICoreCommand>();
     let (ui_tx, ui_rx) = mpsc::unbounded_channel::<CoreUICommand>();
@@ -34,5 +34,5 @@ async fn main() {
         }
     }
 
-    info!("Rust greeter exiting");
+    info!("Greeter exiting");
 }
