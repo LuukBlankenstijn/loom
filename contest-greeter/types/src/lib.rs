@@ -1,14 +1,5 @@
-pub mod ui {
-    #[derive(Debug)]
-    pub enum CoreMessage {
-        Login(String, String),
-    }
-}
+mod bus;
+mod messages;
 
-pub mod core {
-    #[derive(Debug)]
-    pub enum UiMessage {
-        SetWallpaper(Option<String>),
-        SetError(String),
-    }
-}
+pub use bus::{CoreName, ServiceChannel, SystemHandle, SystemMsg, SystemReceiver, SystemSender};
+pub use messages::{GreeterMessage, UiMessage};

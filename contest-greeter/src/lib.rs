@@ -1,10 +1,3 @@
-#[derive(Debug)]
-pub enum UICoreCommand {
-    Login(String, String),
-}
-
-#[derive(Debug)]
-pub enum CoreUICommand {
-    SetWallpaper(Option<String>),
-    SetError(String),
-}
+pub use types::{
+    CoreName, GreeterMessage, ServiceChannel, SystemHandle, SystemMsg, UiMessage,
+};

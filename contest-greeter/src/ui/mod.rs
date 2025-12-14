@@ -8,35 +8,30 @@ mod background;
 mod chain_listener;
 mod login_ui;
 use chain_listener::register_chain_listener;
-use log::debug;
+use lightdm_contest_rs_greeter::CoreName;
+use log::info;
 use login_ui::LoginUi;
 use tokio::sync::mpsc;
-use types::core::UiMessage;
-use types::ui::CoreMessage;
+use types::GreeterMessage;
+use types::SystemReceiver;
+use types::SystemSender;
+use types::UiMessage;
 
 use crate::ui::background::Background;
 
-pub fn run_ui(
-    core_tx: mpsc::UnboundedSender<CoreMessage>,
-    ui_rx: mpsc::UnboundedReceiver<UiMessage>,
-) {
+pub async fn run_ui(bus: impl SystemReceiver) {
     gtk4::init().expect("init gtk");
+    let (tx, rx) = mpsc::channel::<UiMessage>(16);
+    bus.register(CoreName::UI, tx);
 
-    let ui_rx_cell = std::cell::RefCell::new(Some(ui_rx));
-    build_ui(
-        core_tx,
-        ui_rx_cell.borrow_mut().take().expect("ui_rx already taken"),
-    );
+    build_ui(bus, rx);
 
-    debug!("running ui main loop");
+    info!("[UI] running main loop");
     let main_loop = MainLoop::new(None, false);
     main_loop.run();
 }
 
-fn build_ui(
-    core_tx: mpsc::UnboundedSender<CoreMessage>,
-    mut ui_rx: mpsc::UnboundedReceiver<UiMessage>,
-) {
+fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>) {
     let window = Window::builder().title("lightdm-contest-greeter").build();
 
     size_to_first_monitor(&window);
@@ -46,7 +41,7 @@ fn build_ui(
     let background_overlay = background.get_overlay();
     window.set_child(Some(background_overlay));
 
-    let login_ui = build_login_ui(core_tx);
+    let login_ui = build_login_ui(bus);
 
     background_overlay.add_overlay(login_ui.widget());
     let login_ui_clone = login_ui.clone();
@@ -56,8 +51,8 @@ fn build_ui(
     });
 
     idle_add_local(move || {
-        while let Ok(ev) = ui_rx.try_recv() {
-            match ev {
+        while let Ok(msg) = rx.try_recv() {
+            match msg {
                 UiMessage::SetWallpaper(path_option) => match path_option {
                     Some(path) => {
                         background.set_image(&path.to_string());
@@ -78,9 +73,9 @@ fn build_ui(
     window.fullscreen();
 }
 
-fn build_login_ui(core_tx: mpsc::UnboundedSender<CoreMessage>) -> LoginUi {
+fn build_login_ui(bus: impl SystemSender) -> LoginUi {
     let login_ui = LoginUi::new(Box::new(move |username, password| {
-        let _ = core_tx.send(CoreMessage::Login(username, password));
+        bus.send_to(CoreName::Greeter, GreeterMessage::Login(username, password));
     }));
     login_ui.init();
     login_ui
