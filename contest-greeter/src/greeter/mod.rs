@@ -3,15 +3,22 @@ mod lightdm;
 use anyhow::{Result, anyhow};
 use lightdm_contest_rs_greeter::CoreName;
 use log::{error, info, warn};
+use serde::Deserialize;
 use tokio::sync::mpsc;
 use types::{GreeterMessage, SystemReceiver, UiMessage};
 
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct GreeterConfig {
+    session: Option<String>,
+}
+
 pub struct Greeter {
     greeter: lightdm::Greeter,
+    conf: GreeterConfig,
 }
 
 impl Greeter {
-    pub fn new() -> Result<Self> {
+    pub fn new(conf: GreeterConfig) -> Result<Self> {
         let greeter = match lightdm::Greeter::new() {
             Ok(greeter) => {
                 if let Err(e) = greeter.connect_to_daemon() {
@@ -26,7 +33,7 @@ impl Greeter {
                 return Err(anyhow!("[Greeter] failed to construct greeter: {e}"));
             }
         };
-        Ok(Self { greeter })
+        Ok(Self { greeter, conf })
     }
 
     pub async fn run(&self, bus: impl SystemReceiver) {
@@ -43,10 +50,14 @@ impl Greeter {
             });
 
         let auth_bus = bus.clone();
+        let session = self.conf.session.clone();
         self.greeter
             .set_authentication_complete_handler(move |success| {
                 if success {
-                    auth_bus.send_to(CoreName::Greeter, GreeterMessage::StartSession(None));
+                    auth_bus.send_to(
+                        CoreName::Greeter,
+                        GreeterMessage::StartSession(session.clone()),
+                    );
                     info!("[Greeter] authentication succeeded");
                 } else {
                     auth_bus.send_to(

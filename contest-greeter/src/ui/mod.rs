@@ -11,6 +11,7 @@ use chain_listener::register_chain_listener;
 use lightdm_contest_rs_greeter::CoreName;
 use log::info;
 use login_ui::LoginUi;
+use serde::Deserialize;
 use tokio::sync::mpsc;
 use types::GreeterMessage;
 use types::SystemReceiver;
@@ -19,19 +20,29 @@ use types::UiMessage;
 
 use crate::ui::background::Background;
 
-pub async fn run_ui(bus: impl SystemReceiver) {
+#[derive(Clone, Debug, Deserialize, Default)]
+pub struct UiConfig {
+    #[serde(default = "default_chain")]
+    chain: String,
+}
+
+fn default_chain() -> String {
+    "chain".into()
+}
+
+pub async fn run_ui(bus: impl SystemReceiver, conf: UiConfig) {
     gtk4::init().expect("init gtk");
     let (tx, rx) = mpsc::channel::<UiMessage>(16);
     bus.register(CoreName::UI, tx);
 
-    build_ui(bus, rx);
+    build_ui(bus, rx, conf);
 
     info!("[UI] running main loop");
     let main_loop = MainLoop::new(None, false);
     main_loop.run();
 }
 
-fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>) {
+fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>, conf: UiConfig) {
     let window = Window::builder().title("lightdm-contest-greeter").build();
 
     size_to_first_monitor(&window);
@@ -45,7 +56,7 @@ fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>) {
 
     background_overlay.add_overlay(login_ui.widget());
     let login_ui_clone = login_ui.clone();
-    register_chain_listener(&window, vec!['n', 'i', 'a', 'h', 'c'], {
+    register_chain_listener(&window, conf.chain.chars().collect(), {
         let login_ui = login_ui_widget_closure(login_ui_clone);
         move || login_ui()
     });

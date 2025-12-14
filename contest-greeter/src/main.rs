@@ -1,4 +1,5 @@
 mod bus;
+mod conf;
 mod greeter;
 mod ui;
 
@@ -9,11 +10,16 @@ use tokio::sync::mpsc;
 
 use ui::run_ui;
 
-use crate::{bus::start_bus, greeter::Greeter};
+use crate::{bus::start_bus, conf::get_conf, greeter::Greeter};
 
 #[tokio::main]
 async fn main() {
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    let config = match get_conf("/etc/lightdm/lightdm-contest-greeter.conf") {
+        Ok(config) => config,
+        Err(e) => panic!("failed to read config: {e}"),
+    };
+
+    env_logger::Builder::from_env(Env::default().default_filter_or(config.log_level)).init();
 
     let (bus_tx, bus_rx) = mpsc::channel(16);
     let bus = SystemHandle::new(bus_tx);
@@ -32,7 +38,7 @@ async fn main() {
             .enable_all()
             .build()
             .expect("tokio runtime");
-        let greeter = match Greeter::new() {
+        let greeter = match Greeter::new(config.greeter) {
             Ok(greeter) => greeter,
             Err(e) => {
                 error!("[Main] failed to spawn greeter: {e}");
@@ -42,7 +48,7 @@ async fn main() {
         rt.block_on(greeter.run(greeter_bus));
     });
 
-    run_ui(bus.clone()).await;
+    run_ui(bus.clone(), config.ui).await;
 
     info!("[Main] Greeter exiting");
 }

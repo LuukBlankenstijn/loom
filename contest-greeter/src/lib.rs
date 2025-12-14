@@ -1,3 +1,1 @@
-pub use types::{
-    CoreName, GreeterMessage, ServiceChannel, SystemHandle, SystemMsg, UiMessage,
-};
+pub use types::{CoreName, GreeterMessage, ServiceChannel, SystemHandle, SystemMsg, UiMessage};
