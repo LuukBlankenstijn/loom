@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::{greeter::GreeterConfig, ui::UiConfig};
+use crate::{contest_api::ApiPollerConfig, greeter::GreeterConfig, ui::UiConfig};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Conf {
@@ -13,6 +13,8 @@ pub struct Conf {
     pub ui: UiConfig,
     #[serde(default)]
     pub greeter: GreeterConfig,
+    #[serde(default)]
+    pub api_poller: ApiPollerConfig,
 }
 
 fn default_log_level() -> String {

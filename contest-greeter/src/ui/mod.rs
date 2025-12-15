@@ -14,7 +14,7 @@ use login_ui::LoginUi;
 use serde::Deserialize;
 use tokio::sync::mpsc;
 use types::GreeterMessage;
-use types::SystemReceiver;
+use types::SystemBus;
 use types::SystemSender;
 use types::UiMessage;
 
@@ -30,7 +30,7 @@ fn default_chain() -> String {
     "chain".into()
 }
 
-pub async fn run_ui(bus: impl SystemReceiver, conf: UiConfig) {
+pub async fn run_ui(bus: impl SystemBus, conf: UiConfig) {
     gtk4::init().expect("init gtk");
     let (tx, rx) = mpsc::channel::<UiMessage>(16);
     bus.register(CoreName::UI, tx);

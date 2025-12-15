@@ -40,7 +40,7 @@ pub trait SystemSender: Clone + 'static {
     fn send_to<T: Send + 'static>(&self, target: CoreName, msg: T);
 }
 
-pub trait SystemReceiver: SystemSender {
+pub trait SystemBus: SystemSender {
     fn register<T: Send + 'static>(&self, name: CoreName, tx: Sender<T>);
 }
 
@@ -67,7 +67,7 @@ impl SystemSender for SystemHandle {
     }
 }
 
-impl SystemReceiver for SystemHandle {
+impl SystemBus for SystemHandle {
     fn register<T: Send + 'static>(&self, name: CoreName, tx: Sender<T>) {
         if let Err(e) = self.tx.try_send(SystemMsg::Register {
             name: name.clone(),

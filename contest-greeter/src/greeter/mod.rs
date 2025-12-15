@@ -5,7 +5,7 @@ use lightdm_contest_rs_greeter::CoreName;
 use log::{error, info, warn};
 use serde::Deserialize;
 use tokio::sync::mpsc;
-use types::{GreeterMessage, SystemReceiver, UiMessage};
+use types::{GreeterMessage, SystemBus, UiMessage};
 
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct GreeterConfig {
@@ -36,7 +36,7 @@ impl Greeter {
         Ok(Self { greeter, conf })
     }
 
-    pub async fn run(&self, bus: impl SystemReceiver) {
+    pub async fn run(&self, bus: impl SystemBus) {
         let message_bus = bus.clone();
         self.greeter
             .set_message_handler(move |message, message_type| {
