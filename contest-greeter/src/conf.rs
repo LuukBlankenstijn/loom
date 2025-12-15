@@ -9,11 +9,11 @@ use crate::{contest_api::ApiPollerConfig, greeter::GreeterConfig, ui::UiConfig};
 pub struct Conf {
     #[serde(default = "default_log_level")]
     pub log_level: String,
-    #[serde(default)]
+    #[serde(flatten, default)]
     pub ui: UiConfig,
-    #[serde(default)]
+    #[serde(flatten, default)]
     pub greeter: GreeterConfig,
-    #[serde(default)]
+    #[serde(flatten, default)]
     pub api_poller: ApiPollerConfig,
 }
 

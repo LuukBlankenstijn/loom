@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local};
-use log::{debug, info, warn};
+use log::{debug, info};
 use reqwest::Client;
 use serde::Deserialize;
 use tokio::time::{Duration, sleep};
@@ -12,12 +12,6 @@ pub struct ApiPollerConfig {
     interval: i64,
 
     url: Option<String>,
-
-    #[serde(default)]
-    username: String,
-
-    #[serde(default)]
-    password: String,
 }
 
 fn default_interval() -> i64 {
@@ -29,9 +23,6 @@ pub async fn run_api_poller(bus: impl SystemSender, config: ApiPollerConfig) {
         info!("[Contest-Api] contest url not set, not running api poller");
         return;
     };
-    if config.username.is_empty() || config.password.is_empty() {
-        warn!("[Contest-Api] username or password is empty");
-    }
 
     // keep the bus alive for future message routing even though it is unused for now
     let poll_interval = Duration::from_secs(config.interval.max(0) as u64);
@@ -43,15 +34,12 @@ pub async fn run_api_poller(bus: impl SystemSender, config: ApiPollerConfig) {
             Ok(start_time) => {
                 if start_time < Local::now() {
                     info!("[Contest-Api] contest started at {start_time}");
-                    bus.send_to(
-                        CoreName::Greeter,
-                        GreeterMessage::Login(config.username.clone(), config.password.clone()),
-                    );
+                    bus.send_to(CoreName::Greeter, GreeterMessage::Login());
                 } else {
                     debug!("[Contest-Api] contest not started yet (starts at {start_time})");
                 }
             }
-            Err(e) => warn!("[Contest-Api] failed to poll contest API ({url}): {:#}", e),
+            Err(e) => debug!("[Contest-Api] failed to poll contest API ({url}): {:#}", e),
         }
 
         sleep(poll_interval).await;

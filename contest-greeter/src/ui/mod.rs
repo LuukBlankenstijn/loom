@@ -86,7 +86,10 @@ fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>, conf: UiC
 
 fn build_login_ui(bus: impl SystemSender) -> LoginUi {
     let login_ui = LoginUi::new(Box::new(move |username, password| {
-        bus.send_to(CoreName::Greeter, GreeterMessage::Login(username, password));
+        bus.send_to(
+            CoreName::Greeter,
+            GreeterMessage::LoginWithCreds(username, password),
+        );
     }));
     login_ui.init();
     login_ui

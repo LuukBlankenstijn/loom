@@ -10,6 +10,12 @@ use types::{GreeterMessage, SystemBus, UiMessage};
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct GreeterConfig {
     session: Option<String>,
+
+    #[serde(default)]
+    username: String,
+
+    #[serde(default)]
+    password: String,
 }
 
 pub struct Greeter {
@@ -50,13 +56,13 @@ impl Greeter {
             });
 
         let auth_bus = bus.clone();
-        let session = self.conf.session.clone();
+        let _conf = self.conf.clone();
         self.greeter
             .set_authentication_complete_handler(move |success| {
                 if success {
                     auth_bus.send_to(
                         CoreName::Greeter,
-                        GreeterMessage::StartSession(session.clone()),
+                        GreeterMessage::StartSession(_conf.session.clone()),
                     );
                     info!("[Greeter] authentication succeeded");
                 } else {
@@ -72,10 +78,16 @@ impl Greeter {
         bus.register(CoreName::Greeter, tx);
 
         info!("[Greeter] starting greeter loop");
+        let _conf = self.conf.clone();
         while let Some(msg) = rx.recv().await {
             match msg {
-                GreeterMessage::Login(username, password) => self.authenticate(username, password),
+                GreeterMessage::LoginWithCreds(username, password) => {
+                    self.authenticate(username, password)
+                }
                 GreeterMessage::StartSession(session_option) => self.start_session(session_option),
+                GreeterMessage::Login() => {
+                    self.authenticate(_conf.username.clone(), _conf.password.clone());
+                }
             }
         }
     }

@@ -4,6 +4,7 @@ pub enum UiMessage {
 }
 
 pub enum GreeterMessage {
-    Login(String, String),
+    LoginWithCreds(String, String),
+    Login(),
     StartSession(Option<String>),
 }
