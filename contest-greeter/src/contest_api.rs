@@ -1,10 +1,10 @@
 use anyhow::{Context, Result};
-use chrono::{DateTime, Local};
+use chrono::{DateTime, FixedOffset, Local};
 use log::{debug, info};
 use reqwest::Client;
 use serde::Deserialize;
 use tokio::time::{Duration, sleep};
-use types::{CoreName, GreeterMessage, SystemSender};
+use types::{CoreName, GreeterMessage, SystemSender, UiMessage};
 
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct ApiPollerConfig {
@@ -32,10 +32,17 @@ pub async fn run_api_poller(bus: impl SystemSender, config: ApiPollerConfig) {
     loop {
         match fetch_start_time(&client, &url).await {
             Ok(start_time) => {
-                if start_time < Local::now() {
-                    info!("[Contest-Api] contest started at {start_time}");
+                let now = Local::now();
+                if start_time < now {
+                    info!("[Contest-Api] contest started at {start_time} — triggering login");
                     bus.send_to(CoreName::Greeter, GreeterMessage::Login());
                 } else {
+                    bus.send_to(
+                        CoreName::UI,
+                        UiMessage::SetCountdownEndtime {
+                            end_time: Some(start_time),
+                        },
+                    );
                     debug!("[Contest-Api] contest not started yet (starts at {start_time})");
                 }
             }
@@ -48,7 +55,7 @@ pub async fn run_api_poller(bus: impl SystemSender, config: ApiPollerConfig) {
 
 #[derive(Deserialize)]
 struct ContestApiResponse {
-    start_time: String,
+    start_time: DateTime<FixedOffset>,
 }
 
 async fn fetch_start_time(client: &Client, url: &str) -> Result<DateTime<Local>> {
@@ -62,8 +69,5 @@ async fn fetch_start_time(client: &Client, url: &str) -> Result<DateTime<Local>>
 
     let payload: ContestApiResponse = response.json().await.context("decoding JSON payload")?;
 
-    let parsed = DateTime::parse_from_rfc3339(&payload.start_time)
-        .context("parsing start_time as RFC3339 timestamp")?;
-
-    Ok(parsed.with_timezone(&Local))
+    Ok(payload.start_time.with_timezone(&Local))
 }

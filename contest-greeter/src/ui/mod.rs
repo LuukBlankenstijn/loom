@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 use gtk4::Window;
 use gtk4::gdk;
 use gtk4::glib::idle_add_local;
@@ -6,6 +7,7 @@ use gtk4::prelude::*;
 
 mod background;
 mod chain_listener;
+mod countdown;
 mod login_ui;
 use chain_listener::register_chain_listener;
 use lightdm_contest_rs_greeter::CoreName;
@@ -19,15 +21,32 @@ use types::SystemSender;
 use types::UiMessage;
 
 use crate::ui::background::Background;
+use crate::ui::countdown::CountDown;
 
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct UiConfig {
     #[serde(default = "default_chain")]
     chain: String,
+
+    countdown_end_time: Option<DateTime<FixedOffset>>,
+
+    #[serde(default = "default_count_from")]
+    countdown_from: Option<u64>,
+
+    #[serde(default = "default_count_end_login")]
+    countdown_end_login: bool,
 }
 
 fn default_chain() -> String {
     "chain".into()
+}
+
+fn default_count_end_login() -> bool {
+    true
+}
+
+fn default_count_from() -> Option<u64> {
+    Some(0)
 }
 
 pub async fn run_ui(bus: impl SystemBus, conf: UiConfig) {
@@ -52,8 +71,12 @@ fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>, conf: UiC
     let background_overlay = background.get_overlay();
     window.set_child(Some(background_overlay));
 
+    let countdown = CountDown::new(conf.clone(), bus.clone());
+    let countdown_overlay = countdown.widget();
+
     let login_ui = build_login_ui(bus);
 
+    background_overlay.add_overlay(countdown_overlay);
     background_overlay.add_overlay(login_ui.widget());
     let login_ui_clone = login_ui.clone();
     register_chain_listener(&window, conf.chain.chars().collect(), {
@@ -74,6 +97,9 @@ fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>, conf: UiC
                 },
                 UiMessage::SetError(error) => {
                     login_ui.set_error_text(&error.to_string());
+                }
+                UiMessage::SetCountdownEndtime { end_time } => {
+                    countdown.update_endtime(end_time);
                 }
             }
         }
