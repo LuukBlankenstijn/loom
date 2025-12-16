@@ -8,6 +8,7 @@ use gtk4::{
     Box, CssProvider, Label, Overlay, STYLE_PROVIDER_PRIORITY_APPLICATION, gdk::Display,
     prelude::*, style_context_add_provider_for_display,
 };
+use log::debug;
 
 use crate::ui::UiConfig;
 use types::{CoreName, GreeterMessage, SystemSender};
@@ -27,21 +28,6 @@ struct CountdownState {
     end_login: bool,
     triggered: bool,
 }
-
-const COUNTDOWN_CSS: &str = "
-    label.countdown {
-        font-size: 128px;
-        color: rgb(0, 0, 0);
-        padding: 20px;
-        font-weight: bold;
-    }
-    .green-dot {
-        min-width: 24px;
-        min-height: 24px;
-        border-radius: 50%;
-        background-color: #2ecc71;
-    }
-";
 
 impl<S: SystemSender + Clone + 'static> CountDown<S> {
     pub fn new(conf: UiConfig, bus: S) -> Self {
@@ -68,7 +54,24 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         overlay.add_overlay(&connection_dot);
 
         let css = CssProvider::new();
-        css.load_from_data(COUNTDOWN_CSS);
+        debug!("{}", conf.countdown_label_color);
+        css.load_from_data(&format!(
+            "
+            label.countdown {{
+                font-size: 128px;
+                color: {};
+                padding: 20px;
+                font-weight: bold;
+            }}
+            .green-dot {{
+                min-width: 24px;
+                min-height: 24px;
+                border-radius: 50%;
+                background-color: #2ecc71;
+            }}
+        ",
+            conf.countdown_label_color,
+        ));
         if let Some(display) = Display::default() {
             style_context_add_provider_for_display(
                 &display,

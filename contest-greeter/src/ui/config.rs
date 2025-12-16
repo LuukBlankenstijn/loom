@@ -17,6 +17,9 @@ pub struct UiConfig {
 
     #[serde(default = "default_count_end_login")]
     pub(crate) countdown_end_login: bool,
+
+    #[serde(default = "default_countdown_label_color")]
+    pub(crate) countdown_label_color: String,
 }
 
 fn default_chain() -> String {
@@ -29,6 +32,10 @@ fn default_count_end_login() -> bool {
 
 fn default_count_from() -> Option<u64> {
     Some(10)
+}
+
+fn default_countdown_label_color() -> String {
+    "white".into()
 }
 
 fn deserialize_end_time<'de, D>(deserializer: D) -> Result<Option<DateTime<FixedOffset>>, D::Error>
