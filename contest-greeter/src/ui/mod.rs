@@ -42,6 +42,9 @@ fn build_ui(bus: impl SystemSender, mut rx: mpsc::Receiver<UiMessage>, conf: UiC
     window.set_decorated(false);
 
     let background = Background::new();
+    if let Some(source) = conf.background_source.clone() {
+        background.set_image(&source)
+    }
     let background_overlay = background.get_overlay();
     window.set_child(Some(background_overlay));
 

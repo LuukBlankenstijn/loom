@@ -7,6 +7,8 @@ pub struct UiConfig {
     #[serde(default = "default_chain")]
     pub(crate) chain: String,
 
+    pub(crate) background_source: Option<String>,
+
     #[serde(default, deserialize_with = "deserialize_end_time")]
     pub(crate) countdown_end_time: Option<DateTime<FixedOffset>>,
 
