@@ -28,7 +28,7 @@ fn default_count_end_login() -> bool {
 }
 
 fn default_count_from() -> Option<u64> {
-    Some(0)
+    Some(10)
 }
 
 fn deserialize_end_time<'de, D>(deserializer: D) -> Result<Option<DateTime<FixedOffset>>, D::Error>

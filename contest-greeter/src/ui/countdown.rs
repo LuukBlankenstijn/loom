@@ -2,10 +2,11 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use chrono::{DateTime, Local};
+use gtk4::Align;
 use gtk4::glib::{ControlFlow, SourceId, timeout_add_local, timeout_add_seconds_local};
 use gtk4::{
-    CssProvider, Label, Overlay, STYLE_PROVIDER_PRIORITY_APPLICATION, gdk::Display, prelude::*,
-    style_context_add_provider_for_display,
+    Box, CssProvider, Label, Overlay, STYLE_PROVIDER_PRIORITY_APPLICATION, gdk::Display,
+    prelude::*, style_context_add_provider_for_display,
 };
 
 use crate::ui::UiConfig;
@@ -14,6 +15,7 @@ use types::{CoreName, GreeterMessage, SystemSender};
 pub struct CountDown<S: SystemSender + Clone + 'static> {
     overlay: Overlay,
     label: Label,
+    connection_dot: Box,
     state: Rc<RefCell<CountdownState>>,
     tick: Rc<RefCell<Option<SourceId>>>,
     bus: S,
@@ -33,6 +35,12 @@ const COUNTDOWN_CSS: &str = "
         padding: 20px;
         font-weight: bold;
     }
+    .green-dot {
+        min-width: 24px;
+        min-height: 24px;
+        border-radius: 50%;
+        background-color: #2ecc71;
+    }
 ";
 
 impl<S: SystemSender + Clone + 'static> CountDown<S> {
@@ -41,6 +49,15 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         overlay.set_hexpand(true);
         overlay.set_vexpand(true);
 
+        let connection_dot = Box::builder()
+            .css_classes(vec!["green-dot"])
+            .visible(false)
+            .halign(Align::End)
+            .valign(Align::Start)
+            .margin_top(20)
+            .margin_end(20)
+            .build();
+
         let label = Label::new(Some(""));
         label.style_context().add_class("countdown");
         label.set_halign(gtk4::Align::Center);
@@ -48,6 +65,7 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         label.set_hexpand(true);
         label.set_vexpand(true);
         overlay.set_child(Some(&label));
+        overlay.add_overlay(&connection_dot);
 
         let css = CssProvider::new();
         css.load_from_data(COUNTDOWN_CSS);
@@ -71,6 +89,7 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         let countdown = Self {
             overlay,
             label,
+            connection_dot,
             state,
             tick: Rc::new(RefCell::new(None)),
             bus,
@@ -101,7 +120,7 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         }
 
         // update immediately so the label is in a correct state until the countdown starts
-        update_label(&self.label, &self.state, &self.bus);
+        update_ui(&self.label, &self.connection_dot, &self.state, &self.bus);
 
         let state_snapshot = self.state.borrow();
         let Some(end_time) = state_snapshot.end_time else {
@@ -113,6 +132,7 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         drop(state_snapshot);
 
         let label = self.label.clone();
+        let connection_dot = self.connection_dot.clone();
         let state = self.state.clone();
         let tick_handle = self.tick.clone();
         let bus = self.bus.clone();
@@ -121,14 +141,15 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
         let start_id = timeout_add_local(
             std::time::Duration::from_millis(start_after_ms),
             move || {
-                update_label(&label, &state, &bus);
+                update_ui(&label, &connection_dot, &state, &bus);
 
                 let label_tick = label.clone();
+                let connection_dot_tick = connection_dot.clone();
                 let state_tick = state.clone();
                 let tick_ref = tick_handle.clone();
                 let bus_tick = bus.clone();
                 let tick_id = timeout_add_seconds_local(1, move || {
-                    update_label(&label_tick, &state_tick, &bus_tick);
+                    update_ui(&label_tick, &connection_dot_tick, &state_tick, &bus_tick);
                     ControlFlow::Continue
                 });
                 *tick_ref.borrow_mut() = Some(tick_id);
@@ -141,8 +162,9 @@ impl<S: SystemSender + Clone + 'static> CountDown<S> {
     }
 }
 
-fn update_label<S: SystemSender + Clone + 'static>(
+fn update_ui<S: SystemSender>(
     label: &Label,
+    connection_dot: &Box,
     state: &Rc<RefCell<CountdownState>>,
     bus: &S,
 ) {
@@ -155,6 +177,7 @@ fn update_label<S: SystemSender + Clone + 'static>(
             Some(threshold) => seconds <= threshold as i64,
             None => true,
         };
+        connection_dot.set_visible(true);
 
         if show {
             if seconds > 0 {
@@ -170,6 +193,7 @@ fn update_label<S: SystemSender + Clone + 'static>(
             label.set_text("");
         }
     } else {
+        connection_dot.set_visible(false);
         label.set_text("");
     }
 }
