@@ -1,4 +1,3 @@
-use chrono::{DateTime, FixedOffset};
 use gtk4::Window;
 use gtk4::gdk;
 use gtk4::glib::idle_add_local;
@@ -7,13 +6,13 @@ use gtk4::prelude::*;
 
 mod background;
 mod chain_listener;
+mod config;
 mod countdown;
 mod login_ui;
 use chain_listener::register_chain_listener;
 use lightdm_contest_rs_greeter::CoreName;
 use log::info;
 use login_ui::LoginUi;
-use serde::Deserialize;
 use tokio::sync::mpsc;
 use types::GreeterMessage;
 use types::SystemBus;
@@ -22,32 +21,7 @@ use types::UiMessage;
 
 use crate::ui::background::Background;
 use crate::ui::countdown::CountDown;
-
-#[derive(Clone, Debug, Deserialize, Default)]
-pub struct UiConfig {
-    #[serde(default = "default_chain")]
-    chain: String,
-
-    countdown_end_time: Option<DateTime<FixedOffset>>,
-
-    #[serde(default = "default_count_from")]
-    countdown_from: Option<u64>,
-
-    #[serde(default = "default_count_end_login")]
-    countdown_end_login: bool,
-}
-
-fn default_chain() -> String {
-    "chain".into()
-}
-
-fn default_count_end_login() -> bool {
-    true
-}
-
-fn default_count_from() -> Option<u64> {
-    Some(0)
-}
+pub use config::UiConfig;
 
 pub async fn run_ui(bus: impl SystemBus, conf: UiConfig) {
     gtk4::init().expect("init gtk");

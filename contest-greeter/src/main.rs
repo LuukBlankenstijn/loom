@@ -11,9 +11,7 @@ use tokio::sync::mpsc;
 
 use ui::run_ui;
 
-use crate::{
-    bus::start_bus, conf::get_conf, contest_api::run_api_poller, greeter::Greeter,
-};
+use crate::{bus::start_bus, conf::get_conf, contest_api::run_api_poller, greeter::Greeter};
 
 #[tokio::main]
 async fn main() {
