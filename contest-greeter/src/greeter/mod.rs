@@ -1,19 +1,23 @@
 mod lightdm;
 
 use anyhow::{Result, anyhow};
-use lightdm_contest_rs_greeter::CoreName;
 use log::{error, info, warn};
-use serde::Deserialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
+use types::CoreName;
 use types::{GreeterMessage, SystemBus, UiMessage};
 
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, JsonSchema)]
 pub struct GreeterConfig {
+    /// Session to start (defaults to LightDM's default when unset).
     session: Option<String>,
 
+    /// Username used for automatic login.
     #[serde(default)]
     username: String,
 
+    /// Password used for automatic login.
     #[serde(default)]
     password: String,
 }

@@ -2,16 +2,28 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, FixedOffset, Local};
 use log::{debug, info};
 use reqwest::Client;
-use serde::Deserialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, sleep};
 use types::{CoreName, GreeterMessage, SystemSender, UiMessage};
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct ApiPollerConfig {
+    /// Poll interval in seconds.
     #[serde(default = "default_interval")]
     interval: i64,
 
+    /// Contest API URL returning a JSON object with `start_time` (RFC3339).
     url: Option<String>,
+}
+
+impl Default for ApiPollerConfig {
+    fn default() -> Self {
+        Self {
+            interval: default_interval(),
+            url: None,
+        }
+    }
 }
 
 fn default_interval() -> i64 {

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use lightdm_contest_rs_greeter::{CoreName, ServiceChannel, SystemMsg};
 use log::{debug, error, info};
 use tokio::sync::mpsc;
+use types::{CoreName, ServiceChannel, SystemMsg};
 
 pub async fn start_bus(mut rx: mpsc::Receiver<SystemMsg>) {
     let mut registry: HashMap<CoreName, Box<dyn ServiceChannel>> = HashMap::new();

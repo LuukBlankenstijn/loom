@@ -1,25 +1,45 @@
 use chrono::TimeZone;
 use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, Offset};
-use serde::Deserialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
 pub struct UiConfig {
+    /// Key sequence to toggle the login UI.
     #[serde(default = "default_chain")]
     pub(crate) chain: String,
 
+    /// File path or URL for the background image.
     pub(crate) background_source: Option<String>,
 
+    /// Contest start time. Accepts RFC3339 or `YYYY-MM-DD hh:mm:ss` (interpreted as local time).
     #[serde(default, deserialize_with = "deserialize_end_time")]
     pub(crate) countdown_end_time: Option<DateTime<FixedOffset>>,
 
+    /// Start showing the countdown when this many seconds remain.
     #[serde(default = "default_count_from")]
     pub(crate) countdown_from: Option<u64>,
 
+    /// Trigger login automatically when the countdown reaches zero.
     #[serde(default = "default_count_end_login")]
     pub(crate) countdown_end_login: bool,
 
+    /// Color for the countdown label (CSS color value).
     #[serde(default = "default_countdown_label_color")]
     pub(crate) countdown_label_color: String,
+}
+
+impl Default for UiConfig {
+    fn default() -> Self {
+        Self {
+            chain: default_chain(),
+            background_source: None,
+            countdown_end_time: None,
+            countdown_from: default_count_from(),
+            countdown_end_login: default_count_end_login(),
+            countdown_label_color: default_countdown_label_color(),
+        }
+    }
 }
 
 fn default_chain() -> String {
