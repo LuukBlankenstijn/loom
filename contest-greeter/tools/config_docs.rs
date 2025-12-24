@@ -7,6 +7,7 @@ use serde_json::Value;
 
 const ROOT_ORDER: &[&str] = &[
     "log_level",
+    "enable_dbus",
     "chain",
     "background_source",
     "countdown_end_time",

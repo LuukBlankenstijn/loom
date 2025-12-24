@@ -6,6 +6,7 @@
 | Key | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | log_level | string | no | `info` | Log level (env_logger style, e.g. `info`, `debug`). |
+| enable_dbus | bool | no | true | Enable or disable the dbus module |
 | chain | string | no | `chain` | Key sequence to toggle the login UI. |
 | background_source | string? | no | - | File path or URL for the background image. |
 | countdown_end_time | string? | no | - | Contest start time. Accepts RFC3339 or `YYYY-MM-DD hh:mm:ss` (interpreted as local time). |

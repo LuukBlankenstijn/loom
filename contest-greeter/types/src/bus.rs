@@ -36,7 +36,7 @@ impl<T: 'static + Send> ServiceChannel for Sender<T> {
     }
 }
 
-pub trait SystemSender: Clone + 'static {
+pub trait SystemSender: Clone + Send + Sync + 'static {
     fn send_to<T: Send + 'static>(&self, target: CoreName, msg: T);
 }
 

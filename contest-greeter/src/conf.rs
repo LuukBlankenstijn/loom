@@ -13,6 +13,10 @@ pub struct Conf {
     #[serde(default = "default_log_level")]
     pub log_level: String,
 
+    /// Enable or disable the dbus module
+    #[serde(default = "default_enable_dbus")]
+    pub enable_dbus: bool,
+
     /// UI settings.
     #[serde(flatten, default)]
     pub ui: UiConfig,
@@ -30,10 +34,15 @@ fn default_log_level() -> String {
     "info".into()
 }
 
+fn default_enable_dbus() -> bool {
+    true
+}
+
 impl Default for Conf {
     fn default() -> Self {
         Self {
             log_level: default_log_level(),
+            enable_dbus: default_enable_dbus(),
             ui: UiConfig::default(),
             greeter: GreeterConfig::default(),
             api_poller: ApiPollerConfig::default(),

@@ -33,6 +33,7 @@ chrono = { version = "0.4", default-features = false, features = [
     "std",
     "serde",
 ] }
+zbus = { version = "5", default-features = false, features = ["tokio"] }
 
 [[bin]]
 name = "config-docs"

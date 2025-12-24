@@ -1,6 +1,7 @@
 mod bus;
 mod conf;
 mod contest_api;
+mod dbus;
 mod greeter;
 mod ui;
 
@@ -11,7 +12,10 @@ use tokio::sync::mpsc;
 
 use ui::run_ui;
 
-use crate::{bus::start_bus, conf::get_conf, contest_api::run_api_poller, greeter::Greeter};
+use crate::{
+    bus::start_bus, conf::get_conf, contest_api::run_api_poller, dbus::run_dbus_service,
+    greeter::Greeter,
+};
 
 #[tokio::main]
 async fn main() {
@@ -57,6 +61,17 @@ async fn main() {
             .expect("tokio runtime");
         rt.block_on(run_api_poller(api_bus, config.api_poller));
     });
+
+    if config.enable_dbus {
+        let dbus_bus = bus.clone();
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("tokio runtime");
+            rt.block_on(run_dbus_service(dbus_bus));
+        });
+    }
 
     run_ui(bus.clone(), config.ui).await;
 
