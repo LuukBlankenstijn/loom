@@ -1,0 +1,31 @@
+name: release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libgtk-4-dev libglib2.0-dev liblightdm-gobject-1-dev
+      - name: Build
+        run: cargo build --release --locked
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/release/lightdm-contest-greeter dist/lightdm-contest-greeter
+          if [ -f target/release/config-docs ]; then cp target/release/config-docs dist/; fi
+          tar -czf "lightdm-contest-greeter-linux-x86_64.tar.gz" -C dist .
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: lightdm-contest-greeter-linux-x86_64.tar.gz

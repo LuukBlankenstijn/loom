@@ -25,6 +25,24 @@ countdown_end_login = false
 
 Possible config values: [CONFIG.md](./CONFIG.md)
 
+## Install (Debian/Ubuntu)
+
+One-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuukBlankenstijn/LightDM-Contest-Greeter/main/install.sh | sudo bash
+```
+
+From the repo root:
+
+```bash
+sudo ./install.sh
+```
+
+This downloads the latest Linux release binary from GitHub, installs LightDM/D-Bus config files,
+and drops the greeter desktop entry. Afterward, edit `/etc/lightdm/lightdm-contest-greeter.conf`
+and restart LightDM.
+
 ## D-Bus control surface
 
 The greeter optionally exposes a small D-Bus service that lets external tools update runtime state
@@ -32,6 +50,7 @@ The greeter optionally exposes a small D-Bus service that lets external tools up
 `enable_dbus = true` in the config.
 
 Service details:
+
 - Bus name: `nl.luukblankenstijn.ContestGreeterService`
 - Object path: `/nl/luukblankenstijn/ContestGreeterService`
 - Interface: `nl.luukblankenstijn.ContestGreeterService`

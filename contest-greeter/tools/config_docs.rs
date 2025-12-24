@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use lightdm_contest_rs_greeter::conf::Conf;
+use lightdm_contest_greeter::conf::Conf;
 use schemars::{Map, schema::*, schema_for};
 use serde_json::Value;
 

@@ -6,7 +6,7 @@ mod greeter;
 mod ui;
 
 use env_logger::Env;
-use lightdm_contest_rs_greeter::SystemHandle;
+use lightdm_contest_greeter::SystemHandle;
 use log::{error, info};
 use tokio::sync::mpsc;
 

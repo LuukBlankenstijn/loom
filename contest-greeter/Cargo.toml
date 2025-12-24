@@ -2,7 +2,7 @@
 members = [".", "types"]
 
 [package]
-name = "lightdm-contest-rs-greeter"
+name = "lightdm-contest-greeter"
 version = "0.1.0"
 edition = "2024"
 build = "build.rs"
