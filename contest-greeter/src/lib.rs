@@ -1,6 +1,7 @@
 pub mod bus;
 pub mod conf;
 pub mod contest_api;
+pub mod dbus;
 pub mod greeter;
 pub mod ui;
 

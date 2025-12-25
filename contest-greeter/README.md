@@ -55,5 +55,12 @@ Service details:
 - Object path: `/nl/luukblankenstijn/ContestGreeterService`
 - Interface: `nl.luukblankenstijn.ContestGreeterService`
 
-The supported methods are documented in `contestgreeter_interface.xml`, which is the D-Bus
-introspection XML for the service.
+Rust clients can use the lightweight `contest-greeter-dbus` crate, which exposes
+`contest_greeter_dbus::GreeterServiceProxy` and is shared with the server implementation.
+
+Example dependency:
+
+```toml
+[dependencies]
+contest-greeter-dbus = { git = "https://github.com/LuukBlankenstijn/LightDM-Contest-Greeter", tag = "v0.1.0" }
+```

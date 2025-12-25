@@ -1,20 +1,20 @@
 use chrono::{Local, TimeZone};
+use contest_greeter_dbus::{GreeterService, GreeterServiceBackend};
 use log::{error, info};
 use types::{GreeterMessage, SystemSender, UiMessage};
-use zbus::{conn::Builder, interface};
+use zbus::conn::Builder;
 
-struct GreeterService<T: SystemSender> {
+struct GreeterDbusBackend<T: SystemSender> {
     bus: T,
 }
 
-#[interface(name = "nl.luukblankenstijn.ContestGreeterService")]
-impl<T: SystemSender + Sync> GreeterService<T> {
-    async fn set_wallpaper_source(&self, url: String) {
+impl<T: SystemSender + Sync> GreeterServiceBackend for GreeterDbusBackend<T> {
+    fn set_wallpaper_source(&self, url: String) {
         self.bus
             .send_to(types::CoreName::UI, UiMessage::SetWallpaper(Some(url)));
     }
 
-    async fn set_countdown_endtime(&self, end_time: i64) -> zbus::fdo::Result<()> {
+    fn set_countdown_endtime(&self, end_time: i64) -> zbus::fdo::Result<()> {
         let datetime = match Local.timestamp_millis_opt(end_time) {
             chrono::offset::LocalResult::Single(result) => result,
             chrono::offset::LocalResult::Ambiguous(_, _) => {
@@ -36,28 +36,22 @@ impl<T: SystemSender + Sync> GreeterService<T> {
         );
         Ok(())
     }
-    async fn disable_countdown(&self) {
+
+    fn disable_countdown(&self) {
         self.bus.send_to(
             types::CoreName::UI,
             UiMessage::SetCountdownEndtime { end_time: None },
         );
     }
 
-    async fn start_session(&self, session: String) {
-        self.bus.send_to(
-            types::CoreName::Greeter,
-            GreeterMessage::StartSession(Some(session)),
-        );
-    }
-
-    async fn start_default_session(&self) {
+    fn login(&self) {
         self.bus
             .send_to(types::CoreName::Greeter, GreeterMessage::Login());
     }
 }
 
 pub async fn run_dbus_service(bus: impl SystemSender) {
-    let greeter_service = GreeterService { bus };
+    let greeter_service = GreeterService::new(GreeterDbusBackend { bus });
     let result = Builder::system()
         .and_then(|b| b.name("nl.luukblankenstijn.ContestGreeterService"))
         .and_then(|b| {

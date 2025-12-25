@@ -229,6 +229,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "contest-greeter-dbus"
+version = "0.1.0"
+dependencies = [
+ "zbus",
+]
+
+[[package]]
 name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1150,6 +1157,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "contest-greeter-dbus",
  "env_logger",
  "gio 0.20.12",
  "gio-sys 0.20.10",
