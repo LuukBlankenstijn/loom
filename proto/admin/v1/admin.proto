@@ -10,7 +10,10 @@ message Contest {
   string id = 1;
   string name = 2;
   google.protobuf.Timestamp start_time = 3 [(buf.validate.field).required = true];
-  google.protobuf.Timestamp end_time = 4 [(buf.validate.field).required = true];
+  google.protobuf.Timestamp end_time = 4 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).timestamp.gt_now = true
+  ];
 }
 
 message Team {
