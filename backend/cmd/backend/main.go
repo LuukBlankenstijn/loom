@@ -19,6 +19,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type repoContainer struct {
+	team    domain.TeamRepository
+	contest domain.ContestRepository
+	station domain.StationRepository
+}
+
 func init() {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -29,22 +35,8 @@ func init() {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		slog.Warn("No env file loaded", "error", err)
-	}
-	client, err := ent.Open("postgres", fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		envutil.GetEnv("DB_HOST"),
-		envutil.GetEnvWithFallback("DB_PORT", "5432"),
-		envutil.GetEnvWithFallback("DB_USER", "loom"),
-		envutil.GetEnvWithFallback("DB_DATABASE", "loom"),
-		envutil.GetEnvWithFallback("DB_PASSWORD", "loom"),
-		envutil.GetEnvWithFallback("DB_SSLMODE", "disable"),
-	))
-	if err != nil {
-		log.Fatalf("failed opening connection to postgres: %v", err)
-	}
+	loadEnv()
+	client := createEntClient()
 	defer client.Close()
 	// Run the auto migration tool.
 	if err := client.Schema.Create(context.Background()); err != nil {
@@ -52,12 +44,10 @@ func main() {
 	}
 
 	hub := hub.New()
-	stationsRepo := persistence.NewEntStationRepository(client)
-	teamsRepo := persistence.NewEntTeamRepository(client)
-	contestRepo := persistence.NewEntContestRepository(client)
-	stationsServer := stations.New(hub, stationsRepo)
-	teamService := domain.NewTeamService(teamsRepo, contestRepo)
-	adminServer := admin.New(*teamService, stationsRepo, teamsRepo, contestRepo)
+	repoContainer := createRepos(client)
+	stationsServer := stations.New(hub, repoContainer.station)
+	teamService := domain.NewTeamService(repoContainer.team, repoContainer.contest)
+	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest)
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
@@ -74,4 +64,41 @@ func main() {
 	if err := stationsServer.Run(); err != nil {
 		slog.Error("failed to run stations server", slog.Any("error", err))
 	}
+}
+
+func loadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		slog.Warn("No env file loaded", "error", err)
+	}
+}
+
+func createEntClient() *ent.Client {
+	client, err := ent.Open("postgres", fmt.Sprintf(
+		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
+		envutil.GetEnvX("DB_HOST"),
+		envutil.GetEnvWithFallback("DB_PORT", "5432"),
+		envutil.GetEnvWithFallback("DB_USER", "loom"),
+		envutil.GetEnvWithFallback("DB_DATABASE", "loom"),
+		envutil.GetEnvWithFallback("DB_PASSWORD", "loom"),
+		envutil.GetEnvWithFallback("DB_SSLMODE", "disable"),
+	))
+	if err != nil {
+		log.Fatalf("failed opening connection to postgres: %v", err)
+	}
+	return client
+}
+
+func createRepos(client *ent.Client) *repoContainer {
+	container := repoContainer{}
+	if baseUrl, ok := envutil.GetEnv("DJ_BASE_URL"); ok {
+		username, password := envutil.GetEnvX("DJ_USERNAME"), envutil.GetEnvX("DJ_PASSWORD")
+		container.contest = persistence.NewHttpContestRepository(baseUrl, username, password)
+		container.team = persistence.NewHttpTeamRepository(baseUrl, username, password)
+	} else {
+		container.contest = persistence.NewEntContestRepository(client)
+		container.team = persistence.NewEntTeamRepository(client)
+	}
+	container.station = persistence.NewEntStationRepository(client)
+	return &container
 }

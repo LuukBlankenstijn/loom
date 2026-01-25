@@ -10,53 +10,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestEntTeamRepositoryGetByIp(t *testing.T) {
-	ctx := context.Background()
-	client := enttest.Open(t, "sqlite3", "file:ent_team_getbyip?mode=memory&cache=shared&_fk=1")
-	t.Cleanup(func() { _ = client.Close() })
-
-	stationRec, err := client.Station.Create().SetIP("10.0.0.1").SetConnectedAt(time.Now()).Save(ctx)
-	if err != nil {
-		t.Fatalf("create station: %v", err)
-	}
-	_, err = client.Team.
-		Create().
-		SetID("team-1").
-		SetName("Team 1").
-		SetStation(stationRec).
-		Save(ctx)
-	if err != nil {
-		t.Fatalf("create team: %v", err)
-	}
-
-	repo := NewEntTeamRepository(client)
-	got, err := repo.GetByIp(ctx, "10.0.0.1")
-	if err != nil {
-		t.Fatalf("get by ip: %v", err)
-	}
-	if got == nil {
-		t.Fatalf("expected team, got nil")
-	}
-	if got.Id != "team-1" || got.Ip == nil || *got.Ip != "10.0.0.1" {
-		t.Fatalf("unexpected team: %+v", got)
-	}
-}
-
-func TestEntTeamRepositoryGetByIpNotFound(t *testing.T) {
-	ctx := context.Background()
-	client := enttest.Open(t, "sqlite3", "file:ent_team_getbyip_none?mode=memory&cache=shared&_fk=1")
-	t.Cleanup(func() { _ = client.Close() })
-
-	repo := NewEntTeamRepository(client)
-	got, err := repo.GetByIp(ctx, "10.0.0.2")
-	if err != nil {
-		t.Fatalf("get by ip: %v", err)
-	}
-	if got != nil {
-		t.Fatalf("expected nil team, got %v", got)
-	}
-}
-
 func TestEntTeamRepositorySetIp(t *testing.T) {
 	ctx := context.Background()
 	client := enttest.Open(t, "sqlite3", "file:ent_team_setip?mode=memory&cache=shared&_fk=1")
@@ -188,5 +141,4 @@ func TestEntTeamRepositoryGetAllWithContestFilter(t *testing.T) {
 	if len(filtered) != 1 || filtered[0].Id != team1.ID {
 		t.Fatalf("unexpected filtered teams: %+v", filtered)
 	}
-
 }

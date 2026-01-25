@@ -20,38 +20,6 @@ func NewEntTeamRepository(client *ent.Client) *EntTeamRepository {
 	return &EntTeamRepository{client: client}
 }
 
-func (r *EntTeamRepository) GetByIp(ctx context.Context, ip string) (*domain.Team, error) {
-	eTeam, err := r.
-		client.
-		Team.
-		Query().
-		Where(
-			team.HasStationWith(station.IPEQ(ip)),
-		).
-		WithStation().
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotSingular(err) {
-			// should never happen
-			return nil, errors.New("multiple teams with the same station")
-		}
-		if ent.IsNotFound(err) {
-			return nil, nil
-		}
-	}
-	var newIp *string
-	if eTeam.Edges.Station != nil {
-		newIp = &eTeam.Edges.Station.IP
-	} else {
-		newIp = nil
-	}
-	return &domain.Team{
-		Id:   eTeam.ID,
-		Name: eTeam.Name,
-		Ip:   newIp,
-	}, nil
-}
-
 func (r *EntTeamRepository) SetIp(ctx context.Context, teamId string, ip *string) error {
 	if ip != nil {
 		teams, err := r.client.Team.Query().Where(team.HasStationWith(station.IPEQ(*ip))).All(ctx)
