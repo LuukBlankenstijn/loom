@@ -1,15 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    service::{AdminService, Contest, Team},
+    service::{AdminService, Contest},
+    ui::body::{self, Body},
     ui::header::{self, Tab},
 };
 use anyhow::Result;
 use chrono::Utc;
-use iced::{
-    Element, Length, Task, Theme, time,
-    widget::{column, container, text},
-};
+use iced::{Element, Task, Theme, time, widget::column};
 
 #[derive(Debug)]
 struct AdminApp {
@@ -17,7 +15,7 @@ struct AdminApp {
     service: Arc<dyn AdminService>,
     contest: Option<Contest>,
     time_remaining: Option<chrono::Duration>,
-    teams: Option<Vec<Team>>,
+    body: Body,
 }
 
 #[derive(Debug, Clone)]
@@ -25,25 +23,25 @@ pub enum Message {
     TabChanged(Tab),
     LoadContest,
     ContestLoaded(Result<Option<Contest>, String>),
-    LoadTeams,
-    TeamsLoaded(Result<Vec<Team>, String>),
+    Body(body::Message),
     Tick,
 }
 
 impl AdminApp {
     fn new(service: Arc<dyn AdminService>) -> (Self, Task<Message>) {
+        let (body, body_task) = Body::new();
         let state = Self {
             service: service.clone(),
             active_tab: Tab::Stations,
             contest: None,
             time_remaining: None,
-            teams: None,
+            body,
         };
 
         // load inital data
         let task = Task::batch(vec![
             Task::done(Message::LoadContest),
-            Task::done(Message::LoadTeams),
+            body_task.map(Message::Body),
         ]);
 
         (state, task)
@@ -51,34 +49,21 @@ impl AdminApp {
 
     fn view(&self) -> Element<'_, Message> {
         let header = header::view(self.contest.clone(), self.time_remaining);
-        let label = if self.active_tab == Tab::Stations {
-            String::from("stations")
-        } else if let Some(teams) = self.teams.clone() {
-            format!("teams: {:?}", teams)
-        } else {
-            String::from("No teams loaded")
-        };
-        let body = container(text(label)).height(Length::Fill);
+        let body = self.body.view(self.active_tab).map(Message::Body);
         column![header, body].into()
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
+        let service = self.service.clone();
         match message {
             Message::TabChanged(tab) => {
                 self.active_tab = tab;
-                if tab == Tab::Stations {
-                    Task::none()
-                } else {
-                    Task::done(Message::LoadTeams)
-                }
+                Task::none()
             }
-            Message::LoadContest => {
-                let service = self.service.clone();
-                Task::perform(
-                    async move { service.fetch_contest().await.map_err(|e| e.to_string()) },
-                    Message::ContestLoaded,
-                )
-            }
+            Message::LoadContest => Task::perform(
+                async move { service.fetch_contest().await.map_err(|e| e.to_string()) },
+                Message::ContestLoaded,
+            ),
             Message::ContestLoaded(contest) => match contest {
                 Ok(result) => {
                     self.contest = result.clone();
@@ -106,20 +91,7 @@ impl AdminApp {
                 }
                 Task::none()
             }
-            Message::LoadTeams => {
-                let service = self.service.clone();
-                Task::perform(
-                    async move { service.fetch_teams().await.map_err(|e| e.to_string()) },
-                    Message::TeamsLoaded,
-                )
-            }
-            Message::TeamsLoaded(teams) => {
-                match teams {
-                    Ok(result) => self.teams = Some(result.clone()),
-                    Err(msg) => println!("failed to load teams: {msg}"),
-                };
-                Task::none()
-            }
+            Message::Body(message) => self.body.update(message, service).map(Message::Body),
         }
     }
 
