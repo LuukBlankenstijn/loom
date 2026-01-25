@@ -1,0 +1,33 @@
+version: v2
+plugins:
+  - local: protoc-gen-go
+    out: shared/gen/go
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: shared/gen/go
+    opt:
+      - paths=source_relative
+      - simple
+  - local: protoc-gen-prost
+    out: shared/gen/rs/src
+    opt:
+      - compile_well_known_types
+      - extern_path=.google.protobuf.Timestamp=::prost_types::Timestamp
+  - local: protoc-gen-tonic
+    out: shared/gen/rs/src
+    opt:
+      - no_server
+  - local: protoc-gen-prost-crate
+    out: shared/gen/rs
+    strategy: all
+    opt:
+      - gen_crate=shared/gen/rs/Cargo.toml
+      - no_features
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/LuukBlankenstijn/loom/gen/go
+  disable:
+    - file_option: go_package
+      module: buf.build/bufbuild/protovalidate

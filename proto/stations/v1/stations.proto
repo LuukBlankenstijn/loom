@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package stations.v1;
+
+import "buf/validate/validate.proto";
+
+message RegisterRequest {
+  string ip = 1 [(buf.validate.field).string.ip = true];
+}
+
+message ConfigUpdatedResponse {}
+
+service StationService {
+  rpc Subscribe(RegisterRequest) returns (stream ConfigUpdatedResponse) {}
+}

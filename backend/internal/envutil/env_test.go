@@ -1,0 +1,55 @@
+package envutil
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestGetEnv(t *testing.T) {
+	t.Run("present", func(t *testing.T) {
+		t.Setenv("ENVUTIL_PRESENT", "value")
+
+		got := GetEnv("ENVUTIL_PRESENT")
+		if got != "value" {
+			t.Fatalf("expected value, got %q", got)
+		}
+	})
+
+	t.Run("missing panics", func(t *testing.T) {
+		key := "ENVUTIL_MISSING"
+		expected := fmt.Sprintf("env variable %s not found", key)
+
+		defer func() {
+			t.Helper()
+			if r := recover(); r == nil {
+				t.Fatal("expected panic, got nil")
+			} else if msg, ok := r.(string); ok {
+				if msg != expected {
+					t.Fatalf("expected panic %q, got %q", expected, msg)
+				}
+			} else {
+				t.Fatalf("expected string panic, got %T", r)
+			}
+		}()
+
+		_ = GetEnv(key)
+	})
+}
+
+func TestGetEnvWithFallback(t *testing.T) {
+	t.Run("present", func(t *testing.T) {
+		t.Setenv("ENVUTIL_FALLBACK_PRESENT", "value")
+
+		got := GetEnvWithFallback("ENVUTIL_FALLBACK_PRESENT", "fallback")
+		if got != "value" {
+			t.Fatalf("expected value, got %q", got)
+		}
+	})
+
+	t.Run("missing uses fallback", func(t *testing.T) {
+		got := GetEnvWithFallback("ENVUTIL_FALLBACK_MISSING", "fallback")
+		if got != "fallback" {
+			t.Fatalf("expected fallback, got %q", got)
+		}
+	})
+}

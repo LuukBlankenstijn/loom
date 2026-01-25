@@ -1,0 +1,10 @@
+[package]
+name = "loom-station"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.54", features = ["derive"] }
+tonic = "*"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+loom-rpc = { path = "../shared/gen/rs" }
