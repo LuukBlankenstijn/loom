@@ -96,7 +96,11 @@ impl AdminApp {
             Message::Tick => {
                 if let Some(contest) = &mut self.contest {
                     let now = Utc::now();
-                    self.time_remaining = Some(contest.start_time.signed_duration_since(now))
+                    self.time_remaining = Some(contest.start_time.signed_duration_since(now));
+                    if contest.end_time.lt(&now) {
+                        // if contest is over, fetch the next one
+                        return Task::done(Message::LoadContest);
+                    }
                 } else {
                     self.time_remaining = None
                 }

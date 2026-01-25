@@ -56,6 +56,7 @@ impl From<RpcContest> for Contest {
                 .start_time
                 .and_then(ts_to_utc)
                 .unwrap_or_else(Utc::now),
+            end_time: value.end_time.and_then(ts_to_utc).unwrap_or_else(Utc::now),
         }
     }
 }
