@@ -37,8 +37,8 @@ impl Header {
 
     pub fn view(&self) -> Element<'_, Message> {
         let mut nav_bar = row![
-            tab_button("Stations", Tab::Stations),
-            tab_button("Teams", Tab::Teams),
+            tab_button("Stations", Tab::Stations, self.active_tab),
+            tab_button("Teams", Tab::Teams, self.active_tab),
             horizontal(),
         ]
         .spacing(20);
@@ -128,18 +128,45 @@ fn header_style(theme: &iced::Theme) -> container::Style {
     }
 }
 
-fn tab_button(label: &str, tab: Tab) -> Element<'static, Message> {
+fn tab_button(label: &str, tab: Tab, active_tab: Tab) -> Element<'_, Message> {
+    let is_active = tab == active_tab;
+
     button(
-        text(label.to_string())
+        text(label)
+            .size(16) // Slightly smaller for a cleaner look
             .align_x(alignment::Horizontal::Center)
-            .align_y(alignment::Vertical::Center)
-            .height(Length::Fill),
+            .align_y(alignment::Vertical::Center),
     )
     .on_press(Message::TabChanged(tab))
-    .padding([5, 5])
-    .height(Length::Fill)
-    .width(150)
+    .padding([8, 20])
+    .style(move |theme, _status| tab_button_style(theme, is_active))
     .into()
+}
+
+fn tab_button_style(theme: &iced::Theme, is_active: bool) -> button::Style {
+    let palette = theme.extended_palette();
+
+    if is_active {
+        button::Style {
+            background: Some(Background::Color(palette.primary.strong.color)),
+            text_color: palette.primary.strong.text,
+            border: iced::Border {
+                radius: 6.0.into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    } else {
+        button::Style {
+            background: Some(Background::Color(palette.background.weakest.color)),
+            text_color: palette.background.weak.text,
+            border: iced::Border {
+                radius: 6.0.into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
 }
 
 fn contest_info(contest_name: String, time_remaining: Duration) -> Element<'static, Message> {
@@ -162,5 +189,14 @@ fn contest_info(contest_name: String, time_remaining: Duration) -> Element<'stat
 
     label.push_str(format!(" | {contest_name}").as_str());
 
-    text(label).font(Font::MONOSPACE).size(32).into()
+    container(
+        text(label)
+            .font(Font::MONOSPACE)
+            .size(24)
+            .style(|theme: &iced::Theme| text::Style {
+                color: Some(theme.extended_palette().secondary.base.color),
+            }),
+    )
+    .padding([5, 15])
+    .into()
 }
