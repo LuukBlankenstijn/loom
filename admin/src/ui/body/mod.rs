@@ -1,9 +1,9 @@
-use std::sync::Arc;
+mod stations;
+mod teams;
 
-use iced::{
-    Element, Length, Task,
-    widget::{container, text},
-};
+use std::{collections::HashMap, sync::Arc};
+
+use iced::{Element, Length, Task, widget::container};
 
 use crate::{
     service::{AdminService, Station, Team},
@@ -13,9 +13,8 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct Body {
     teams: Option<Vec<Team>>,
-    teams_loading: bool,
+    ip_team_name_map: HashMap<String, String>,
     stations: Option<Vec<Station>>,
-    stations_loading: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -37,49 +36,48 @@ impl Body {
     }
 
     pub fn view(&self, active_tab: Tab) -> Element<'_, Message> {
-        let label = if active_tab == Tab::Stations {
-            if let Some(stations) = self.stations.clone() {
-                format!("stations: {:?}", stations)
-            } else {
-                String::from("No stations loaded")
+        let page = match active_tab {
+            Tab::Stations => {
+                stations::view_stations(self.stations.clone(), self.ip_team_name_map.clone())
             }
-        } else if let Some(teams) = self.teams.clone() {
-            format!("teams: {:?}", teams)
-        } else {
-            String::from("No teams loaded")
+            Tab::Teams => teams::view_teams(self.teams.clone()),
         };
-        container(text(label)).height(Length::Fill).into()
+        container(page).height(Length::Fill).into()
     }
 
     pub fn update(&mut self, message: Message, service: Arc<dyn AdminService>) -> Task<Message> {
         let service = service.clone();
         match message {
-            Message::LoadTeams => {
-                self.teams_loading = true;
-                Task::perform(
-                    async move { service.fetch_teams().await.map_err(|e| e.to_string()) },
-                    Message::TeamsLoaded,
-                )
-            }
+            Message::LoadTeams => Task::perform(
+                async move { service.fetch_teams().await.map_err(|e| e.to_string()) },
+                Message::TeamsLoaded,
+            ),
             Message::TeamsLoaded(teams) => {
                 match teams {
                     Ok(teams) => {
-                        self.teams = Some(teams);
+                        self.teams = Some(teams.clone());
+                        self.ip_team_name_map = teams
+                            .into_iter()
+                            .filter_map(|t| {
+                                if let Some(ip) = t.ip {
+                                    Some((ip, t.name))
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect()
                     }
                     Err(msg) => {
                         println!("failed to load teams: {msg}");
                     }
                 };
-                self.teams_loading = false;
                 Task::none()
             }
-            Message::LoadStations => {
-                self.stations_loading = true;
-                Task::perform(
-                    async move { service.fetch_stations().await.map_err(|e| e.to_string()) },
-                    Message::StationsLoaded,
-                )
-            }
+            Message::LoadStations => Task::perform(
+                async move { service.fetch_stations().await.map_err(|e| e.to_string()) },
+                Message::StationsLoaded,
+            ),
+
             Message::StationsLoaded(stations) => {
                 match stations {
                     Ok(stations) => {
@@ -89,7 +87,6 @@ impl Body {
                         println!("failed to load stations: {msg}");
                     }
                 };
-                self.stations_loading = false;
                 Task::none()
             }
         }
