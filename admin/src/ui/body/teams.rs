@@ -1,9 +1,11 @@
 use iced::{
     Alignment, Border, Color, Element, Font, Length, Shadow, Theme, Vector,
+    alignment::Vertical,
+    border,
     widget::{
-        self, container, scrollable,
+        self, button, container, row, scrollable,
         table::{self, column},
-        text,
+        text, tooltip,
     },
 };
 
@@ -24,13 +26,32 @@ pub fn view_teams(teams: Option<Vec<Team>>) -> Element<'static, Message> {
                         )
                         .width(Length::Fixed(80.0)),
                         column(
-                            text("IP Address").size(18).font(Font {
+                            text("IP address").size(18).font(Font {
                                 weight: iced::font::Weight::Bold,
                                 ..Default::default()
                             }),
-                            |t: Team| match t.ip {
-                                Some(ip) => text(ip).font(Font::MONOSPACE).size(16),
-                                None => text("None"),
+                            |t: Team| -> Element<'_, Message> {
+                                match t.ip {
+                                    Some(ip) => row![
+                                        text(ip).font(Font::MONOSPACE).size(16),
+                                        tooltip(
+                                            button("󰅚")
+                                                .style(delete_ip_button)
+                                                .on_press(Message::Unassign(t.id.clone())),
+                                            "Unassign ip",
+                                            tooltip::Position::Top
+                                        )
+                                    ]
+                                    .align_y(Vertical::Center)
+                                    .spacing(10)
+                                    .into(),
+                                    None => button(text("Assign IP address").size(16))
+                                        .on_press(Message::OpenModal {
+                                            station_id: None,
+                                            team_id: Some(t.id),
+                                        })
+                                        .into(),
+                                }
                             }
                         )
                         .width(Length::Fill),
@@ -85,5 +106,27 @@ pub fn table_card(theme: &Theme) -> container::Style {
             blur_radius: 12.0,
         },
         ..Default::default()
+    }
+}
+
+pub fn delete_ip_button(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    let base_style = button::Style {
+        border: border::width(0.0),
+        text_color: palette.danger.base.color,
+        ..Default::default()
+    };
+
+    match status {
+        button::Status::Hovered | button::Status::Pressed => button::Style {
+            text_color: palette.danger.strong.color,
+            ..base_style
+        },
+        button::Status::Disabled => button::Style {
+            text_color: palette.danger.weak.color,
+            ..base_style
+        },
+        _ => base_style,
     }
 }

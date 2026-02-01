@@ -1,13 +1,17 @@
+mod modal;
 mod stations;
 mod teams;
 
 use std::{collections::HashMap, sync::Arc};
 
-use iced::{Element, Length, Task, widget::container};
+use iced::{
+    Element, Length, Task,
+    widget::{container, stack},
+};
 
 use crate::{
     service::{AdminService, Station, Team},
-    ui::header::Tab,
+    ui::{body::modal::Modal, header::Tab},
 };
 
 #[derive(Debug, Default)]
@@ -15,6 +19,7 @@ pub struct Body {
     teams: Option<Vec<Team>>,
     ip_team_name_map: HashMap<String, String>,
     stations: Option<Vec<Station>>,
+    modal_state: Option<Modal>,
 }
 
 #[derive(Debug, Clone)]
@@ -23,6 +28,13 @@ pub enum Message {
     TeamsLoaded(Result<Vec<Team>, String>),
     LoadStations,
     StationsLoaded(Result<Vec<Station>, String>),
+    OpenModal {
+        team_id: Option<String>,
+        station_id: Option<i32>,
+    },
+    Modal(modal::Message),
+    Unassign(String),
+    Unassigned(Result<(), String>),
 }
 
 impl Body {
@@ -42,16 +54,23 @@ impl Body {
             }
             Tab::Teams => teams::view_teams(self.teams.clone()),
         };
-        container(page).height(Length::Fill).into()
+        let base = container(page).height(Length::Fill);
+        if let Some(modal) = &self.modal_state {
+            stack![base, modal.view().map(Message::Modal)].into()
+        } else {
+            base.into()
+        }
     }
 
     pub fn update(&mut self, message: Message, service: Arc<dyn AdminService>) -> Task<Message> {
         let service = service.clone();
         match message {
-            Message::LoadTeams => Task::perform(
-                async move { service.fetch_teams().await.map_err(|e| e.to_string()) },
-                Message::TeamsLoaded,
-            ),
+            Message::LoadTeams => {
+                return Task::perform(
+                    async move { service.fetch_teams().await.map_err(|e| e.to_string()) },
+                    Message::TeamsLoaded,
+                );
+            }
             Message::TeamsLoaded(teams) => {
                 match teams {
                     Ok(teams) => {
@@ -71,13 +90,13 @@ impl Body {
                         println!("failed to load teams: {msg}");
                     }
                 };
-                Task::none()
             }
-            Message::LoadStations => Task::perform(
-                async move { service.fetch_stations().await.map_err(|e| e.to_string()) },
-                Message::StationsLoaded,
-            ),
-
+            Message::LoadStations => {
+                return Task::perform(
+                    async move { service.fetch_stations().await.map_err(|e| e.to_string()) },
+                    Message::StationsLoaded,
+                );
+            }
             Message::StationsLoaded(stations) => {
                 match stations {
                     Ok(stations) => {
@@ -87,8 +106,52 @@ impl Body {
                         println!("failed to load stations: {msg}");
                     }
                 };
-                Task::none()
             }
-        }
+            Message::Modal(message) => {
+                match message {
+                    modal::Message::Cancel => {
+                        self.modal_state = None;
+                    }
+                    modal::Message::Close => {
+                        self.modal_state = None;
+                        return Task::done(Message::LoadTeams);
+                    }
+                    _ => {
+                        if let Some(modal) = &mut self.modal_state {
+                            return modal.update(message, service).map(Message::Modal);
+                        }
+                    }
+                };
+            }
+            Message::OpenModal {
+                team_id,
+                station_id,
+            } => {
+                self.modal_state = Some(modal::Modal::new(
+                    team_id,
+                    station_id,
+                    self.teams.clone(),
+                    self.stations.clone(),
+                ));
+            }
+            Message::Unassign(team_id) => {
+                return Task::perform(
+                    async move {
+                        service
+                            .set_ip(team_id, None)
+                            .await
+                            .map_err(|e| e.to_string())
+                    },
+                    Message::Unassigned,
+                );
+            }
+            Message::Unassigned(result) => match result {
+                Ok(_) => return Task::done(Message::LoadTeams),
+                Err(msg) => {
+                    println!("Failed to unassign team: {msg}")
+                }
+            },
+        };
+        Task::none()
     }
 }

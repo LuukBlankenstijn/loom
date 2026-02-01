@@ -36,3 +36,15 @@ pub struct Contest {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
 }
+
+impl std::fmt::Display for Team {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.name))
+    }
+}
+
+impl std::fmt::Display for Station {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.ip))
+    }
+}

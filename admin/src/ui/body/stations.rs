@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use iced::{
     Alignment, Border, Color, Element, Font, Length, Shadow, Theme, Vector,
     widget::{
-        self, container, row, scrollable,
+        self, button, container, row, scrollable,
         table::{self, column},
         text,
     },
@@ -47,11 +47,16 @@ pub fn view_stations(
                                 weight: iced::font::Weight::Bold,
                                 ..Default::default()
                             }),
-                            |s: ExtendedStation| {
+                            |s: ExtendedStation| -> Element<'_, Message> {
                                 if let Some(team_name) = s.team_name {
-                                    text(team_name).size(16)
+                                    text(team_name).size(16).into()
                                 } else {
-                                    text("No team assigned").size(16)
+                                    button(text("Assign team").size(16))
+                                        .on_press(Message::OpenModal {
+                                            station_id: Some(s.base.id),
+                                            team_id: None,
+                                        })
+                                        .into()
                                 }
                             }
                         )

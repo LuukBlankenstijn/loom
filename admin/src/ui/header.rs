@@ -13,6 +13,7 @@ pub enum Tab {
     #[default]
     Stations,
     Teams,
+    Map,
 }
 
 #[derive(Debug, Default)]
@@ -39,6 +40,7 @@ impl Header {
         let mut nav_bar = row![
             tab_button("Stations", Tab::Stations, self.active_tab),
             tab_button("Teams", Tab::Teams, self.active_tab),
+            tab_button("Map", Tab::Map, self.active_tab),
             horizontal(),
         ]
         .spacing(20);
@@ -158,7 +160,7 @@ fn tab_button_style(theme: &iced::Theme, is_active: bool) -> button::Style {
         }
     } else {
         button::Style {
-            background: Some(Background::Color(palette.background.weakest.color)),
+            background: Some(Background::Color(palette.background.neutral.color)),
             text_color: palette.background.weak.text,
             border: iced::Border {
                 radius: 6.0.into(),
