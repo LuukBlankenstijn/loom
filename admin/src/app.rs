@@ -19,7 +19,6 @@ struct AdminApp {
 pub enum Message {
     Body(body::Message),
     Header(header::Message),
-    FontLoaded,
 }
 
 impl AdminApp {
@@ -55,7 +54,6 @@ impl AdminApp {
         match message {
             Message::Body(message) => self.body.update(message, service).map(Message::Body),
             Message::Header(message) => self.header.udpate(message, service).map(Message::Header),
-            Message::FontLoaded => Task::none(),
         }
     }
 

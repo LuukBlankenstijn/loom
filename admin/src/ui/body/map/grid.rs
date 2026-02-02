@@ -1,39 +1,37 @@
 use iced::{
-    Element, Event, Length, Point, Rectangle, Renderer, Theme, Vector, mouse,
+    Element, Event, Length, Point, Rectangle, Renderer, Theme, Vector,
+    keyboard::{self, Modifiers},
+    mouse,
     widget::{
         Canvas,
         canvas::{self, Frame, Geometry, Path, Program, Stroke},
     },
 };
 
+use crate::ui::body::map::types::{Drawable, MapElement};
+
 #[derive(Clone, Debug)]
 pub struct Grid {
+    elements: Vec<MapElement>,
     offset: Vector<f32>,
     zoom: f32,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Interaction {
-    pub is_panning: bool,
-    pub last_cursor_pos: Point,
-}
-
-impl Default for Grid {
-    fn default() -> Self {
-        Self {
-            offset: Vector::new(0.0, 0.0),
-            zoom: 1.0,
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
     MapPanned(Vector<f32>),
     MapZoomed { factor: f32, cursor: Point },
+    DrawFinish(Point, Point),
 }
 
 impl Grid {
+    pub fn new(elements: Vec<MapElement>) -> Self {
+        Self {
+            zoom: 1.0,
+            offset: Vector::default(),
+            elements,
+        }
+    }
     pub fn view(&self) -> Element<'_, Message> {
         Canvas::new(self)
             .height(Length::Fill)
@@ -57,6 +55,7 @@ impl Grid {
                 self.offset.x = cursor.x - (cursor.x - self.offset.x) * actual_factor;
                 self.offset.y = cursor.y - (cursor.y - self.offset.y) * actual_factor;
             }
+            _ => {}
         }
     }
 
@@ -105,6 +104,34 @@ impl Grid {
             );
         }
     }
+
+    fn draw_elements(&self, frame: &mut Frame, theme: &Theme) {
+        for element in &self.elements {
+            element.draw(frame, theme);
+        }
+    }
+
+    fn screen_to_world(&self, pos: Point) -> Point {
+        Point::new(
+            (pos.x - self.offset.x) / self.zoom,
+            (pos.y - self.offset.y) / self.zoom,
+        )
+    }
+
+    // TODO: remove this, make a layer between to have the data seperate from the view logic
+    // Then adding an element to the data layer, will update the view logic
+    pub fn add_element(&mut self, element: MapElement) {
+        self.elements.push(element);
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Interaction {
+    pub is_panning: bool,
+    pub last_cursor_pos: Point,
+    pub modifiers: Modifiers,
+
+    pub draw_start: Option<Point>,
 }
 
 impl Program<Message> for Grid {
@@ -112,7 +139,7 @@ impl Program<Message> for Grid {
 
     fn draw(
         &self,
-        _state: &Self::State,
+        state: &Self::State,
         renderer: &Renderer,
         theme: &Theme,
         bounds: Rectangle,
@@ -127,6 +154,19 @@ impl Program<Message> for Grid {
         frame.translate(self.offset);
         frame.scale(self.zoom);
         self.draw_grid(&mut frame, bounds, theme);
+        self.draw_elements(&mut frame, theme);
+
+        if let Some(start) = state.draw_start {
+            let end = self.screen_to_world(state.last_cursor_pos);
+            let ghost_color = theme.extended_palette().primary.weak.color;
+
+            frame.stroke(
+                &Path::line(start, end),
+                Stroke::default()
+                    .with_width(1.0 / self.zoom)
+                    .with_color(ghost_color),
+            );
+        }
 
         vec![frame.into_geometry()]
     }
@@ -142,57 +182,88 @@ impl Program<Message> for Grid {
         let cursor_position = cursor.position_in(bounds);
 
         match event {
-            // 1. Start Panning
-            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
-                if let Some(pos) = cursor_position {
-                    state.is_panning = true;
-                    state.last_cursor_pos = pos;
-                    return Some(canvas::Action::request_redraw().and_capture());
-                }
-            }
-
-            // 2. Stop Panning
-            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
-                state.is_panning = false;
-                return Some(canvas::Action::request_redraw());
-            }
-
-            // 3. Handle Panning Movement
-            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                if state.is_panning
-                    && let Some(pos) = cursor_position
-                {
-                    let delta = pos - state.last_cursor_pos;
-                    state.last_cursor_pos = pos;
-
-                    return Some(canvas::Action::publish(Message::MapPanned(delta)).and_capture());
-                }
-            }
-
-            // 4. Handle Zooming
-            Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
-                if let Some(pos) = cursor_position {
-                    let factor = match delta {
-                        mouse::ScrollDelta::Lines { y, .. }
-                        | mouse::ScrollDelta::Pixels { y, .. } => {
-                            if y > &0.0 {
-                                1.1
-                            } else if y < &0.0 {
-                                0.9
+            Event::Mouse(move_event) => {
+                match move_event {
+                    // 1. Start Panning
+                    mouse::Event::ButtonPressed(mouse::Button::Left) => {
+                        if let Some(pos) = cursor_position {
+                            if state.modifiers.control() {
+                                state.is_panning = true;
                             } else {
-                                return None;
+                                state.draw_start = Some(self.screen_to_world(pos))
+                            }
+                            state.last_cursor_pos = pos;
+                            return Some(canvas::Action::request_redraw().and_capture());
+                        }
+                    }
+                    // 2. Stop Panning
+                    mouse::Event::ButtonReleased(mouse::Button::Left) => {
+                        if let Some(start) = state.draw_start
+                            && let Some(pos) = cursor_position
+                        {
+                            let end = self.screen_to_world(pos);
+                            state.draw_start = None;
+
+                            // Only add if the wall has meaningful length
+                            if start.distance(end) > 1.0 {
+                                return Some(canvas::Action::publish(Message::DrawFinish(
+                                    start, end,
+                                )));
                             }
                         }
-                    };
+                        state.draw_start = None;
+                        state.is_panning = false;
+                        return Some(canvas::Action::request_redraw());
+                    }
+                    // 3. Handle Panning Movement
+                    mouse::Event::CursorMoved { .. } => {
+                        if let Some(pos) = cursor_position {
+                            if state.is_panning {
+                                let delta = pos - state.last_cursor_pos;
+                                state.last_cursor_pos = pos;
+                                return Some(
+                                    canvas::Action::publish(Message::MapPanned(delta))
+                                        .and_capture(),
+                                );
+                            }
 
-                    return Some(
-                        canvas::Action::publish(Message::MapZoomed {
-                            factor,
-                            cursor: pos,
-                        })
-                        .and_capture(),
-                    );
+                            state.last_cursor_pos = pos;
+
+                            if state.draw_start.is_some() {
+                                return Some(canvas::Action::request_redraw().and_capture());
+                            }
+                        }
+                    }
+                    // 4. Handle Zooming
+                    mouse::Event::WheelScrolled { delta } => {
+                        if let Some(pos) = cursor_position {
+                            let factor = match delta {
+                                mouse::ScrollDelta::Lines { y, .. }
+                                | mouse::ScrollDelta::Pixels { y, .. } => {
+                                    if y > &0.0 {
+                                        1.1
+                                    } else if y < &0.0 {
+                                        0.9
+                                    } else {
+                                        return None;
+                                    }
+                                }
+                            };
+
+                            return Some(
+                                canvas::Action::publish(Message::MapZoomed {
+                                    factor,
+                                    cursor: pos,
+                                })
+                                .and_capture(),
+                            );
+                        }
+                    }
+                    _ => {}
                 }
+            }
+            Event::Keyboard(keyboard::Event::ModifiersChanged(modifiers)) => {
+                state.modifiers = *modifiers
             }
             _ => {}
         }
