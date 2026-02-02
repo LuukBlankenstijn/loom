@@ -1,20 +1,14 @@
 use iced::{
-    Element, Event, Length, Point, Rectangle, Renderer, Theme, Vector,
+    Event, Point, Rectangle, Theme, Vector,
     keyboard::{self, Modifiers},
     mouse,
-    widget::{
-        Canvas,
-        canvas::{self, Frame, Geometry, Path, Program, Stroke},
-    },
+    widget::canvas::{self, Frame, Path, Stroke},
 };
-
-use crate::ui::body::map::types::{Drawable, MapElement};
 
 #[derive(Clone, Debug)]
 pub struct Grid {
-    elements: Vec<MapElement>,
-    offset: Vector<f32>,
-    zoom: f32,
+    pub offset: Vector<f32>,
+    pub zoom: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -25,21 +19,14 @@ pub enum Message {
 }
 
 impl Grid {
-    pub fn new(elements: Vec<MapElement>) -> Self {
+    pub fn new() -> Self {
         Self {
             zoom: 1.0,
             offset: Vector::default(),
-            elements,
         }
     }
-    pub fn view(&self) -> Element<'_, Message> {
-        Canvas::new(self)
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .into()
-    }
 
-    pub fn update(&mut self, message: Message) {
+    pub fn update_canvas(&mut self, message: Message) {
         match message {
             Message::MapPanned(delta) => {
                 self.offset.x += delta.x;
@@ -59,7 +46,7 @@ impl Grid {
         }
     }
 
-    fn draw_grid(&self, frame: &mut Frame, bounds: Rectangle, theme: &Theme) {
+    pub fn draw_grid(&self, frame: &mut Frame, bounds: Rectangle, theme: &Theme) {
         let palette = theme.extended_palette();
 
         let grid_size = 100.0;
@@ -105,86 +92,25 @@ impl Grid {
         }
     }
 
-    fn draw_elements(&self, frame: &mut Frame, theme: &Theme) {
-        for element in &self.elements {
-            element.draw(frame, theme);
-        }
-    }
-
-    fn screen_to_world(&self, pos: Point) -> Point {
+    pub fn screen_to_world(&self, pos: Point) -> Point {
         Point::new(
             (pos.x - self.offset.x) / self.zoom,
             (pos.y - self.offset.y) / self.zoom,
         )
     }
 
-    // TODO: remove this, make a layer between to have the data seperate from the view logic
-    // Then adding an element to the data layer, will update the view logic
-    pub fn add_element(&mut self, element: MapElement) {
-        self.elements.push(element);
-    }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Interaction {
-    pub is_panning: bool,
-    pub last_cursor_pos: Point,
-    pub modifiers: Modifiers,
-
-    pub draw_start: Option<Point>,
-}
-
-impl Program<Message> for Grid {
-    type State = Interaction;
-
-    fn draw(
+    pub fn update(
         &self,
-        state: &Self::State,
-        renderer: &Renderer,
-        theme: &Theme,
-        bounds: Rectangle,
-        _cursor: mouse::Cursor,
-    ) -> Vec<Geometry<Renderer>> {
-        let mut frame = Frame::new(renderer, bounds.size());
-        frame.fill_rectangle(
-            Point::ORIGIN,
-            bounds.size(),
-            theme.extended_palette().background.neutral.color,
-        );
-        frame.translate(self.offset);
-        frame.scale(self.zoom);
-        self.draw_grid(&mut frame, bounds, theme);
-        self.draw_elements(&mut frame, theme);
-
-        if let Some(start) = state.draw_start {
-            let end = self.screen_to_world(state.last_cursor_pos);
-            let ghost_color = theme.extended_palette().primary.weak.color;
-
-            frame.stroke(
-                &Path::line(start, end),
-                Stroke::default()
-                    .with_width(1.0 / self.zoom)
-                    .with_color(ghost_color),
-            );
-        }
-
-        vec![frame.into_geometry()]
-    }
-
-    fn update(
-        &self,
-        state: &mut Self::State,
+        state: &mut Interaction,
         event: &Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<canvas::Action<Message>> {
-        // Corrected return type
         let cursor_position = cursor.position_in(bounds);
 
         match event {
             Event::Mouse(move_event) => {
                 match move_event {
-                    // 1. Start Panning
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         if let Some(pos) = cursor_position {
                             if state.modifiers.control() {
@@ -196,7 +122,10 @@ impl Program<Message> for Grid {
                             return Some(canvas::Action::request_redraw().and_capture());
                         }
                     }
-                    // 2. Stop Panning
+                    mouse::Event::ButtonPressed(mouse::Button::Right) => {
+                        state.draw_start = None;
+                        return Some(canvas::Action::request_redraw().and_capture());
+                    }
                     mouse::Event::ButtonReleased(mouse::Button::Left) => {
                         if let Some(start) = state.draw_start
                             && let Some(pos) = cursor_position
@@ -215,7 +144,6 @@ impl Program<Message> for Grid {
                         state.is_panning = false;
                         return Some(canvas::Action::request_redraw());
                     }
-                    // 3. Handle Panning Movement
                     mouse::Event::CursorMoved { .. } => {
                         if let Some(pos) = cursor_position {
                             if state.is_panning {
@@ -234,7 +162,6 @@ impl Program<Message> for Grid {
                             }
                         }
                     }
-                    // 4. Handle Zooming
                     mouse::Event::WheelScrolled { delta } => {
                         if let Some(pos) = cursor_position {
                             let factor = match delta {
@@ -270,4 +197,13 @@ impl Program<Message> for Grid {
 
         None
     }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Interaction {
+    pub is_panning: bool,
+    pub last_cursor_pos: Point,
+    pub modifiers: Modifiers,
+
+    pub draw_start: Option<Point>,
 }

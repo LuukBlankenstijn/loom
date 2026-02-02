@@ -158,7 +158,7 @@ impl Body {
                     println!("Failed to unassign team: {msg}")
                 }
             },
-            Message::Map(msg) => self.map.update(msg),
+            Message::Map(msg) => return self.map.update(msg).map(Message::Map),
         };
         Task::none()
     }

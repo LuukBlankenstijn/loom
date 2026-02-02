@@ -1,12 +1,12 @@
+mod canvas;
 mod grid;
 mod types;
 
-use iced::Element;
 use iced::Length::Fill;
-use iced::widget::container;
+use iced::widget::Canvas;
+use iced::{Element, Task};
 
 use crate::ui::body::map::grid::Grid;
-pub use crate::ui::body::map::grid::Message;
 use crate::ui::body::map::types::MapElement;
 use crate::ui::body::map::types::door::Door;
 use crate::ui::body::map::types::wall::Wall;
@@ -16,6 +16,13 @@ pub struct MapApp {
     doors: Vec<Door>,
     walls: Vec<Wall>,
     grid: Grid,
+    grid_elements: Vec<MapElement>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Message {
+    AddElement(MapElement),
+    Canvas(grid::Message),
 }
 
 impl Default for MapApp {
@@ -27,24 +34,50 @@ impl Default for MapApp {
         Self {
             doors,
             walls,
-            grid: Grid::new(door_enums.chain(wall_enums).collect()),
+            grid: Grid::new(),
+            grid_elements: door_enums.chain(wall_enums).collect(),
         }
     }
 }
 
 impl MapApp {
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::DrawFinish(start, end) => {
-                let wall = Wall::new(start, end);
-                self.walls.push(wall.clone());
-                self.grid.add_element(MapElement::Wall(wall));
+            Message::Canvas(msg) => match msg {
+                grid::Message::DrawFinish(start, end) => {
+                    return Task::done(Message::AddElement(MapElement::Wall(Wall::new(
+                        start, end,
+                    ))));
+                }
+                _ => self.grid.update_canvas(msg),
+            },
+            Message::AddElement(element) => {
+                match element {
+                    MapElement::Door(door) => self.doors.push(door),
+                    MapElement::Wall(wall) => self.walls.push(wall),
+                };
+                self.grid_elements = self.get_all_elements()
             }
-            _ => self.grid.update(message),
-        }
+        };
+        Task::none()
+    }
+
+    fn get_all_elements(&self) -> Vec<MapElement> {
+        let mut elements = Vec::with_capacity(self.walls.len() + self.doors.len());
+
+        elements.extend(self.walls.iter().cloned().map(MapElement::Wall));
+        elements.extend(self.doors.iter().cloned().map(MapElement::Door));
+
+        elements
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        container(self.grid.view()).width(Fill).height(Fill).into()
+        let canvas: Element<'_, grid::Message> =
+            Canvas::new(canvas::MapCanvas::new(&self.grid, &self.grid_elements))
+                .width(Fill)
+                .height(Fill)
+                .into();
+
+        canvas.map(Message::Canvas)
     }
 }
