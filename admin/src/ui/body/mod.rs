@@ -1,3 +1,4 @@
+mod map;
 mod modal;
 mod stations;
 mod teams;
@@ -11,7 +12,10 @@ use iced::{
 
 use crate::{
     service::{AdminService, Station, Team},
-    ui::{body::modal::Modal, header::Tab},
+    ui::{
+        body::{map::MapApp, modal::Modal},
+        header::Tab,
+    },
 };
 
 #[derive(Debug, Default)]
@@ -20,6 +24,7 @@ pub struct Body {
     ip_team_name_map: HashMap<String, String>,
     stations: Option<Vec<Station>>,
     modal_state: Option<Modal>,
+    map: MapApp,
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +40,7 @@ pub enum Message {
     Modal(modal::Message),
     Unassign(String),
     Unassigned(Result<(), String>),
+    Map(map::Message),
 }
 
 impl Body {
@@ -53,6 +59,7 @@ impl Body {
                 stations::view_stations(self.stations.clone(), self.ip_team_name_map.clone())
             }
             Tab::Teams => teams::view_teams(self.teams.clone()),
+            Tab::Map => self.map.view().map(Message::Map),
         };
         let base = container(page).height(Length::Fill);
         if let Some(modal) = &self.modal_state {
@@ -151,6 +158,7 @@ impl Body {
                     println!("Failed to unassign team: {msg}")
                 }
             },
+            Message::Map(msg) => self.map.update(msg),
         };
         Task::none()
     }
