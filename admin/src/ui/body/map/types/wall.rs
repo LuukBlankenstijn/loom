@@ -13,6 +13,22 @@ pub struct Wall {
     end: Point,
 }
 
+impl Wall {
+    pub fn new(start: Point, end: Point) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            start,
+            end,
+        }
+    }
+    pub fn get_test() -> Vec<Self> {
+        vec![
+            Self::new(Point::new(50.0, 0.0), Point::new(200.0, 0.0)),
+            Self::new(Point::new(200.0, 0.0), Point::new(200.0, 150.0)),
+        ]
+    }
+}
+
 impl Drawable for Wall {
     fn draw(&self, frame: &mut iced::widget::canvas::Frame, _theme: &iced::Theme, selected: bool) {
         let dot_radius = 3.0;
@@ -86,21 +102,5 @@ impl Drawable for Wall {
         let distance_sq = (px - closest_x).powi(2) + (py - closest_y).powi(2);
 
         distance_sq < threshold.powi(2)
-    }
-}
-
-impl Wall {
-    pub fn new(start: Point, end: Point) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            start,
-            end,
-        }
-    }
-    pub fn get_test() -> Vec<Self> {
-        vec![
-            Self::new(Point::new(50.0, 0.0), Point::new(200.0, 10.0)),
-            Self::new(Point::new(200.0, 10.0), Point::new(200.0, 150.0)),
-        ]
     }
 }

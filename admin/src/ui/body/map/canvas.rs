@@ -42,7 +42,6 @@ impl<'a> Program<Message> for MapCanvas<'a> {
     ) -> Vec<Geometry<Renderer>> {
         let mut frame = Frame::new(renderer, bounds.size());
 
-        // We use the references inside the briefcase to draw
         frame.translate(self.grid.offset);
         frame.scale(self.grid.zoom);
 
@@ -53,9 +52,10 @@ impl<'a> Program<Message> for MapCanvas<'a> {
             element.draw(&mut frame, theme, selected);
         }
 
-        // Ghost wall math using self.grid
         if let Some(start) = state.draw_start {
-            let end = self.grid.screen_to_world(state.last_cursor_pos);
+            let end = self
+                .grid
+                .snap_to_grid(self.grid.screen_to_world(state.last_cursor_pos));
             let ghost_color = theme.extended_palette().primary.weak.color;
 
             frame.stroke(

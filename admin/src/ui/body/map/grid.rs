@@ -102,6 +102,13 @@ impl Grid {
         )
     }
 
+    pub fn snap_to_grid(&self, point: Point) -> Point {
+        let snap_units = 10.0;
+        let x = (point.x / snap_units).round() * snap_units;
+        let y = (point.y / snap_units).round() * snap_units;
+        Point::new(x, y)
+    }
+
     pub fn update(
         &self,
         state: &mut Interaction,
@@ -120,7 +127,8 @@ impl Grid {
                             if state.modifiers.control() {
                                 state.is_panning = true;
                             } else {
-                                state.draw_start = Some(self.screen_to_world(pos))
+                                state.draw_start =
+                                    Some(self.snap_to_grid(self.screen_to_world(pos)))
                             }
                             state.last_cursor_pos = pos;
 
@@ -142,7 +150,7 @@ impl Grid {
                         if let Some(start) = state.draw_start
                             && let Some(pos) = cursor_position
                         {
-                            let end = self.screen_to_world(pos);
+                            let end = self.snap_to_grid(self.screen_to_world(pos));
                             state.draw_start = None;
 
                             // Only add if the wall has meaningful length

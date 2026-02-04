@@ -25,7 +25,7 @@ impl Door {
     pub fn get_test() -> Vec<Self> {
         vec![
             Self::new(Point::new(0.0, 0.0), false),
-            Self::new(Point::new(200.0, 200.0), false),
+            Self::new(Point::new(200.0, 200.0), true),
         ]
     }
 }
