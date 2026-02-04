@@ -1,19 +1,31 @@
+use std::collections::{HashMap, HashSet};
+
 use iced::{
     Event, Rectangle, Renderer, Theme, mouse,
     widget::canvas::{self, Frame, Geometry, Path, Program, Stroke},
 };
+use uuid::Uuid;
 
 use super::grid::{Grid, Interaction, Message};
 use super::types::{Drawable, MapElement};
 
 pub struct MapCanvas<'a> {
     grid: &'a Grid,
-    elements: &'a [MapElement],
+    elements: &'a HashMap<Uuid, MapElement>,
+    selected: &'a HashSet<Uuid>,
 }
 
 impl<'a> MapCanvas<'a> {
-    pub fn new(grid: &'a Grid, elements: &'a [MapElement]) -> Self {
-        Self { grid, elements }
+    pub fn new(
+        grid: &'a Grid,
+        elements: &'a HashMap<Uuid, MapElement>,
+        selected: &'a HashSet<Uuid>,
+    ) -> Self {
+        Self {
+            grid,
+            elements,
+            selected,
+        }
     }
 }
 
@@ -36,8 +48,9 @@ impl<'a> Program<Message> for MapCanvas<'a> {
 
         self.grid.draw_grid(&mut frame, bounds, theme);
 
-        for element in self.elements {
-            element.draw(&mut frame, theme);
+        for element in self.elements.values() {
+            let selected = self.selected.contains(&element.get_id());
+            element.draw(&mut frame, theme, selected);
         }
 
         // Ghost wall math using self.grid

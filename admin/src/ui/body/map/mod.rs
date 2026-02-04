@@ -2,40 +2,46 @@ mod canvas;
 mod grid;
 mod types;
 
+use std::collections::{HashMap, HashSet};
+
 use iced::Length::Fill;
 use iced::widget::Canvas;
 use iced::{Element, Task};
+use uuid::Uuid;
 
 use crate::ui::body::map::grid::Grid;
-use crate::ui::body::map::types::MapElement;
 use crate::ui::body::map::types::door::Door;
 use crate::ui::body::map::types::wall::Wall;
+use crate::ui::body::map::types::{Drawable, MapElement};
 
 #[derive(Debug)]
 pub struct MapApp {
-    doors: Vec<Door>,
-    walls: Vec<Wall>,
     grid: Grid,
-    grid_elements: Vec<MapElement>,
+    elements: HashMap<Uuid, MapElement>,
+    selected: HashSet<Uuid>,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     AddElement(MapElement),
     Canvas(grid::Message),
+    ToggleSelect(Uuid),
 }
 
 impl Default for MapApp {
     fn default() -> Self {
         let doors = Door::get_test();
         let walls = Wall::get_test();
-        let door_enums = Door::get_test().into_iter().map(MapElement::Door);
-        let wall_enums = Wall::get_test().into_iter().map(MapElement::Wall);
+
+        let elements = doors
+            .into_iter()
+            .map(|d| (d.get_id(), MapElement::Door(d)))
+            .chain(walls.into_iter().map(|w| (w.get_id(), MapElement::Wall(w))))
+            .collect();
         Self {
-            doors,
-            walls,
+            elements,
             grid: Grid::new(),
-            grid_elements: door_enums.chain(wall_enums).collect(),
+            selected: Default::default(),
         }
     }
 }
@@ -49,34 +55,55 @@ impl MapApp {
                         start, end,
                     ))));
                 }
+                grid::Message::ClearSelection => self.selected.clear(),
+                grid::Message::DeleteSelection => {
+                    for id in &self.selected {
+                        self.elements.remove(id);
+                    }
+                    self.selected.clear();
+                }
+                grid::Message::RequestSelect(point) => {
+                    let hit_id = self
+                        .elements
+                        .values()
+                        .find(|e| e.is_hit(point))
+                        .map(|e| e.get_id());
+                    if let Some(id) = hit_id {
+                        return Task::done(Message::ToggleSelect(id));
+                    }
+                }
                 _ => self.grid.update_canvas(msg),
             },
             Message::AddElement(element) => {
                 match element {
-                    MapElement::Door(door) => self.doors.push(door),
-                    MapElement::Wall(wall) => self.walls.push(wall),
+                    MapElement::Door(door) => {
+                        self.elements.insert(door.get_id(), MapElement::Door(door))
+                    }
+                    MapElement::Wall(wall) => {
+                        self.elements.insert(wall.get_id(), MapElement::Wall(wall))
+                    }
                 };
-                self.grid_elements = self.get_all_elements()
+            }
+            Message::ToggleSelect(id) => {
+                if self.selected.contains(&id) {
+                    self.selected.remove(&id);
+                } else {
+                    let _ = self.selected.insert(id);
+                }
             }
         };
         Task::none()
     }
 
-    fn get_all_elements(&self) -> Vec<MapElement> {
-        let mut elements = Vec::with_capacity(self.walls.len() + self.doors.len());
-
-        elements.extend(self.walls.iter().cloned().map(MapElement::Wall));
-        elements.extend(self.doors.iter().cloned().map(MapElement::Door));
-
-        elements
-    }
-
     pub fn view(&self) -> Element<'_, Message> {
-        let canvas: Element<'_, grid::Message> =
-            Canvas::new(canvas::MapCanvas::new(&self.grid, &self.grid_elements))
-                .width(Fill)
-                .height(Fill)
-                .into();
+        let canvas: Element<'_, grid::Message> = Canvas::new(canvas::MapCanvas::new(
+            &self.grid,
+            &self.elements,
+            &self.selected,
+        ))
+        .width(Fill)
+        .height(Fill)
+        .into();
 
         canvas.map(Message::Canvas)
     }

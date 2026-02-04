@@ -12,3 +12,4 @@ chrono = "0.4"
 anyhow = "1.0.100"
 tonic = "*"
 prost-types = "0.14"
+uuid = { version = "1.20.0", features = ["v4"] }

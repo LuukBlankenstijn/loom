@@ -1,6 +1,6 @@
 use iced::{
     Event, Point, Rectangle, Theme, Vector,
-    keyboard::{self, Modifiers},
+    keyboard::{self, Key, Modifiers, key::Named},
     mouse,
     widget::canvas::{self, Frame, Path, Stroke},
 };
@@ -16,6 +16,9 @@ pub enum Message {
     MapPanned(Vector<f32>),
     MapZoomed { factor: f32, cursor: Point },
     DrawFinish(Point, Point),
+    RequestSelect(Point),
+    ClearSelection,
+    DeleteSelection,
 }
 
 impl Grid {
@@ -113,12 +116,21 @@ impl Grid {
                 match move_event {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         if let Some(pos) = cursor_position {
+                            // panning and drawing logic
                             if state.modifiers.control() {
                                 state.is_panning = true;
                             } else {
                                 state.draw_start = Some(self.screen_to_world(pos))
                             }
                             state.last_cursor_pos = pos;
+
+                            // selection logic
+                            if state.modifiers.shift() {
+                                let world_pos = self.screen_to_world(pos);
+                                return Some(canvas::Action::publish(Message::RequestSelect(
+                                    world_pos,
+                                )));
+                            }
                             return Some(canvas::Action::request_redraw().and_capture());
                         }
                     }
@@ -192,6 +204,23 @@ impl Grid {
             Event::Keyboard(keyboard::Event::ModifiersChanged(modifiers)) => {
                 state.modifiers = *modifiers
             }
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                modified_key: _modified_key,
+                physical_key: _physical_key,
+                location: _location,
+                modifiers: _modifiers,
+                text: _text,
+                repeat: _repeat,
+            }) => match key {
+                Key::Named(Named::Delete) => {
+                    return Some(canvas::Action::publish(Message::DeleteSelection));
+                }
+                Key::Named(Named::Escape) => {
+                    return Some(canvas::Action::publish(Message::ClearSelection));
+                }
+                _ => {}
+            },
             _ => {}
         }
 
