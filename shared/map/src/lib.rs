@@ -14,6 +14,13 @@ use uuid::Uuid;
 
 use crate::grid::SystemMessage;
 
+#[derive(Default, Debug, Clone)]
+pub enum MapMode {
+    #[default]
+    View,
+    Edit,
+}
+
 #[derive(Debug)]
 pub struct Map {
     grid: Grid,
@@ -88,11 +95,12 @@ impl Map {
         Task::none()
     }
 
-    pub fn view(&self) -> Element<'_, Message> {
+    pub fn view(&self, map_mode: MapMode) -> Element<'_, Message> {
         let canvas: Element<'_, Message> = Canvas::new(canvas::MapCanvas::new(
             &self.grid,
             &self.elements,
             &self.selected,
+            map_mode.clone(),
         ))
         .width(Fill)
         .height(Fill)

@@ -6,7 +6,7 @@ use iced::{
 };
 use uuid::Uuid;
 
-use crate::Message;
+use crate::{MapMode, Message};
 
 use super::grid::{Grid, Interaction};
 use super::types::{Drawable, MapElement};
@@ -15,6 +15,7 @@ pub struct MapCanvas<'a> {
     grid: &'a Grid,
     elements: &'a HashMap<Uuid, MapElement>,
     selected: &'a HashSet<Uuid>,
+    mode: MapMode,
 }
 
 impl<'a> MapCanvas<'a> {
@@ -22,11 +23,13 @@ impl<'a> MapCanvas<'a> {
         grid: &'a Grid,
         elements: &'a HashMap<Uuid, MapElement>,
         selected: &'a HashSet<Uuid>,
+        mode: MapMode,
     ) -> Self {
         Self {
             grid,
             elements,
             selected,
+            mode,
         }
     }
 }
@@ -76,6 +79,16 @@ impl<'a> Program<Message> for MapCanvas<'a> {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<canvas::Action<Message>> {
-        self.grid.update(state, event, bounds, cursor)
+        self.grid.update(state, event, bounds, cursor, &self.mode)
+    }
+
+    fn mouse_interaction(
+        &self,
+        state: &Self::State,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> mouse::Interaction {
+        self.grid
+            .mouse_interaction(state, bounds, cursor, &self.mode)
     }
 }

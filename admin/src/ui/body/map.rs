@@ -8,18 +8,11 @@ use iced::{
         space, stack, text,
     },
 };
-use loom_map::{Door, MapElement, Wall};
-
-#[derive(Default, Debug, Clone)]
-pub enum MapMode {
-    #[default]
-    View,
-    Edit,
-}
+use loom_map::{Door, MapElement, MapMode, Wall};
 
 #[derive(Debug)]
 pub struct Map {
-    mapmode: MapMode,
+    map_mode: MapMode,
     map: loom_map::Map,
     is_colapsed: bool,
 }
@@ -33,7 +26,7 @@ impl Default for Map {
             .collect();
         Self {
             map: loom_map::Map::new(elements),
-            mapmode: Default::default(),
+            map_mode: Default::default(),
             is_colapsed: false,
         }
     }
@@ -48,7 +41,11 @@ pub enum Message {
 
 impl Map {
     pub fn view(&self) -> Element<'_, Message> {
-        stack![self.map.view().map(Message::Map), self.view_hud()].into()
+        stack![
+            self.map.view(self.map_mode.clone()).map(Message::Map),
+            self.view_hud()
+        ]
+        .into()
     }
 
     fn view_hud(&self) -> Element<'_, Message> {
@@ -80,7 +77,7 @@ impl Map {
                     }
                 }),
                 self.view_edit_mode_toggle(),
-                if matches!(self.mapmode, MapMode::Edit) {
+                if matches!(self.map_mode, MapMode::Edit) {
                     // Action Buttons
                     column![
                         rule::horizontal(1).style(|t| {
@@ -133,16 +130,16 @@ impl Map {
             Message::Map(message) => {
                 return self.map.update(message).map(Message::Map);
             }
-            Message::ToggleMapMode => match self.mapmode {
-                MapMode::View => self.mapmode = MapMode::Edit,
-                MapMode::Edit => self.mapmode = MapMode::View,
+            Message::ToggleMapMode => match self.map_mode {
+                MapMode::View => self.map_mode = MapMode::Edit,
+                MapMode::Edit => self.map_mode = MapMode::View,
             },
         }
         Task::none()
     }
 
     fn view_edit_mode_toggle(&self) -> Element<'_, Message> {
-        let (label, color) = match self.mapmode {
+        let (label, color) = match self.map_mode {
             MapMode::Edit => ("Mode: Editing", Color::from_rgb(0.0, 1.0, 0.0)),
             MapMode::View => ("Mode: Viewing", Color::from_rgb(0.7, 0.7, 0.7)),
         };

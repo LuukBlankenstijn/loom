@@ -5,7 +5,7 @@ use iced::{
     widget::canvas::{self, Frame, Path, Stroke},
 };
 
-use crate::Message;
+use crate::{MapMode, Message};
 
 #[derive(Clone, Debug)]
 pub struct Grid {
@@ -121,8 +121,10 @@ impl Grid {
         event: &Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
+        mode: &MapMode,
     ) -> Option<canvas::Action<Message>> {
         let cursor_position = cursor.position_in(bounds);
+        let can_edit = matches!(mode, MapMode::Edit);
 
         match event {
             Event::Mouse(move_event) => {
@@ -130,16 +132,16 @@ impl Grid {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         if let Some(pos) = cursor_position {
                             // panning and drawing logic
-                            if state.modifiers.control() {
-                                state.is_panning = true;
-                            } else {
+                            if state.modifiers.control() && can_edit {
                                 state.draw_start =
                                     Some(self.snap_to_grid(self.screen_to_world(pos)))
+                            } else {
+                                state.is_panning = true;
                             }
                             state.last_cursor_pos = pos;
 
                             // selection logic
-                            if state.modifiers.shift() {
+                            if state.modifiers.shift() && can_edit {
                                 let world_pos = self.screen_to_world(pos);
                                 return Some(canvas::Action::publish(
                                     SystemMessage::RequestSelect(world_pos).into(),
@@ -242,6 +244,24 @@ impl Grid {
         }
 
         None
+    }
+
+    pub fn mouse_interaction(
+        &self,
+        state: &Interaction,
+        _bounds: Rectangle,
+        _cursor: mouse::Cursor,
+        mode: &MapMode,
+    ) -> mouse::Interaction {
+        let can_edit = matches!(mode, MapMode::Edit);
+        if can_edit {
+            if state.modifiers.control() {
+                return mouse::Interaction::Crosshair;
+            } else if state.modifiers.shift() {
+                return mouse::Interaction::Cell;
+            }
+        }
+        mouse::Interaction::default()
     }
 }
 
