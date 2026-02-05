@@ -4,7 +4,7 @@ use iced::{
 };
 use uuid::Uuid;
 
-use crate::ui::body::map::types::Drawable;
+use super::Drawable;
 
 #[derive(Clone, Debug)]
 pub struct Wall {
@@ -16,7 +16,7 @@ pub struct Wall {
 impl Wall {
     pub fn new(start: Point, end: Point) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             start,
             end,
         }

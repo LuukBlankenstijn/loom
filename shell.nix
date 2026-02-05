@@ -10,5 +10,11 @@ pkgs.mkShell {
     protoc-gen-tonic
     protoc-gen-prost
     protoc-gen-prost-crate
+
+    rustc
+    cargo
+    rustfmt
+    clippy
+    rust-analyzer
   ];
 }

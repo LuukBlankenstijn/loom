@@ -13,7 +13,7 @@ use iced::{
 use crate::{
     service::{AdminService, Station, Team},
     ui::{
-        body::{map::MapApp, modal::Modal},
+        body::{map::Map, modal::Modal},
         header::Tab,
     },
 };
@@ -24,7 +24,7 @@ pub struct Body {
     ip_team_name_map: HashMap<String, String>,
     stations: Option<Vec<Station>>,
     modal_state: Option<Modal>,
-    map: MapApp,
+    map: Map,
 }
 
 #[derive(Debug, Clone)]

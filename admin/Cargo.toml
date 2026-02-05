@@ -5,11 +5,11 @@ edition = "2024"
 
 [dependencies]
 loom-rpc = { path = "../shared/gen/rs" }
-iced = { version = "0.14", features = ["tokio", "canvas"] }
+loom-map = { path = "../shared/map"}
+iced = { version = "0.14", features = ["tokio"] }
 tokio = { version = "1.0", features = ["full"] }
 async-trait = "0.1"
 chrono = "0.4"
 anyhow = "1.0.100"
 tonic = "*"
 prost-types = "0.14"
-uuid = { version = "1.20.0", features = ["v4"] }

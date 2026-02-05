@@ -1,13 +1,16 @@
 use iced::{Point, Theme, widget::canvas::Frame};
 use uuid::Uuid;
 
-pub mod door;
-pub mod wall;
+mod door;
+mod wall;
+
+pub use door::Door;
+pub use wall::Wall;
 
 #[derive(Clone, Debug)]
 pub enum MapElement {
-    Door(door::Door),
-    Wall(wall::Wall),
+    Door(Door),
+    Wall(Wall),
 }
 
 impl Drawable for MapElement {

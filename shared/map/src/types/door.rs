@@ -4,7 +4,7 @@ use iced::{
 };
 use uuid::Uuid;
 
-use crate::ui::body::map::types::Drawable;
+use super::Drawable;
 
 #[derive(Clone, Debug)]
 pub struct Door {
@@ -17,16 +17,10 @@ impl Door {
     const WIDTH: f32 = 100.0;
     pub fn new(position: Point, rotate: bool) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: Uuid::now_v7(),
             position,
             rotate,
         }
-    }
-    pub fn get_test() -> Vec<Self> {
-        vec![
-            Self::new(Point::new(0.0, 0.0), false),
-            Self::new(Point::new(200.0, 200.0), true),
-        ]
     }
 }
 

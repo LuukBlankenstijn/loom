@@ -6,7 +6,9 @@ use iced::{
 };
 use uuid::Uuid;
 
-use super::grid::{Grid, Interaction, Message};
+use crate::Message;
+
+use super::grid::{Grid, Interaction};
 use super::types::{Drawable, MapElement};
 
 pub struct MapCanvas<'a> {
