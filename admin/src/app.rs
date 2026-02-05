@@ -6,7 +6,11 @@ use crate::{
     ui::header::{self, Header},
 };
 use anyhow::Result;
-use iced::{Element, Task, Theme, widget::column};
+use iced::{
+    Element, Task, Theme,
+    widget::column,
+    window::{Settings, settings::PlatformSpecific},
+};
 
 #[derive(Debug)]
 struct AdminApp {
@@ -74,6 +78,13 @@ pub fn run_app(service: Arc<dyn AdminService>) -> Result<()> {
     )
     .subscription(AdminApp::subscription)
     .theme(AdminApp::style)
+    .window(Settings {
+        platform_specific: PlatformSpecific {
+            application_id: String::from("nl.luukblankenstijn.loom-admin"),
+            ..Default::default()
+        },
+        ..Default::default()
+    })
     .run()?;
     Ok(())
 }
