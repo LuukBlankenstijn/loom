@@ -264,6 +264,9 @@ impl Grid {
                 Key::Character("c") => {
                     return Some(canvas::Action::publish(Message::DuplicateSelection));
                 }
+                Key::Character("r") => {
+                    return Some(canvas::Action::publish(Message::RotateSelection));
+                }
                 _ => {}
             },
             _ => {}

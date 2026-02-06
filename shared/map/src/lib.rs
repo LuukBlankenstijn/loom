@@ -37,6 +37,7 @@ pub enum Message {
     DeleteSelection,
     DuplicateSelection,
     MoveSelection(Vector),
+    RotateSelection,
 }
 
 impl Map {
@@ -109,6 +110,13 @@ impl Map {
                         new.move_by(Vector::new(10.0, 10.0));
                         self.selected.insert(new.get_id());
                         self.elements.insert(new.get_id(), new);
+                    }
+                }
+            }
+            Message::RotateSelection => {
+                for id in &self.selected {
+                    if let Some(element) = self.elements.get_mut(id) {
+                        element.rotate();
                     }
                 }
             }

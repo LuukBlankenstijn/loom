@@ -171,6 +171,10 @@ impl Drawable for Door {
             ..self.clone()
         }
     }
+
+    fn rotate(&mut self) {
+        self.rotate = !self.rotate
+    }
 }
 
 fn distance_to_segment(p: Point, a: Point, b: Point) -> f32 {

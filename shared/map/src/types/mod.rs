@@ -48,6 +48,13 @@ impl Drawable for MapElement {
             MapElement::Wall(wall) => MapElement::Wall(wall.duplicate()),
         }
     }
+
+    fn rotate(&mut self) {
+        match self {
+            MapElement::Door(door) => door.rotate(),
+            MapElement::Wall(wall) => wall.rotate(),
+        }
+    }
 }
 
 pub trait Drawable {
@@ -56,4 +63,5 @@ pub trait Drawable {
     fn is_hit(&self, point: Point) -> bool;
     fn move_by(&mut self, delta: Vector);
     fn duplicate(&self) -> Self;
+    fn rotate(&mut self) {}
 }

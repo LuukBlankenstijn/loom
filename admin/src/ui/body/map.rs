@@ -103,6 +103,23 @@ impl Map {
                             Color::from_rgb(0.2, 0.8, 1.0),
                             Message::Map(loom_map::Message::DuplicateSelection)
                         ),
+                        space().height(1),
+                        self.view_hud_button(
+                            "Rotate Selection",
+                            Color::from_rgb(0.2, 0.8, 1.0),
+                            Message::Map(loom_map::Message::RotateSelection)
+                        ),
+                        rule::horizontal(1).style(|t| {
+                            Style {
+                                color: Color::WHITE,
+                                ..rule::default(t)
+                            }
+                        }),
+                        self.view_hud_button(
+                            "New Door",
+                            Color::from_rgb(0.0, 1.0, 0.0),
+                            Message::Map(loom_map::Message::RotateSelection)
+                        ),
                     ]
                     .spacing(5)
                 } else {
