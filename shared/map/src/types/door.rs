@@ -160,6 +160,17 @@ impl Drawable for Door {
 
         false
     }
+
+    fn move_by(&mut self, delta: Vector) {
+        self.position += delta
+    }
+
+    fn duplicate(&self) -> Self {
+        Self {
+            id: Uuid::now_v7(),
+            ..self.clone()
+        }
+    }
 }
 
 fn distance_to_segment(p: Point, a: Point, b: Point) -> f32 {

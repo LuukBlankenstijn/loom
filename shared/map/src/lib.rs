@@ -9,7 +9,7 @@ use std::collections::{HashMap, HashSet};
 
 use iced::Length::Fill;
 use iced::widget::Canvas;
-use iced::{Element, Task};
+use iced::{Element, Task, Vector};
 use uuid::Uuid;
 
 use crate::grid::SystemMessage;
@@ -35,6 +35,8 @@ pub enum Message {
     System(SystemMessage),
     ClearSelection,
     DeleteSelection,
+    DuplicateSelection,
+    MoveSelection(Vector),
 }
 
 impl Map {
@@ -89,6 +91,25 @@ impl Map {
                     self.selected.remove(&id);
                 } else {
                     let _ = self.selected.insert(id);
+                }
+            }
+            Message::MoveSelection(delta) => {
+                for id in &self.selected {
+                    if let Some(element) = self.elements.get_mut(id) {
+                        element.move_by(delta);
+                    }
+                }
+            }
+            Message::DuplicateSelection => {
+                let ids = self.selected.clone();
+                self.selected.clear();
+                for id in ids {
+                    if let Some(element) = self.elements.get(&id) {
+                        let mut new = element.duplicate();
+                        new.move_by(Vector::new(10.0, 10.0));
+                        self.selected.insert(new.get_id());
+                        self.elements.insert(new.get_id(), new);
+                    }
                 }
             }
         };

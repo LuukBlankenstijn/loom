@@ -103,4 +103,16 @@ impl Drawable for Wall {
 
         distance_sq < threshold.powi(2)
     }
+
+    fn move_by(&mut self, delta: iced::Vector) {
+        self.start += delta;
+        self.end += delta;
+    }
+
+    fn duplicate(&self) -> Self {
+        Self {
+            id: Uuid::now_v7(),
+            ..self.clone()
+        }
+    }
 }

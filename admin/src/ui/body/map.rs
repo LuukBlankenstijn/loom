@@ -97,6 +97,12 @@ impl Map {
                             Color::from_rgb(1.0, 0.8, 0.2),
                             Message::Map(loom_map::Message::ClearSelection)
                         ),
+                        space().height(1),
+                        self.view_hud_button(
+                            "Duplicate Selection",
+                            Color::from_rgb(0.2, 0.8, 1.0),
+                            Message::Map(loom_map::Message::DuplicateSelection)
+                        ),
                     ]
                     .spacing(5)
                 } else {

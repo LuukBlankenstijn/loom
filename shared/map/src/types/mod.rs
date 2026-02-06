@@ -1,4 +1,4 @@
-use iced::{Point, Theme, widget::canvas::Frame};
+use iced::{Point, Theme, Vector, widget::canvas::Frame};
 use uuid::Uuid;
 
 mod door;
@@ -34,10 +34,26 @@ impl Drawable for MapElement {
             MapElement::Wall(door) => door.is_hit(point),
         }
     }
+
+    fn move_by(&mut self, delta: Vector) {
+        match self {
+            MapElement::Door(door) => door.move_by(delta),
+            MapElement::Wall(wall) => wall.move_by(delta),
+        }
+    }
+
+    fn duplicate(&self) -> Self {
+        match self {
+            MapElement::Door(door) => MapElement::Door(door.duplicate()),
+            MapElement::Wall(wall) => MapElement::Wall(wall.duplicate()),
+        }
+    }
 }
 
 pub trait Drawable {
     fn draw(&self, frame: &mut Frame, theme: &Theme, selected: bool);
     fn get_id(&self) -> Uuid;
     fn is_hit(&self, point: Point) -> bool;
+    fn move_by(&mut self, delta: Vector);
+    fn duplicate(&self) -> Self;
 }

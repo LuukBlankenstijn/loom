@@ -27,6 +27,17 @@ impl From<SystemMessage> for Message {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Interaction {
+    pub is_panning: bool,
+    pub last_cursor_pos: Point,
+    pub modifiers: Modifiers,
+
+    pub draw_start: Option<Point>,
+
+    pub is_moving: bool,
+}
+
 impl Grid {
     pub fn new() -> Self {
         Self {
@@ -43,7 +54,7 @@ impl Grid {
             }
             SystemMessage::MapZoomed { factor, cursor } => {
                 let old_zoom = self.zoom;
-                let new_zoom = (old_zoom * factor).clamp(0.3, 2.0);
+                let new_zoom = (old_zoom * factor).clamp(0.1, 2.0);
                 self.zoom = new_zoom;
 
                 // pan the map to zoom to the cursor
@@ -135,6 +146,8 @@ impl Grid {
                             if state.modifiers.control() && can_edit {
                                 state.draw_start =
                                     Some(self.snap_to_grid(self.screen_to_world(pos)))
+                            } else if state.modifiers.alt() && can_edit {
+                                state.is_moving = true;
                             } else {
                                 state.is_panning = true;
                             }
@@ -170,6 +183,7 @@ impl Grid {
                         }
                         state.draw_start = None;
                         state.is_panning = false;
+                        state.is_moving = false;
                         return Some(canvas::Action::request_redraw());
                     }
                     mouse::Event::CursorMoved { .. } => {
@@ -179,6 +193,15 @@ impl Grid {
                                 state.last_cursor_pos = pos;
                                 return Some(
                                     canvas::Action::publish(SystemMessage::MapPanned(delta).into())
+                                        .and_capture(),
+                                );
+                            }
+                            if state.is_moving {
+                                let delta = self.snap_to_grid(pos)
+                                    - self.snap_to_grid(state.last_cursor_pos);
+                                state.last_cursor_pos = pos;
+                                return Some(
+                                    canvas::Action::publish(Message::MoveSelection(delta))
                                         .and_capture(),
                                 );
                             }
@@ -231,12 +254,15 @@ impl Grid {
                 modifiers: _modifiers,
                 text: _text,
                 repeat: _repeat,
-            }) => match key {
+            }) => match key.as_ref() {
                 Key::Named(Named::Delete) => {
                     return Some(canvas::Action::publish(Message::DeleteSelection));
                 }
                 Key::Named(Named::Escape) => {
                     return Some(canvas::Action::publish(Message::ClearSelection));
+                }
+                Key::Character("c") => {
+                    return Some(canvas::Action::publish(Message::DuplicateSelection));
                 }
                 _ => {}
             },
@@ -263,13 +289,4 @@ impl Grid {
         }
         mouse::Interaction::default()
     }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Interaction {
-    pub is_panning: bool,
-    pub last_cursor_pos: Point,
-    pub modifiers: Modifiers,
-
-    pub draw_start: Option<Point>,
 }
