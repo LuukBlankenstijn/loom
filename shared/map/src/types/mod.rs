@@ -44,8 +44,8 @@ impl Drawable for MapElement {
 
     fn duplicate(&self) -> Self {
         match self {
-            MapElement::Door(door) => MapElement::Door(door.duplicate()),
-            MapElement::Wall(wall) => MapElement::Wall(wall.duplicate()),
+            MapElement::Door(door) => door.duplicate().into(),
+            MapElement::Wall(wall) => wall.duplicate().into(),
         }
     }
 

@@ -4,6 +4,8 @@ use iced::{
 };
 use uuid::Uuid;
 
+use crate::MapElement;
+
 use super::Drawable;
 
 #[derive(Clone, Debug)]
@@ -174,6 +176,12 @@ impl Drawable for Door {
 
     fn rotate(&mut self) {
         self.rotate = !self.rotate
+    }
+}
+
+impl From<Door> for MapElement {
+    fn from(value: Door) -> Self {
+        MapElement::Door(value)
     }
 }
 

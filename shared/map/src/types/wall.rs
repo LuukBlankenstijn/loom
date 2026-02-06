@@ -4,6 +4,8 @@ use iced::{
 };
 use uuid::Uuid;
 
+use crate::MapElement;
+
 use super::Drawable;
 
 #[derive(Clone, Debug)]
@@ -114,5 +116,11 @@ impl Drawable for Wall {
             id: Uuid::now_v7(),
             ..self.clone()
         }
+    }
+}
+
+impl From<Wall> for MapElement {
+    fn from(value: Wall) -> Self {
+        MapElement::Wall(value)
     }
 }

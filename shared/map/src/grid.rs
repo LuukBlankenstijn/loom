@@ -5,26 +5,12 @@ use iced::{
     widget::canvas::{self, Frame, Path, Stroke},
 };
 
-use crate::{MapMode, Message};
+use crate::{MapMode, Message, messsage::GridMessage};
 
 #[derive(Clone, Debug)]
 pub struct Grid {
     pub offset: Vector<f32>,
     pub zoom: f32,
-}
-
-#[derive(Clone, Debug)]
-pub enum SystemMessage {
-    MapPanned(Vector<f32>),
-    MapZoomed { factor: f32, cursor: Point },
-    DrawFinish(Point, Point),
-    RequestSelect(Point),
-}
-
-impl From<SystemMessage> for Message {
-    fn from(val: SystemMessage) -> Self {
-        Message::System(val)
-    }
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -46,13 +32,13 @@ impl Grid {
         }
     }
 
-    pub fn update_canvas(&mut self, message: SystemMessage) {
+    pub fn update_canvas(&mut self, message: GridMessage) {
         match message {
-            SystemMessage::MapPanned(delta) => {
+            GridMessage::MapPanned(delta) => {
                 self.offset.x += delta.x;
                 self.offset.y += delta.y;
             }
-            SystemMessage::MapZoomed { factor, cursor } => {
+            GridMessage::MapZoomed { factor, cursor } => {
                 let old_zoom = self.zoom;
                 let new_zoom = (old_zoom * factor).clamp(0.1, 2.0);
                 self.zoom = new_zoom;
@@ -157,7 +143,7 @@ impl Grid {
                             if state.modifiers.shift() && can_edit {
                                 let world_pos = self.screen_to_world(pos);
                                 return Some(canvas::Action::publish(
-                                    SystemMessage::RequestSelect(world_pos).into(),
+                                    GridMessage::RequestSelect(world_pos).into(),
                                 ));
                             }
                             return Some(canvas::Action::request_redraw().and_capture());
@@ -177,7 +163,7 @@ impl Grid {
                             // Only add if the wall has meaningful length
                             if start.distance(end) > 1.0 {
                                 return Some(canvas::Action::publish(
-                                    SystemMessage::DrawFinish(start, end).into(),
+                                    GridMessage::DrawFinish(start, end).into(),
                                 ));
                             }
                         }
@@ -192,7 +178,7 @@ impl Grid {
                                 let delta = pos - state.last_cursor_pos;
                                 state.last_cursor_pos = pos;
                                 return Some(
-                                    canvas::Action::publish(SystemMessage::MapPanned(delta).into())
+                                    canvas::Action::publish(GridMessage::MapPanned(delta).into())
                                         .and_capture(),
                                 );
                             }
@@ -230,7 +216,7 @@ impl Grid {
 
                             return Some(
                                 canvas::Action::publish(
-                                    SystemMessage::MapZoomed {
+                                    GridMessage::MapZoomed {
                                         factor,
                                         cursor: pos,
                                     }

@@ -1,8 +1,10 @@
 mod canvas;
 mod grid;
+mod messsage;
 mod types;
 
 use grid::Grid;
+pub use messsage::Message;
 pub use types::{Door, Drawable, MapElement, Wall};
 
 use std::collections::{HashMap, HashSet};
@@ -12,7 +14,7 @@ use iced::widget::Canvas;
 use iced::{Element, Task, Vector};
 use uuid::Uuid;
 
-use crate::grid::SystemMessage;
+use crate::messsage::{GridMessage, SystemMessage};
 
 #[derive(Default, Debug, Clone)]
 pub enum MapMode {
@@ -28,18 +30,6 @@ pub struct Map {
     selected: HashSet<Uuid>,
 }
 
-#[derive(Debug, Clone)]
-pub enum Message {
-    AddElement(MapElement),
-    ToggleSelect(Uuid),
-    System(SystemMessage),
-    ClearSelection,
-    DeleteSelection,
-    DuplicateSelection,
-    MoveSelection(Vector),
-    RotateSelection,
-}
-
 impl Map {
     pub fn new(elements: Vec<MapElement>) -> Self {
         let elements = elements.into_iter().map(|e| (e.get_id(), e)).collect();
@@ -52,13 +42,13 @@ impl Map {
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::System(msg) => match msg {
-                grid::SystemMessage::DrawFinish(start, end) => {
-                    return Task::done(Message::AddElement(MapElement::Wall(Wall::new(
-                        start, end,
-                    ))));
+            Message::Grid(msg) => match msg {
+                GridMessage::DrawFinish(start, end) => {
+                    return Task::done(
+                        SystemMessage::AddElement(Wall::new(start, end).into()).into(),
+                    );
                 }
-                SystemMessage::RequestSelect(point) => {
+                GridMessage::RequestSelect(point) => {
                     let hit_id = self
                         .elements
                         .values()
@@ -70,22 +60,20 @@ impl Map {
                 }
                 _ => self.grid.update_canvas(msg),
             },
+            Message::System(msg) => match msg {
+                SystemMessage::AddElement(element) => {
+                    match element {
+                        MapElement::Door(door) => self.elements.insert(door.get_id(), door.into()),
+                        MapElement::Wall(wall) => self.elements.insert(wall.get_id(), wall.into()),
+                    };
+                }
+            },
             Message::ClearSelection => self.selected.clear(),
             Message::DeleteSelection => {
                 for id in &self.selected {
                     self.elements.remove(id);
                 }
                 self.selected.clear();
-            }
-            Message::AddElement(element) => {
-                match element {
-                    MapElement::Door(door) => {
-                        self.elements.insert(door.get_id(), MapElement::Door(door))
-                    }
-                    MapElement::Wall(wall) => {
-                        self.elements.insert(wall.get_id(), MapElement::Wall(wall))
-                    }
-                };
             }
             Message::ToggleSelect(id) => {
                 if self.selected.contains(&id) {
@@ -119,6 +107,11 @@ impl Map {
                         element.rotate();
                     }
                 }
+            }
+            Message::AddElement(element_generator) => {
+                let pos = -self.grid.offset + Vector::new(200.0, 200.0);
+                let element = element_generator(self.grid.snap_to_grid((pos.x, pos.y).into()));
+                self.elements.insert(element.get_id(), element);
             }
         };
         Task::none()

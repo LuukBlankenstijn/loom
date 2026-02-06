@@ -118,7 +118,9 @@ impl Map {
                         self.view_hud_button(
                             "New Door",
                             Color::from_rgb(0.0, 1.0, 0.0),
-                            Message::Map(loom_map::Message::RotateSelection)
+                            Message::Map(loom_map::Message::AddElement(|point| {
+                                loom_map::Door::new(point, false).into()
+                            }))
                         ),
                     ]
                     .spacing(5)
