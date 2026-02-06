@@ -8,7 +8,7 @@ use iced::{
         space, stack, text,
     },
 };
-use loom_map::{Door, MapElement, MapMode, Wall};
+use loom_map::{Door, MapElement, MapMode, Rotation, Wall};
 
 #[derive(Debug)]
 pub struct Map {
@@ -119,7 +119,7 @@ impl Map {
                             "New Door",
                             Color::from_rgb(0.0, 1.0, 0.0),
                             Message::Map(loom_map::Message::AddElement(|point| {
-                                loom_map::Door::new(point, false).into()
+                                loom_map::Door::new(point, None).into()
                             }))
                         ),
                     ]
@@ -217,8 +217,8 @@ impl Map {
 
 fn get_doors() -> Vec<Door> {
     vec![
-        Door::new(Point::new(0.0, 0.0), false),
-        Door::new(Point::new(200.0, 200.0), true),
+        Door::new(Point::new(0.0, 0.0), None),
+        Door::new(Point::new(200.0, 200.0), Some(Rotation::Deg90)),
     ]
 }
 

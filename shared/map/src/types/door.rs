@@ -4,7 +4,7 @@ use iced::{
 };
 use uuid::Uuid;
 
-use crate::MapElement;
+use crate::types::Rotation;
 
 use super::Drawable;
 
@@ -12,16 +12,16 @@ use super::Drawable;
 pub struct Door {
     id: Uuid,
     position: Point,
-    rotate: bool,
+    rotation: Rotation,
 }
 
 impl Door {
     const WIDTH: f32 = 100.0;
-    pub fn new(position: Point, rotate: bool) -> Self {
+    pub fn new(position: Point, rotation: Option<Rotation>) -> Self {
         Self {
             id: Uuid::now_v7(),
             position,
-            rotate,
+            rotation: rotation.unwrap_or_default(),
         }
     }
 }
@@ -31,9 +31,7 @@ impl Drawable for Door {
         frame.with_save(|frame| {
             frame.translate(Vector::new(self.position.x, self.position.y));
 
-            if self.rotate {
-                frame.rotate(0.5 * Radians::PI);
-            }
+            frame.rotate(self.rotation);
 
             let dot_radius = 3.0;
             let stroke_width = 2.0;
@@ -119,48 +117,34 @@ impl Drawable for Door {
     }
 
     fn is_hit(&self, point: Point) -> bool {
-        let threshold = 10.0; // Margin of error for clicking
+        let threshold = 10.0;
 
-        // 1. Transform the click point into the door's local coordinate system.
-        let mut local_p = point - Vector::new(self.position.x, self.position.y);
+        // world -> local: undo translation
+        let mut p = point - Vector::new(self.position.x, self.position.y);
 
-        if self.rotate {
-            // Rotate the point by -90 degrees to align with the door's local axis
-            let (sin, cos) = (-0.5 * Radians::PI.0).sin_cos();
-            let rx = local_p.x * cos - local_p.y * sin;
-            let ry = local_p.x * sin + local_p.y * cos;
-            local_p = Point::new(rx, ry);
-        }
+        // undo rotation (inverse of what draw() applies)
+        let (sin, cos) = (-(iced::Radians::from(self.rotation).0)).sin_cos();
+        p = Point::new(p.x * cos - p.y * sin, p.x * sin + p.y * cos);
 
-        // 2. Now check the local point against the door parts
-        // The door spans from x: -50 to +50 and y: -100 to 0 in local space.
-
-        // Check Jambs (the dots)
+        // now run your existing local-space checks unchanged
         let left_jamb = Point::new(-Self::WIDTH / 2.0, 0.0);
         let right_jamb = Point::new(Self::WIDTH / 2.0, 0.0);
 
-        if local_p.distance(left_jamb) < threshold || local_p.distance(right_jamb) < threshold {
+        if p.distance(left_jamb) < threshold || p.distance(right_jamb) < threshold {
             return true;
         }
 
-        // Check Door Leaf (the vertical line)
-        // Line from (-50, 0) to (-50, -100)
         let leaf_start = Point::new(-Self::WIDTH / 2.0, 0.0);
         let leaf_end = Point::new(-Self::WIDTH / 2.0, -Self::WIDTH);
-        if distance_to_segment(local_p, leaf_start, leaf_end) < threshold {
+        if distance_to_segment(p, leaf_start, leaf_end) < threshold {
             return true;
         }
 
-        // Check Swing Arc (Is it inside the quarter circle?)
-        let dist_to_hinge = local_p.distance(left_jamb);
+        let dist_to_hinge = p.distance(left_jamb);
         let is_within_radius = (dist_to_hinge - Self::WIDTH).abs() < threshold;
-        let is_within_angles = local_p.x >= -Self::WIDTH / 2.0 && local_p.y <= 0.0;
+        let is_within_angles = p.x >= -Self::WIDTH / 2.0 && p.y <= 0.0;
 
-        if is_within_radius && is_within_angles {
-            return true;
-        }
-
-        false
+        is_within_radius && is_within_angles
     }
 
     fn move_by(&mut self, delta: Vector) {
@@ -174,14 +158,12 @@ impl Drawable for Door {
         }
     }
 
-    fn rotate(&mut self) {
-        self.rotate = !self.rotate
-    }
-}
-
-impl From<Door> for MapElement {
-    fn from(value: Door) -> Self {
-        MapElement::Door(value)
+    fn rotate(&mut self, rotation: Option<super::Rotation>) {
+        if let Some(rotation) = rotation {
+            self.rotation = rotation
+        } else {
+            self.rotation = self.rotation.rotate_cw()
+        }
     }
 }
 

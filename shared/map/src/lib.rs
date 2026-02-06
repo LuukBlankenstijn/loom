@@ -5,7 +5,7 @@ mod types;
 
 use grid::Grid;
 pub use messsage::Message;
-pub use types::{Door, Drawable, MapElement, Wall};
+pub use types::{Door, Drawable, MapElement, Rotation, Wall};
 
 use std::collections::{HashMap, HashSet};
 
@@ -104,7 +104,7 @@ impl Map {
             Message::RotateSelection => {
                 for id in &self.selected {
                     if let Some(element) = self.elements.get_mut(id) {
-                        element.rotate();
+                        element.rotate(None);
                     }
                 }
             }

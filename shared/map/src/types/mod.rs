@@ -1,3 +1,4 @@
+use enum_dispatch::enum_dispatch;
 use iced::{Point, Theme, Vector, widget::canvas::Frame};
 use uuid::Uuid;
 
@@ -8,60 +9,50 @@ pub use door::Door;
 pub use wall::Wall;
 
 #[derive(Clone, Debug)]
+#[enum_dispatch(Drawable, MapElement)]
 pub enum MapElement {
     Door(Door),
     Wall(Wall),
 }
 
-impl Drawable for MapElement {
-    fn draw(&self, frame: &mut Frame, theme: &Theme, selected: bool) {
-        match self {
-            MapElement::Door(wall) => wall.draw(frame, theme, selected),
-            MapElement::Wall(door) => door.draw(frame, theme, selected),
-        }
-    }
-
-    fn get_id(&self) -> Uuid {
-        match self {
-            MapElement::Door(door) => door.get_id(),
-            MapElement::Wall(door) => door.get_id(),
-        }
-    }
-
-    fn is_hit(&self, point: Point) -> bool {
-        match self {
-            MapElement::Door(door) => door.is_hit(point),
-            MapElement::Wall(door) => door.is_hit(point),
-        }
-    }
-
-    fn move_by(&mut self, delta: Vector) {
-        match self {
-            MapElement::Door(door) => door.move_by(delta),
-            MapElement::Wall(wall) => wall.move_by(delta),
-        }
-    }
-
-    fn duplicate(&self) -> Self {
-        match self {
-            MapElement::Door(door) => door.duplicate().into(),
-            MapElement::Wall(wall) => wall.duplicate().into(),
-        }
-    }
-
-    fn rotate(&mut self) {
-        match self {
-            MapElement::Door(door) => door.rotate(),
-            MapElement::Wall(wall) => wall.rotate(),
-        }
-    }
-}
-
+#[enum_dispatch]
 pub trait Drawable {
     fn draw(&self, frame: &mut Frame, theme: &Theme, selected: bool);
     fn get_id(&self) -> Uuid;
     fn is_hit(&self, point: Point) -> bool;
     fn move_by(&mut self, delta: Vector);
     fn duplicate(&self) -> Self;
-    fn rotate(&mut self) {}
+    fn rotate(&mut self, _rotation: Option<Rotation>) {}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[repr(u16)]
+pub enum Rotation {
+    #[default]
+    Deg0 = 0,
+    Deg90 = 90,
+    Deg180 = 180,
+    Deg270 = 270,
+}
+
+impl Rotation {
+    fn rotate_cw(self) -> Self {
+        match self {
+            Self::Deg0 => Self::Deg90,
+            Self::Deg90 => Self::Deg180,
+            Self::Deg180 => Self::Deg270,
+            Self::Deg270 => Self::Deg0,
+        }
+    }
+}
+
+impl From<Rotation> for iced::Radians {
+    fn from(value: Rotation) -> Self {
+        match value {
+            Rotation::Deg0 => 0.0 * iced::Radians::PI,
+            Rotation::Deg90 => 0.5 * iced::Radians::PI,
+            Rotation::Deg180 => 1.0 * iced::Radians::PI,
+            Rotation::Deg270 => 1.5 * iced::Radians::PI,
+        }
+    }
 }
