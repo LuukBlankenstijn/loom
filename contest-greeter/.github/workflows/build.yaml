@@ -1,0 +1,25 @@
+name: Build and Cache with Cachix
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        with:
+          name: luukblankenstijn
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Build contest-greeter
+        run: nix build .#contest-greeter
