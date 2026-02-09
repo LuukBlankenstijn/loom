@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use iced::widget::{
@@ -46,9 +47,24 @@ impl Modal {
                 .find(|station| station.id == id)
                 .cloned()
         });
+        let mut used_ips = HashSet::new();
+        if let Some(teams) = &teams {
+            for t in teams.iter() {
+                if let Some(ip) = &t.ip {
+                    _ = used_ips.insert(ip);
+                }
+            }
+        }
         Self {
             selected_team: team,
             selected_station: station,
+            stations_state: combo_box::State::new(
+                stations
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter(|s| !used_ips.contains(&s.ip))
+                    .collect(),
+            ),
             teams_state: combo_box::State::new(
                 teams
                     .unwrap_or_default()
@@ -56,7 +72,6 @@ impl Modal {
                     .filter(|t| t.ip.is_none())
                     .collect(),
             ),
-            stations_state: combo_box::State::new(stations.unwrap_or_default()),
             error: None,
         }
     }
