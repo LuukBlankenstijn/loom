@@ -412,6 +412,94 @@ func (x *UploadImageRequest) GetImageData() []byte {
 	return nil
 }
 
+type GetWallpaperRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ContestId     string                 `protobuf:"bytes,1,opt,name=contest_id,json=contestId,proto3" json:"contest_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetWallpaperRequest) Reset() {
+	*x = GetWallpaperRequest{}
+	mi := &file_admin_v1_admin_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetWallpaperRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetWallpaperRequest) ProtoMessage() {}
+
+func (x *GetWallpaperRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admin_v1_admin_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetWallpaperRequest.ProtoReflect.Descriptor instead.
+func (*GetWallpaperRequest) Descriptor() ([]byte, []int) {
+	return file_admin_v1_admin_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetWallpaperRequest) GetContestId() string {
+	if x != nil {
+		return x.ContestId
+	}
+	return ""
+}
+
+type WallpaperResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ImageData     []byte                 `protobuf:"bytes,1,opt,name=image_data,json=imageData,proto3,oneof" json:"image_data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WallpaperResponse) Reset() {
+	*x = WallpaperResponse{}
+	mi := &file_admin_v1_admin_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WallpaperResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WallpaperResponse) ProtoMessage() {}
+
+func (x *WallpaperResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admin_v1_admin_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WallpaperResponse.ProtoReflect.Descriptor instead.
+func (*WallpaperResponse) Descriptor() ([]byte, []int) {
+	return file_admin_v1_admin_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *WallpaperResponse) GetImageData() []byte {
+	if x != nil {
+		return x.ImageData
+	}
+	return nil
+}
+
 var File_admin_v1_admin_proto protoreflect.FileDescriptor
 
 const file_admin_v1_admin_proto_rawDesc = "" +
@@ -422,7 +510,7 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12A\n" +
 	"\n" +
 	"start_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\tstartTime\x12B\n" +
-	"\bend_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB\v\xbaH\b\xc8\x01\x01\xb2\x01\x028\x01R\aendTime\"O\n" +
+	"\bend_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampB\v\xbaH\b\xc8\x01\x01\xb2\x01\x02@\x01R\aendTime\"O\n" +
 	"\x04Team\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\x02ip\x18\x02 \x01(\tB\a\xbaH\x04r\x02p\x01H\x00R\x02ip\x88\x01\x01\x12\x12\n" +
@@ -447,13 +535,21 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"contest_id\x18\x01 \x01(\tR\tcontestId\x12\"\n" +
 	"\n" +
 	"image_data\x18\x02 \x01(\fH\x00R\timageData\x88\x01\x01B\r\n" +
-	"\v_image_data2\xda\x02\n" +
+	"\v_image_data\"4\n" +
+	"\x13GetWallpaperRequest\x12\x1d\n" +
+	"\n" +
+	"contest_id\x18\x01 \x01(\tR\tcontestId\"F\n" +
+	"\x11WallpaperResponse\x12\"\n" +
+	"\n" +
+	"image_data\x18\x01 \x01(\fH\x00R\timageData\x88\x01\x01B\r\n" +
+	"\v_image_data2\xa8\x03\n" +
 	"\fAdminService\x12=\n" +
 	"\x0eGetNextContest\x12\x16.google.protobuf.Empty\x1a\x11.admin.v1.Contest\"\x00\x12C\n" +
 	"\x0eGetActiveTeams\x12\x16.google.protobuf.Empty\x1a\x17.admin.v1.TeamsResponse\"\x00\x12C\n" +
 	"\vGetStations\x12\x16.google.protobuf.Empty\x1a\x1a.admin.v1.StationsResponse\"\x00\x129\n" +
 	"\x05SetIp\x12\x16.admin.v1.SetIpRequest\x1a\x16.google.protobuf.Empty\"\x00\x12F\n" +
-	"\fSetWallpaper\x12\x1c.admin.v1.UploadImageRequest\x1a\x16.google.protobuf.Empty\"\x00B\x95\x01\n" +
+	"\fSetWallpaper\x12\x1c.admin.v1.UploadImageRequest\x1a\x16.google.protobuf.Empty\"\x00\x12L\n" +
+	"\fGetWallpaper\x12\x1d.admin.v1.GetWallpaperRequest\x1a\x1b.admin.v1.WallpaperResponse\"\x00B\x95\x01\n" +
 	"\fcom.admin.v1B\n" +
 	"AdminProtoP\x01Z8github.com/LuukBlankenstijn/loom/gen/go/admin/v1;adminv1\xa2\x02\x03AXX\xaa\x02\bAdmin.V1\xca\x02\bAdmin\\V1\xe2\x02\x14Admin\\V1\\GPBMetadata\xea\x02\tAdmin::V1b\x06proto3"
 
@@ -469,7 +565,7 @@ func file_admin_v1_admin_proto_rawDescGZIP() []byte {
 	return file_admin_v1_admin_proto_rawDescData
 }
 
-var file_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_admin_v1_admin_proto_goTypes = []any{
 	(*Contest)(nil),               // 0: admin.v1.Contest
 	(*Team)(nil),                  // 1: admin.v1.Team
@@ -478,28 +574,32 @@ var file_admin_v1_admin_proto_goTypes = []any{
 	(*StationsResponse)(nil),      // 4: admin.v1.StationsResponse
 	(*SetIpRequest)(nil),          // 5: admin.v1.SetIpRequest
 	(*UploadImageRequest)(nil),    // 6: admin.v1.UploadImageRequest
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 8: google.protobuf.Empty
+	(*GetWallpaperRequest)(nil),   // 7: admin.v1.GetWallpaperRequest
+	(*WallpaperResponse)(nil),     // 8: admin.v1.WallpaperResponse
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 10: google.protobuf.Empty
 }
 var file_admin_v1_admin_proto_depIdxs = []int32{
-	7,  // 0: admin.v1.Contest.start_time:type_name -> google.protobuf.Timestamp
-	7,  // 1: admin.v1.Contest.end_time:type_name -> google.protobuf.Timestamp
-	7,  // 2: admin.v1.Station.connected_at:type_name -> google.protobuf.Timestamp
-	7,  // 3: admin.v1.Station.diconnected_at:type_name -> google.protobuf.Timestamp
+	9,  // 0: admin.v1.Contest.start_time:type_name -> google.protobuf.Timestamp
+	9,  // 1: admin.v1.Contest.end_time:type_name -> google.protobuf.Timestamp
+	9,  // 2: admin.v1.Station.connected_at:type_name -> google.protobuf.Timestamp
+	9,  // 3: admin.v1.Station.diconnected_at:type_name -> google.protobuf.Timestamp
 	1,  // 4: admin.v1.TeamsResponse.teams:type_name -> admin.v1.Team
 	2,  // 5: admin.v1.StationsResponse.stations:type_name -> admin.v1.Station
-	8,  // 6: admin.v1.AdminService.GetNextContest:input_type -> google.protobuf.Empty
-	8,  // 7: admin.v1.AdminService.GetActiveTeams:input_type -> google.protobuf.Empty
-	8,  // 8: admin.v1.AdminService.GetStations:input_type -> google.protobuf.Empty
+	10, // 6: admin.v1.AdminService.GetNextContest:input_type -> google.protobuf.Empty
+	10, // 7: admin.v1.AdminService.GetActiveTeams:input_type -> google.protobuf.Empty
+	10, // 8: admin.v1.AdminService.GetStations:input_type -> google.protobuf.Empty
 	5,  // 9: admin.v1.AdminService.SetIp:input_type -> admin.v1.SetIpRequest
 	6,  // 10: admin.v1.AdminService.SetWallpaper:input_type -> admin.v1.UploadImageRequest
-	0,  // 11: admin.v1.AdminService.GetNextContest:output_type -> admin.v1.Contest
-	3,  // 12: admin.v1.AdminService.GetActiveTeams:output_type -> admin.v1.TeamsResponse
-	4,  // 13: admin.v1.AdminService.GetStations:output_type -> admin.v1.StationsResponse
-	8,  // 14: admin.v1.AdminService.SetIp:output_type -> google.protobuf.Empty
-	8,  // 15: admin.v1.AdminService.SetWallpaper:output_type -> google.protobuf.Empty
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
+	7,  // 11: admin.v1.AdminService.GetWallpaper:input_type -> admin.v1.GetWallpaperRequest
+	0,  // 12: admin.v1.AdminService.GetNextContest:output_type -> admin.v1.Contest
+	3,  // 13: admin.v1.AdminService.GetActiveTeams:output_type -> admin.v1.TeamsResponse
+	4,  // 14: admin.v1.AdminService.GetStations:output_type -> admin.v1.StationsResponse
+	10, // 15: admin.v1.AdminService.SetIp:output_type -> google.protobuf.Empty
+	10, // 16: admin.v1.AdminService.SetWallpaper:output_type -> google.protobuf.Empty
+	8,  // 17: admin.v1.AdminService.GetWallpaper:output_type -> admin.v1.WallpaperResponse
+	12, // [12:18] is the sub-list for method output_type
+	6,  // [6:12] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -514,13 +614,14 @@ func file_admin_v1_admin_proto_init() {
 	file_admin_v1_admin_proto_msgTypes[2].OneofWrappers = []any{}
 	file_admin_v1_admin_proto_msgTypes[5].OneofWrappers = []any{}
 	file_admin_v1_admin_proto_msgTypes[6].OneofWrappers = []any{}
+	file_admin_v1_admin_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admin_v1_admin_proto_rawDesc), len(file_admin_v1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

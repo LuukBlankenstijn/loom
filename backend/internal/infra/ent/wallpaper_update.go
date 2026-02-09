@@ -33,12 +33,6 @@ func (_u *WallpaperUpdate) SetImageData(v []byte) *WallpaperUpdate {
 	return _u
 }
 
-// ClearImageData clears the value of the "image_data" field.
-func (_u *WallpaperUpdate) ClearImageData() *WallpaperUpdate {
-	_u.mutation.ClearImageData()
-	return _u
-}
-
 // Mutation returns the WallpaperMutation object of the builder.
 func (_u *WallpaperUpdate) Mutation() *WallpaperMutation {
 	return _u.mutation
@@ -83,9 +77,6 @@ func (_u *WallpaperUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
 	}
-	if _u.mutation.ImageDataCleared() {
-		_spec.ClearField(wallpaper.FieldImageData, field.TypeBytes)
-	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{wallpaper.Label}
@@ -109,12 +100,6 @@ type WallpaperUpdateOne struct {
 // SetImageData sets the "image_data" field.
 func (_u *WallpaperUpdateOne) SetImageData(v []byte) *WallpaperUpdateOne {
 	_u.mutation.SetImageData(v)
-	return _u
-}
-
-// ClearImageData clears the value of the "image_data" field.
-func (_u *WallpaperUpdateOne) ClearImageData() *WallpaperUpdateOne {
-	_u.mutation.ClearImageData()
 	return _u
 }
 
@@ -191,9 +176,6 @@ func (_u *WallpaperUpdateOne) sqlSave(ctx context.Context) (_node *Wallpaper, er
 	}
 	if value, ok := _u.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
-	}
-	if _u.mutation.ImageDataCleared() {
-		_spec.ClearField(wallpaper.FieldImageData, field.TypeBytes)
 	}
 	_node = &Wallpaper{config: _u.config}
 	_spec.Assign = _node.assignValues

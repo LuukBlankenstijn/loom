@@ -67,6 +67,9 @@ func (_c *WallpaperCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *WallpaperCreate) check() error {
+	if _, ok := _c.mutation.ImageData(); !ok {
+		return &ValidationError{Name: "image_data", err: errors.New(`ent: missing required field "Wallpaper.image_data"`)}
+	}
 	if _, ok := _c.mutation.ContestID(); !ok {
 		return &ValidationError{Name: "contest_id", err: errors.New(`ent: missing required field "Wallpaper.contest_id"`)}
 	}
@@ -99,7 +102,7 @@ func (_c *WallpaperCreate) createSpec() (*Wallpaper, *sqlgraph.CreateSpec) {
 	_spec.OnConflict = _c.conflict
 	if value, ok := _c.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
-		_node.ImageData = &value
+		_node.ImageData = value
 	}
 	if value, ok := _c.mutation.ContestID(); ok {
 		_spec.SetField(wallpaper.FieldContestID, field.TypeString, value)
@@ -169,12 +172,6 @@ func (u *WallpaperUpsert) UpdateImageData() *WallpaperUpsert {
 	return u
 }
 
-// ClearImageData clears the value of the "image_data" field.
-func (u *WallpaperUpsert) ClearImageData() *WallpaperUpsert {
-	u.SetNull(wallpaper.FieldImageData)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -231,13 +228,6 @@ func (u *WallpaperUpsertOne) SetImageData(v []byte) *WallpaperUpsertOne {
 func (u *WallpaperUpsertOne) UpdateImageData() *WallpaperUpsertOne {
 	return u.Update(func(s *WallpaperUpsert) {
 		s.UpdateImageData()
-	})
-}
-
-// ClearImageData clears the value of the "image_data" field.
-func (u *WallpaperUpsertOne) ClearImageData() *WallpaperUpsertOne {
-	return u.Update(func(s *WallpaperUpsert) {
-		s.ClearImageData()
 	})
 }
 
@@ -462,13 +452,6 @@ func (u *WallpaperUpsertBulk) SetImageData(v []byte) *WallpaperUpsertBulk {
 func (u *WallpaperUpsertBulk) UpdateImageData() *WallpaperUpsertBulk {
 	return u.Update(func(s *WallpaperUpsert) {
 		s.UpdateImageData()
-	})
-}
-
-// ClearImageData clears the value of the "image_data" field.
-func (u *WallpaperUpsertBulk) ClearImageData() *WallpaperUpsertBulk {
-	return u.Update(func(s *WallpaperUpsert) {
-		s.ClearImageData()
 	})
 }
 

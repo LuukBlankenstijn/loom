@@ -20,9 +20,10 @@ import (
 )
 
 type repoContainer struct {
-	team    domain.TeamRepository
-	contest domain.ContestRepository
-	station domain.StationRepository
+	team      domain.TeamRepository
+	contest   domain.ContestRepository
+	station   domain.StationRepository
+	wallpaper domain.WallpaperRepository
 }
 
 func init() {
@@ -47,7 +48,7 @@ func main() {
 	repoContainer := createRepos(client)
 	stationsServer := stations.New(hub, repoContainer.station)
 	teamService := domain.NewTeamService(repoContainer.team, repoContainer.contest)
-	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest)
+	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest, repoContainer.wallpaper)
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
@@ -100,5 +101,6 @@ func createRepos(client *ent.Client) *repoContainer {
 		container.team = persistence.NewEntTeamRepository(client)
 	}
 	container.station = persistence.NewEntStationRepository(client)
+	container.wallpaper = persistence.NewEntWallpaperRepository(client)
 	return &container
 }

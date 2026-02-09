@@ -13,8 +13,8 @@ type Wallpaper struct {
 // Fields of the Wallpaper.
 func (Wallpaper) Fields() []ent.Field {
 	return []ent.Field{
-		field.Bytes("image_data").Optional().Nillable(),
-		field.String("contest_id").Immutable(),
+		field.Bytes("image_data"),
+		field.String("contest_id").Unique().Immutable(),
 	}
 }
 

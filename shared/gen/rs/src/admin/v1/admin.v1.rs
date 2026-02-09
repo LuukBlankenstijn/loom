@@ -55,5 +55,15 @@ pub struct UploadImageRequest {
     #[prost(bytes="vec", optional, tag="2")]
     pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetWallpaperRequest {
+    #[prost(string, tag="1")]
+    pub contest_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct WallpaperResponse {
+    #[prost(bytes="vec", optional, tag="1")]
+    pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
+}
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

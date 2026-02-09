@@ -102,16 +102,6 @@ func ImageDataLTE(v []byte) predicate.Wallpaper {
 	return predicate.Wallpaper(sql.FieldLTE(FieldImageData, v))
 }
 
-// ImageDataIsNil applies the IsNil predicate on the "image_data" field.
-func ImageDataIsNil() predicate.Wallpaper {
-	return predicate.Wallpaper(sql.FieldIsNull(FieldImageData))
-}
-
-// ImageDataNotNil applies the NotNil predicate on the "image_data" field.
-func ImageDataNotNil() predicate.Wallpaper {
-	return predicate.Wallpaper(sql.FieldNotNull(FieldImageData))
-}
-
 // ContestIDEQ applies the EQ predicate on the "contest_id" field.
 func ContestIDEQ(v string) predicate.Wallpaper {
 	return predicate.Wallpaper(sql.FieldEQ(FieldContestID, v))

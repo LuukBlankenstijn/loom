@@ -48,6 +48,9 @@ const (
 	// AdminServiceSetWallpaperProcedure is the fully-qualified name of the AdminService's SetWallpaper
 	// RPC.
 	AdminServiceSetWallpaperProcedure = "/admin.v1.AdminService/SetWallpaper"
+	// AdminServiceGetWallpaperProcedure is the fully-qualified name of the AdminService's GetWallpaper
+	// RPC.
+	AdminServiceGetWallpaperProcedure = "/admin.v1.AdminService/GetWallpaper"
 )
 
 // AdminServiceClient is a client for the admin.v1.AdminService service.
@@ -62,6 +65,8 @@ type AdminServiceClient interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
+	// Gets the wallpaper for some contest
+	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 }
 
 // NewAdminServiceClient constructs a client for the admin.v1.AdminService service. By default, it
@@ -105,6 +110,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("SetWallpaper")),
 			connect.WithClientOptions(opts...),
 		),
+		getWallpaper: connect.NewClient[v1.GetWallpaperRequest, v1.WallpaperResponse](
+			httpClient,
+			baseURL+AdminServiceGetWallpaperProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("GetWallpaper")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -115,6 +126,7 @@ type adminServiceClient struct {
 	getStations    *connect.Client[emptypb.Empty, v1.StationsResponse]
 	setIp          *connect.Client[v1.SetIpRequest, emptypb.Empty]
 	setWallpaper   *connect.Client[v1.UploadImageRequest, emptypb.Empty]
+	getWallpaper   *connect.Client[v1.GetWallpaperRequest, v1.WallpaperResponse]
 }
 
 // GetNextContest calls admin.v1.AdminService.GetNextContest.
@@ -162,6 +174,15 @@ func (c *adminServiceClient) SetWallpaper(ctx context.Context, req *v1.UploadIma
 	return nil, err
 }
 
+// GetWallpaper calls admin.v1.AdminService.GetWallpaper.
+func (c *adminServiceClient) GetWallpaper(ctx context.Context, req *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error) {
+	response, err := c.getWallpaper.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // AdminServiceHandler is an implementation of the admin.v1.AdminService service.
 type AdminServiceHandler interface {
 	// Gets the current or next active contest
@@ -174,6 +195,8 @@ type AdminServiceHandler interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
+	// Gets the wallpaper for some contest
+	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -213,6 +236,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("SetWallpaper")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceGetWallpaperHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceGetWallpaperProcedure,
+		svc.GetWallpaper,
+		connect.WithSchema(adminServiceMethods.ByName("GetWallpaper")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admin.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceGetNextContestProcedure:
@@ -225,6 +254,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSetIpHandler.ServeHTTP(w, r)
 		case AdminServiceSetWallpaperProcedure:
 			adminServiceSetWallpaperHandler.ServeHTTP(w, r)
+		case AdminServiceGetWallpaperProcedure:
+			adminServiceGetWallpaperHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -252,4 +283,8 @@ func (UnimplementedAdminServiceHandler) SetIp(context.Context, *v1.SetIpRequest)
 
 func (UnimplementedAdminServiceHandler) SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetWallpaper is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.GetWallpaper is not implemented"))
 }

@@ -164,6 +164,5 @@ func (r *HttpTeamRepository) getUsers(ctx context.Context, target *[]apiUser, te
 	if teamId != nil {
 		url = fmt.Sprintf("%s?team_id=%s", url, *teamId)
 	}
-	err := r.get(ctx, url, &target)
-	return err
+	return r.get(ctx, url, target)
 }

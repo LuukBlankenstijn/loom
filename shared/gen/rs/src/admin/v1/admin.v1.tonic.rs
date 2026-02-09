@@ -209,5 +209,31 @@ pub mod admin_service_client {
                 .insert(GrpcMethod::new("admin.v1.AdminService", "SetWallpaper"));
             self.inner.unary(req, path, codec).await
         }
+        /** Gets the wallpaper for some contest
+*/
+        pub async fn get_wallpaper(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetWallpaperRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::WallpaperResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/GetWallpaper",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "GetWallpaper"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }

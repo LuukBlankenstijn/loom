@@ -1635,7 +1635,7 @@ func (m *WallpaperMutation) ImageData() (r []byte, exists bool) {
 // OldImageData returns the old "image_data" field's value of the Wallpaper entity.
 // If the Wallpaper object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *WallpaperMutation) OldImageData(ctx context.Context) (v *[]byte, err error) {
+func (m *WallpaperMutation) OldImageData(ctx context.Context) (v []byte, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldImageData is only allowed on UpdateOne operations")
 	}
@@ -1649,22 +1649,9 @@ func (m *WallpaperMutation) OldImageData(ctx context.Context) (v *[]byte, err er
 	return oldValue.ImageData, nil
 }
 
-// ClearImageData clears the value of the "image_data" field.
-func (m *WallpaperMutation) ClearImageData() {
-	m.image_data = nil
-	m.clearedFields[wallpaper.FieldImageData] = struct{}{}
-}
-
-// ImageDataCleared returns if the "image_data" field was cleared in this mutation.
-func (m *WallpaperMutation) ImageDataCleared() bool {
-	_, ok := m.clearedFields[wallpaper.FieldImageData]
-	return ok
-}
-
 // ResetImageData resets all changes to the "image_data" field.
 func (m *WallpaperMutation) ResetImageData() {
 	m.image_data = nil
-	delete(m.clearedFields, wallpaper.FieldImageData)
 }
 
 // SetContestID sets the "contest_id" field.
@@ -1821,11 +1808,7 @@ func (m *WallpaperMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *WallpaperMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(wallpaper.FieldImageData) {
-		fields = append(fields, wallpaper.FieldImageData)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1838,11 +1821,6 @@ func (m *WallpaperMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *WallpaperMutation) ClearField(name string) error {
-	switch name {
-	case wallpaper.FieldImageData:
-		m.ClearImageData()
-		return nil
-	}
 	return fmt.Errorf("unknown Wallpaper nullable field %s", name)
 }
 

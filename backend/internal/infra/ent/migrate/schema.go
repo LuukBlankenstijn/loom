@@ -57,8 +57,8 @@ var (
 	// WallpapersColumns holds the columns for the "wallpapers" table.
 	WallpapersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "image_data", Type: field.TypeBytes, Nullable: true},
-		{Name: "contest_id", Type: field.TypeString},
+		{Name: "image_data", Type: field.TypeBytes},
+		{Name: "contest_id", Type: field.TypeString, Unique: true},
 	}
 	// WallpapersTable holds the schema information for the "wallpapers" table.
 	WallpapersTable = &schema.Table{

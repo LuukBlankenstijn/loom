@@ -17,7 +17,7 @@ type Wallpaper struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// ImageData holds the value of the "image_data" field.
-	ImageData *[]byte `json:"image_data,omitempty"`
+	ImageData []byte `json:"image_data,omitempty"`
 	// ContestID holds the value of the "contest_id" field.
 	ContestID    string `json:"contest_id,omitempty"`
 	selectValues sql.SelectValues
@@ -59,7 +59,7 @@ func (_m *Wallpaper) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field image_data", values[i])
 			} else if value != nil {
-				_m.ImageData = value
+				_m.ImageData = *value
 			}
 		case wallpaper.FieldContestID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -103,10 +103,8 @@ func (_m *Wallpaper) String() string {
 	var builder strings.Builder
 	builder.WriteString("Wallpaper(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	if v := _m.ImageData; v != nil {
-		builder.WriteString("image_data=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString("image_data=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ImageData))
 	builder.WriteString(", ")
 	builder.WriteString("contest_id=")
 	builder.WriteString(_m.ContestID)
