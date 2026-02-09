@@ -183,8 +183,10 @@ impl Grid {
                                 );
                             }
                             if state.is_moving {
-                                let delta = self.snap_to_grid(pos)
-                                    - self.snap_to_grid(state.last_cursor_pos);
+                                let current_world = self.screen_to_world(pos);
+                                let last_world = self.screen_to_world(state.last_cursor_pos);
+                                let delta = self.snap_to_grid(current_world)
+                                    - self.snap_to_grid(last_world);
                                 state.last_cursor_pos = pos;
                                 return Some(
                                     canvas::Action::publish(Message::MoveSelection(delta))

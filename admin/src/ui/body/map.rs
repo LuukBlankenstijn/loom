@@ -157,7 +157,10 @@ impl Map {
             }
             Message::ToggleMapMode => match self.map_mode {
                 MapMode::View => self.map_mode = MapMode::Edit,
-                MapMode::Edit => self.map_mode = MapMode::View,
+                MapMode::Edit => {
+                    self.map_mode = MapMode::View;
+                    return Task::done(Message::Map(loom_map::Message::ClearSelection));
+                }
             },
         }
         Task::none()
