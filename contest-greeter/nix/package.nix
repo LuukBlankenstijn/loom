@@ -10,7 +10,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "contest-greeter";
-  version = "0.1.0";
+  version = "1.1.1";
 
   src = lib.cleanSource ./..;
 
@@ -30,11 +30,13 @@ rustPlatform.buildRustPackage {
   ];
 
   postFixup = ''
-    patchelf --add-rpath ${lib.makeLibraryPath [
-      wayland
-      libxkbcommon
-      vulkan-loader
-    ]} $out/bin/contest-greeter
+    patchelf --add-rpath ${
+      lib.makeLibraryPath [
+        wayland
+        libxkbcommon
+        vulkan-loader
+      ]
+    } $out/bin/contest-greeter
   '';
 
   meta = with lib; {

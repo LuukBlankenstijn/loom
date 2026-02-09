@@ -70,7 +70,12 @@ in
     };
 
     backgroundSource = mkOption {
-      type = types.nullOr types.str;
+      type = types.nullOr (
+        types.oneOf [
+          types.str
+          types.path
+        ]
+      );
       default = null;
       description = "File path or URL for the background image.";
       example = "/etc/greetd/background.png";
@@ -109,20 +114,11 @@ in
         services.greetd = {
           enable = true;
           settings.default_session = {
-            command = "${cfg.cagePackage}/bin/cage -s -- ${pkgs.systemd}/bin/systemd-cat -t contest-greeter ${cfg.package}/bin/contest-greeter";
+            command = "${cfg.cagePackage}/bin/cage -s -- ${pkgs.systemd}/bin/systemd-cat -t contest-greeter ${cfg.package}/bin/contest-greeter ${configFile}";
             user = "greeter";
           };
         };
-
-        environment.etc."greetd/contest-greeter.toml".source = configFile;
-
-        users.users.greeter = {
-          isSystemUser = true;
-          group = "greeter";
-        };
-        users.groups.greeter = { };
       }
-
       # Only add D-Bus if enabled
       (mkIf cfg.enableDbus {
         services.dbus.packages = [

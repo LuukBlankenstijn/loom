@@ -1,5 +1,5 @@
-use log::{debug, info};
-use std::{fs::File, io::BufReader, path::Path};
+use log::error;
+use std::{io::Cursor, path::Path};
 
 use iced::{
     Color, ContentFit, Element, Length, Task,
@@ -26,7 +26,6 @@ pub struct Background {
 #[derive(Debug, Clone)]
 pub enum BackgroundMessage {
     SetSource(Option<String>),
-    GetHandle(String),
     SetHandle(Option<iced::widget::image::Handle>),
 }
 
@@ -69,22 +68,20 @@ impl Background {
             BackgroundMessage::SetSource(source) => {
                 if let Some(source) = source {
                     self.image_status = ImageStatus::Loading;
-                    if !is_local(&source) {
+                    if is_http_url(&source) {
                         return Task::perform(
-                            async move { fetch_remote_image(source) },
-                            BackgroundMessage::GetHandle,
+                            async move { fetch_remote_image(&source).and_then(create_handle) },
+                            BackgroundMessage::SetHandle,
+                        );
+                    } else {
+                        return Task::perform(
+                            async move { fetch_local_image(&source).and_then(create_handle) },
+                            BackgroundMessage::SetHandle,
                         );
                     }
-                    return Task::done(BackgroundMessage::GetHandle(source));
                 } else {
                     self.image_status = ImageStatus::Empty;
                 }
-            }
-            BackgroundMessage::GetHandle(filepath) => {
-                return Task::perform(
-                    async move { get_handle(&filepath) },
-                    BackgroundMessage::SetHandle,
-                );
             }
             BackgroundMessage::SetHandle(result) => match result {
                 Some(handle) => {
@@ -108,60 +105,61 @@ fn no_background_container<'a>(label: String) -> Element<'a, BackgroundMessage> 
         .into()
 }
 
-fn get_handle(path: &str) -> Option<iced::widget::image::Handle> {
+fn is_http_url(source: &str) -> bool {
+    source.starts_with("http://") || source.starts_with("https://")
+}
+
+fn fetch_local_image(path: &str) -> Option<Vec<u8>> {
     if !Path::new(path).exists() {
+        error!("Path does not exist: {}", path);
         return None;
     }
-    File::open(path)
-        .ok()
-        .and_then(|file| {
-            let reader = BufReader::new(file);
-            image::ImageReader::new(reader).with_guessed_format().ok()
-        })
-        .and_then(|reader| {
-            let format = reader.format()?;
-            let ext = format.extensions_str().first()?;
-            let path_with_ext = format!("{}.{}", path, ext);
-            std::os::unix::fs::symlink(path, &path_with_ext).ok()?;
-            Some(iced::widget::image::Handle::from_path(path_with_ext))
-        })
-}
 
-fn is_local(source: &str) -> bool {
-    let path = Path::new(source);
-    path.exists() && path.is_file()
-}
-
-fn fetch_remote_image(source: String) -> String {
-    if !source.starts_with("http://") && !source.starts_with("https://") {
-        debug!("Invalid URL format: {}", source);
-        return String::new();
+    match std::fs::read(path) {
+        Ok(bytes) => Some(bytes),
+        Err(e) => {
+            error!("Failed to read file {}: {}", path, e);
+            None
+        }
     }
-    let response = match ureq::get(&source).call() {
+}
+
+fn fetch_remote_image(source: &str) -> Option<Vec<u8>> {
+    if !is_http_url(source) {
+        error!("Invalid URL format: {}", source);
+        return None;
+    }
+
+    let response = match ureq::get(source).call() {
         Ok(resp) => resp,
         Err(e) => {
-            debug!("Failed to fetch {}: {}", source, e);
-            return String::new();
+            error!("Failed to fetch {}: {}", source, e);
+            return None;
         }
     };
-    let bytes = match response.into_body().read_to_vec() {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            debug!("Failed to read bytes from {}: {}", source, e);
-            return String::new();
-        }
-    };
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    let filename = format!("/tmp/download_{}", timestamp);
 
-    if std::fs::write(&filename, bytes).is_err() {
-        debug!("Failed to write file for {}", source);
-        return String::new();
+    match response.into_body().read_to_vec() {
+        Ok(bytes) => Some(bytes),
+        Err(e) => {
+            error!("Failed to read bytes from {}: {}", source, e);
+            None
+        }
+    }
+}
+
+fn create_handle(bytes: Vec<u8>) -> Option<iced::widget::image::Handle> {
+    let reader = match image::ImageReader::new(Cursor::new(&bytes)).with_guessed_format() {
+        Ok(r) => r,
+        Err(e) => {
+            error!("Failed to guess image format: {}", e);
+            return None;
+        }
+    };
+
+    if reader.format().is_none() {
+        error!("Unrecognized image format");
+        return None;
     }
 
-    filename
+    Some(iced::widget::image::Handle::from_bytes(bytes))
 }

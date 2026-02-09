@@ -1,10 +1,8 @@
 {
   description = "A greetd greeter for icpc contests";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
-
   outputs =
     { self, nixpkgs }:
     let
@@ -29,7 +27,7 @@
       nixosModules.default = import ./nix/module.nix self;
 
       # For convenience
-      overlays.default = final: prev: {
+      overlays.default = _: prev: {
         contest-greeter = self.packages.${prev.system}.default;
       };
     };
