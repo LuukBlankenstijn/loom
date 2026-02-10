@@ -23,6 +23,11 @@ plugins:
     opt:
       - gen_crate=shared/gen/rs/Cargo.toml
       - no_features
+  - local: protoc-gen-es
+    out: dashboard/src/gen
+    opt:
+      - target=ts
+    include_imports: true
 managed:
   enabled: true
   override:

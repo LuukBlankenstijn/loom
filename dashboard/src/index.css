@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface-900: #0f0f0f;
+  --color-surface-800: #1a1a1a;
+  --color-surface-700: #262626;
+  --color-surface-600: #333333;
+  --color-surface-500: #404040;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-400: #60a5fa;
+  --color-success-500: #22c55e;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+}
+
+body {
+  @apply bg-surface-900 text-gray-100;
+}

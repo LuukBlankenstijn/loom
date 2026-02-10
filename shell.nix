@@ -9,6 +9,7 @@ pkgs.mkShell {
     protoc-gen-connect-go
     protoc-gen-tonic
     protoc-gen-prost
+    protoc-gen-es
     protoc-gen-prost-crate
 
     rustc
