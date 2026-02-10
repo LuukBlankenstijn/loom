@@ -47,8 +47,9 @@ func main() {
 	hub := hub.New()
 	repoContainer := createRepos(client)
 	stationsServer := stations.New(hub, repoContainer.station)
+	wallpaperService := domain.NewWallpaperService(repoContainer.contest, repoContainer.wallpaper)
 	teamService := domain.NewTeamService(repoContainer.team, repoContainer.contest)
-	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest, repoContainer.wallpaper)
+	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest, repoContainer.wallpaper, *wallpaperService)
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()

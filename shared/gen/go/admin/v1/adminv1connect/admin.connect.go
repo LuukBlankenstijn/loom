@@ -65,7 +65,7 @@ type AdminServiceClient interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
-	// Gets the wallpaper for some contest
+	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 }
 
@@ -195,7 +195,7 @@ type AdminServiceHandler interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
-	// Gets the wallpaper for some contest
+	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 }
 

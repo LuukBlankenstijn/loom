@@ -12,11 +12,12 @@ import (
 )
 
 type adminServer struct {
-	teamService   domain.TeamService
-	stationRepo   domain.StationRepository
-	teamRepo      domain.TeamRepository
-	contestRepo   domain.ContestRepository
-	wallpaperRepo domain.WallpaperRepository
+	teamService      domain.TeamService
+	wallpaperService domain.WallpaperService
+	stationRepo      domain.StationRepository
+	teamRepo         domain.TeamRepository
+	contestRepo      domain.ContestRepository
+	wallpaperRepo    domain.WallpaperRepository
 }
 
 func New(
@@ -25,9 +26,11 @@ func New(
 	teamRepo domain.TeamRepository,
 	contestRepo domain.ContestRepository,
 	wallpaperRepo domain.WallpaperRepository,
+	wallpaperService domain.WallpaperService,
 ) *adminServer {
 	return &adminServer{
 		teamService,
+		wallpaperService,
 		stationRepo,
 		teamRepo,
 		contestRepo,

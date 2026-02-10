@@ -57,8 +57,8 @@ pub struct UploadImageRequest {
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct GetWallpaperRequest {
-    #[prost(string, tag="1")]
-    pub contest_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="1")]
+    pub contest_id: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct WallpaperResponse {

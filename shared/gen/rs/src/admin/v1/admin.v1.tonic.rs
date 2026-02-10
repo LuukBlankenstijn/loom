@@ -209,7 +209,7 @@ pub mod admin_service_client {
                 .insert(GrpcMethod::new("admin.v1.AdminService", "SetWallpaper"));
             self.inner.unary(req, path, codec).await
         }
-        /** Gets the wallpaper for some contest
+        /** Gets the wallpaper for some contest or the active contest if not set
 */
         pub async fn get_wallpaper(
             &mut self,

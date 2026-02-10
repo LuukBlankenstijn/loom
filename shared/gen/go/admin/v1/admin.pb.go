@@ -414,7 +414,7 @@ func (x *UploadImageRequest) GetImageData() []byte {
 
 type GetWallpaperRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ContestId     string                 `protobuf:"bytes,1,opt,name=contest_id,json=contestId,proto3" json:"contest_id,omitempty"`
+	ContestId     *string                `protobuf:"bytes,1,opt,name=contest_id,json=contestId,proto3,oneof" json:"contest_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -450,8 +450,8 @@ func (*GetWallpaperRequest) Descriptor() ([]byte, []int) {
 }
 
 func (x *GetWallpaperRequest) GetContestId() string {
-	if x != nil {
-		return x.ContestId
+	if x != nil && x.ContestId != nil {
+		return *x.ContestId
 	}
 	return ""
 }
@@ -535,10 +535,11 @@ const file_admin_v1_admin_proto_rawDesc = "" +
 	"contest_id\x18\x01 \x01(\tR\tcontestId\x12\"\n" +
 	"\n" +
 	"image_data\x18\x02 \x01(\fH\x00R\timageData\x88\x01\x01B\r\n" +
-	"\v_image_data\"4\n" +
-	"\x13GetWallpaperRequest\x12\x1d\n" +
+	"\v_image_data\"H\n" +
+	"\x13GetWallpaperRequest\x12\"\n" +
 	"\n" +
-	"contest_id\x18\x01 \x01(\tR\tcontestId\"F\n" +
+	"contest_id\x18\x01 \x01(\tH\x00R\tcontestId\x88\x01\x01B\r\n" +
+	"\v_contest_id\"F\n" +
 	"\x11WallpaperResponse\x12\"\n" +
 	"\n" +
 	"image_data\x18\x01 \x01(\fH\x00R\timageData\x88\x01\x01B\r\n" +
@@ -614,6 +615,7 @@ func file_admin_v1_admin_proto_init() {
 	file_admin_v1_admin_proto_msgTypes[2].OneofWrappers = []any{}
 	file_admin_v1_admin_proto_msgTypes[5].OneofWrappers = []any{}
 	file_admin_v1_admin_proto_msgTypes[6].OneofWrappers = []any{}
+	file_admin_v1_admin_proto_msgTypes[7].OneofWrappers = []any{}
 	file_admin_v1_admin_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

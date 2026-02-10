@@ -65,7 +65,7 @@ func (a *adminServer) SetWallpaper(ctx context.Context, request *adminv1.UploadI
 }
 
 func (a *adminServer) GetWallpaper(ctx context.Context, request *adminv1.GetWallpaperRequest) (*adminv1.WallpaperResponse, error) {
-	image, err := a.wallpaperRepo.GetWallpaper(ctx, request.ContestId)
+	image, err := a.wallpaperService.GetWallpaper(ctx, request.ContestId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
