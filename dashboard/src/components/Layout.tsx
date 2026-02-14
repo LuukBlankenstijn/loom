@@ -4,6 +4,7 @@ const navItems = [
   { to: "/", label: "Contest" },
   { to: "/teams", label: "Teams" },
   { to: "/stations", label: "Stations" },
+  { to: "/maps", label: "Maps" },
 ];
 
 export function Layout() {

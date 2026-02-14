@@ -21,6 +21,42 @@ func (f ContestFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContestMutation", m)
 }
 
+// The ContestAreaMapFunc type is an adapter to allow the use of ordinary
+// function as ContestAreaMap mutator.
+type ContestAreaMapFunc func(context.Context, *ent.ContestAreaMapMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContestAreaMapFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContestAreaMapMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContestAreaMapMutation", m)
+}
+
+// The ContestMapFunc type is an adapter to allow the use of ordinary
+// function as ContestMap mutator.
+type ContestMapFunc func(context.Context, *ent.ContestMapMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ContestMapFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ContestMapMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContestMapMutation", m)
+}
+
+// The DoorElementFunc type is an adapter to allow the use of ordinary
+// function as DoorElement mutator.
+type DoorElementFunc func(context.Context, *ent.DoorElementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DoorElementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DoorElementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DoorElementMutation", m)
+}
+
 // The StationFunc type is an adapter to allow the use of ordinary
 // function as Station mutator.
 type StationFunc func(context.Context, *ent.StationMutation) (ent.Value, error)
@@ -33,6 +69,18 @@ func (f StationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StationMutation", m)
 }
 
+// The TableElementFunc type is an adapter to allow the use of ordinary
+// function as TableElement mutator.
+type TableElementFunc func(context.Context, *ent.TableElementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TableElementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TableElementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TableElementMutation", m)
+}
+
 // The TeamFunc type is an adapter to allow the use of ordinary
 // function as Team mutator.
 type TeamFunc func(context.Context, *ent.TeamMutation) (ent.Value, error)
@@ -43,6 +91,18 @@ func (f TeamFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TeamMutation", m)
+}
+
+// The WallElementFunc type is an adapter to allow the use of ordinary
+// function as WallElement mutator.
+type WallElementFunc func(context.Context, *ent.WallElementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WallElementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WallElementMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WallElementMutation", m)
 }
 
 // The WallpaperFunc type is an adapter to allow the use of ordinary

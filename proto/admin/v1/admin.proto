@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package admin.v1;
 
+import "admin/v1/map.proto";
 import "buf/validate/validate.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
@@ -14,6 +15,7 @@ message Contest {
     (buf.validate.field).required = true,
     (buf.validate.field).timestamp.gt_now = true
   ];
+  optional int32 map_id = 5;
 }
 
 message Team {
@@ -42,7 +44,7 @@ message SetIpRequest {
   optional string ip = 2;
 }
 
-message UploadImageRequest {
+message UploadWallpaperRequest {
   string contest_id = 1;
   optional bytes image_data = 2;
 }
@@ -66,7 +68,18 @@ service AdminService {
   // Sets the ip for some team. Only allows ips that are not used by a different team yet
   rpc SetIp(SetIpRequest) returns (google.protobuf.Empty) {}
   // Sets the wallpaper for some contest
-  rpc SetWallpaper(UploadImageRequest) returns (google.protobuf.Empty) {}
+  rpc SetWallpaper(UploadWallpaperRequest) returns (google.protobuf.Empty) {}
   // Gets the wallpaper for some contest or the active contest if not set
   rpc GetWallpaper(GetWallpaperRequest) returns (WallpaperResponse) {}
+
+  // Gets all maps in the system
+  rpc GetAllMaps(google.protobuf.Empty) returns (GetAllMapsResponse) {}
+  // Sets the map for some contest, does not error of either does not exist
+  rpc SetMap(SetMapRequest) returns (google.protobuf.Empty) {}
+  // Creates a new map
+  rpc CreateMap(CreateMapRequest) returns (MapResponse) {}
+  // Gets a map
+  rpc GetMap(GetMapRequest) returns (MapResponse) {}
+  // Updates a map
+  rpc UpdateMap(UpdateMapRequest) returns (google.protobuf.Empty) {}
 }

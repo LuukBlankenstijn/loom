@@ -23,7 +23,28 @@ type Station struct {
 	ConnectedAt time.Time `json:"connected_at,omitempty"`
 	// DisconnectedAt holds the value of the "disconnected_at" field.
 	DisconnectedAt *time.Time `json:"disconnected_at,omitempty"`
-	selectValues   sql.SelectValues
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the StationQuery when eager-loading is set.
+	Edges        StationEdges `json:"edges"`
+	selectValues sql.SelectValues
+}
+
+// StationEdges holds the relations/edges for other nodes in the graph.
+type StationEdges struct {
+	// TableElement holds the value of the table_element edge.
+	TableElement []*TableElement `json:"table_element,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// TableElementOrErr returns the TableElement value or an error if the edge
+// was not loaded in eager-loading.
+func (e StationEdges) TableElementOrErr() ([]*TableElement, error) {
+	if e.loadedTypes[0] {
+		return e.TableElement, nil
+	}
+	return nil, &NotLoadedError{edge: "table_element"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -88,6 +109,11 @@ func (_m *Station) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Station) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryTableElement queries the "table_element" edge of the Station entity.
+func (_m *Station) QueryTableElement() *TableElementQuery {
+	return NewStationClient(_m.config).QueryTableElement(_m)
 }
 
 // Update returns a builder for updating this Station.

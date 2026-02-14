@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/predicate"
 )
 
@@ -222,6 +223,29 @@ func DisconnectedAtIsNil() predicate.Station {
 // DisconnectedAtNotNil applies the NotNil predicate on the "disconnected_at" field.
 func DisconnectedAtNotNil() predicate.Station {
 	return predicate.Station(sql.FieldNotNull(FieldDisconnectedAt))
+}
+
+// HasTableElement applies the HasEdge predicate on the "table_element" edge.
+func HasTableElement() predicate.Station {
+	return predicate.Station(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, TableElementTable, TableElementColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTableElementWith applies the HasEdge predicate on the "table_element" edge with a given conditions (other predicates).
+func HasTableElementWith(preds ...predicate.TableElement) predicate.Station {
+	return predicate.Station(func(s *sql.Selector) {
+		step := newTableElementStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

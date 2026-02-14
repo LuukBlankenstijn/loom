@@ -2,6 +2,8 @@ import { createClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { AdminService } from "@client/admin/v1/admin_pb";
 import type { Contest, StationsResponse, TeamsResponse, WallpaperResponse } from "@client/admin/v1/admin_pb";
+import type { GetAllMapsResponse, MapResponse } from "@client/admin/v1/map_pb";
+import { SetMapRequestSchema } from "@client/admin/v1/map_pb";
 import { create } from "@bufbuild/protobuf";
 import { EmptySchema } from "@bufbuild/protobuf/wkt";
 
@@ -29,5 +31,14 @@ export const adminClient = {
   },
   setWallpaper: async (contestId: string, imageData: Uint8Array): Promise<void> => {
     await client.setWallpaper({ contestId, imageData });
+  },
+  getAllMaps: async (): Promise<GetAllMapsResponse> => {
+    return await client.getAllMaps(create(EmptySchema)) as GetAllMapsResponse;
+  },
+  createMap: async (name: string): Promise<MapResponse> => {
+    return await client.createMap({ name }) as MapResponse;
+  },
+  setMap: async (contestId: string, mapId: number): Promise<void> => {
+    await client.setMap(create(SetMapRequestSchema, { contestId, mapId }));
   },
 };

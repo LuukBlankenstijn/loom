@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestEntStationRepositoryUpsertCreatesAndUpdates(t *testing.T) {
@@ -39,7 +40,11 @@ func TestEntStationRepositoryUpsertCreatesAndUpdates(t *testing.T) {
 		t.Fatalf("query after update: %v", err)
 	}
 	if !updated.ConnectedAt.After(firstConnectedAt) {
-		t.Fatalf("connected_at was not updated: before=%v after=%v", firstConnectedAt, updated.ConnectedAt)
+		t.Fatalf(
+			"connected_at was not updated: before=%v after=%v",
+			firstConnectedAt,
+			updated.ConnectedAt,
+		)
 	}
 }
 
@@ -68,6 +73,10 @@ func TestEntStationRepositoryUpdateDisconnectedAt(t *testing.T) {
 		t.Fatalf("disconnected_at not set")
 	}
 	if updated.DisconnectedAt.Before(created.ConnectedAt) {
-		t.Fatalf("disconnected_at is before connected_at: connected=%v disconnected=%v", created.ConnectedAt, *updated.DisconnectedAt)
+		t.Fatalf(
+			"disconnected_at is before connected_at: connected=%v disconnected=%v",
+			created.ConnectedAt,
+			*updated.DisconnectedAt,
+		)
 	}
 }

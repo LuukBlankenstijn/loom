@@ -9,11 +9,26 @@ import (
 // Contest is the predicate function for contest builders.
 type Contest func(*sql.Selector)
 
+// ContestAreaMap is the predicate function for contestareamap builders.
+type ContestAreaMap func(*sql.Selector)
+
+// ContestMap is the predicate function for contestmap builders.
+type ContestMap func(*sql.Selector)
+
+// DoorElement is the predicate function for doorelement builders.
+type DoorElement func(*sql.Selector)
+
 // Station is the predicate function for station builders.
 type Station func(*sql.Selector)
 
+// TableElement is the predicate function for tableelement builders.
+type TableElement func(*sql.Selector)
+
 // Team is the predicate function for team builders.
 type Team func(*sql.Selector)
+
+// WallElement is the predicate function for wallelement builders.
+type WallElement func(*sql.Selector)
 
 // Wallpaper is the predicate function for wallpaper builders.
 type Wallpaper func(*sql.Selector)

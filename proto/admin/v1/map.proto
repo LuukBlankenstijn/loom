@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "buf/validate/validate.proto";
+
+message Location {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+enum Rotation {
+  ROTATION_UNSPECIFIED = 0;
+  ROTATION_0 = 1;
+  ROTATION_90 = 2;
+  ROTATION_180 = 3;
+  ROTATION_270 = 4;
+}
+
+message Map {
+  int32 id = 1;
+  string name = 2;
+}
+
+message Door {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location location = 2;
+  Rotation rotation = 3;
+}
+
+message Wall {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location start = 2;
+  Location end = 3;
+}
+
+message Table {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location location = 2;
+  Rotation rotation = 3;
+}
+
+message Element {
+  oneof element {
+    Wall wall = 1;
+    Door door = 2;
+    Table table = 3;
+  }
+}
+
+message SetMapRequest {
+  string contest_id = 1;
+  int32 map_id = 2;
+}
+
+message GetMapRequest {
+  int32 id = 1;
+}
+
+message CreateMapRequest {
+  string name = 1;
+}
+
+message MapResponse {
+  Map map = 1;
+  repeated Element elements = 2;
+}
+
+message GetAllMapsResponse {
+  repeated Map maps = 1;
+}
+
+message UpdateMapRequest {
+  int32 id = 1;
+  repeated string deleted = 3 [(buf.validate.field).repeated.items.string.uuid = true];
+  repeated Element updated = 4;
+}

@@ -10,7 +10,10 @@ import (
 )
 
 // Gets all teams for the next active contest
-func (a *adminServer) GetActiveTeams(ctx context.Context, empty *emptypb.Empty) (*adminv1.TeamsResponse, error) {
+func (a *adminHandler) GetActiveTeams(
+	ctx context.Context,
+	empty *emptypb.Empty,
+) (*adminv1.TeamsResponse, error) {
 	domainTeams, err := a.teamService.GetTeamsForActiveContest(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get teams"))
@@ -29,7 +32,10 @@ func (a *adminServer) GetActiveTeams(ctx context.Context, empty *emptypb.Empty) 
 }
 
 // Sets the ip of some team. Only allows ips that are now used yet by other teams
-func (a *adminServer) SetIp(ctx context.Context, request *adminv1.SetIpRequest) (*emptypb.Empty, error) {
+func (a *adminHandler) SetIp(
+	ctx context.Context,
+	request *adminv1.SetIpRequest,
+) (*emptypb.Empty, error) {
 	err := a.teamRepo.SetIp(ctx, request.TeamId, request.Ip)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to set ip"))

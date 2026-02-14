@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { adminClient } from "../lib/client";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
@@ -8,6 +8,7 @@ import type { Station } from "@client/admin/v1/admin_pb";
 export function ContestPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedMapId, setSelectedMapId] = useState<number | null>(null);
 
   const { data: contest, isLoading } = useQuery({
     queryKey: ["contest"],
@@ -17,7 +18,8 @@ export function ContestPage() {
   const { data: wallpaper, isLoading: wallpaperLoading } = useQuery({
     queryKey: ["wallpaper"],
     queryFn: () => adminClient.getWallpaper(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - wallpaper rarely changes
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
   });
 
   const { data: teamsData } = useQuery({
@@ -30,11 +32,36 @@ export function ContestPage() {
     queryFn: () => adminClient.getStations(),
   });
 
+  const { data: mapsData } = useQuery({
+    queryKey: ["maps"],
+    queryFn: () => adminClient.getAllMaps(),
+  });
+
   const uploadMutation = useMutation({
     mutationFn: (imageData: Uint8Array) =>
       adminClient.setWallpaper(contest?.id ?? "", imageData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wallpaper"] });
+    },
+  });
+
+  // Sync local state with server state
+  useEffect(() => {
+    if (contest?.mapId !== undefined) {
+      setSelectedMapId(contest.mapId);
+    }
+  }, [contest?.mapId]);
+
+  const setMapMutation = useMutation({
+    mutationFn: (mapId: number) =>
+      adminClient.setMap(contest?.id ?? "", mapId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contest"] });
+    },
+    onError: (error) => {
+      console.error("Failed to set map:", error);
+      // Reset to server value on error
+      setSelectedMapId(contest?.mapId ?? null);
     },
   });
 
@@ -56,6 +83,7 @@ export function ContestPage() {
 
   const teams = teamsData?.teams ?? [];
   const stations = stationsData?.stations ?? [];
+  const maps = mapsData?.maps ?? [];
   const totalTeams = teams.length;
 
   const connectedTeams = teams.filter((team) => {
@@ -79,6 +107,19 @@ export function ContestPage() {
 
   const openFilePicker = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleMapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+      setSelectedMapId(null);
+      return;
+    }
+    const mapId = parseInt(value, 10);
+    if (!isNaN(mapId)) {
+      setSelectedMapId(mapId); // Optimistic update
+      setMapMutation.mutate(mapId);
+    }
   };
 
   return (
@@ -111,6 +152,29 @@ export function ContestPage() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-rose-500/10 border border-orange-500/20">
               <p className="text-xs text-orange-400 mb-1 uppercase tracking-wide">End Time</p>
               <p className="text-gray-200">{formatDate(contest.endTime)}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20">
+              <p className="text-xs text-violet-400 mb-2 uppercase tracking-wide">Map</p>
+              <select
+                value={selectedMapId ?? ""}
+                onChange={handleMapChange}
+                disabled={setMapMutation.isPending}
+                className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
+              >
+                <option value="">No map selected</option>
+                {maps.map((map) => (
+                  <option key={map.id} value={map.id}>
+                    {map.name}
+                  </option>
+                ))}
+              </select>
+              {setMapMutation.isError && (
+                <p className="text-danger-500 text-sm mt-2">Failed to set map</p>
+              )}
+              {setMapMutation.isPending && (
+                <p className="text-gray-400 text-sm mt-2">Saving...</p>
+              )}
             </div>
           </div>
         ) : (

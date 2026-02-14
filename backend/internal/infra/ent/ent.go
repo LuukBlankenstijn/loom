@@ -13,8 +13,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contest"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestareamap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestmap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/doorelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/team"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallpaper"
 )
 
@@ -76,10 +81,15 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			contest.Table:   contest.ValidColumn,
-			station.Table:   station.ValidColumn,
-			team.Table:      team.ValidColumn,
-			wallpaper.Table: wallpaper.ValidColumn,
+			contest.Table:        contest.ValidColumn,
+			contestareamap.Table: contestareamap.ValidColumn,
+			contestmap.Table:     contestmap.ValidColumn,
+			doorelement.Table:    doorelement.ValidColumn,
+			station.Table:        station.ValidColumn,
+			tableelement.Table:   tableelement.ValidColumn,
+			team.Table:           team.ValidColumn,
+			wallelement.Table:    wallelement.ValidColumn,
+			wallpaper.Table:      wallpaper.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -19,8 +20,17 @@ const (
 	FieldConnectedAt = "connected_at"
 	// FieldDisconnectedAt holds the string denoting the disconnected_at field in the database.
 	FieldDisconnectedAt = "disconnected_at"
+	// EdgeTableElement holds the string denoting the table_element edge name in mutations.
+	EdgeTableElement = "table_element"
 	// Table holds the table name of the station in the database.
 	Table = "stations"
+	// TableElementTable is the table that holds the table_element relation/edge.
+	TableElementTable = "table_elements"
+	// TableElementInverseTable is the table name for the TableElement entity.
+	// It exists in this package in order to avoid circular dependency with the "tableelement" package.
+	TableElementInverseTable = "table_elements"
+	// TableElementColumn is the table column denoting the table_element relation/edge.
+	TableElementColumn = "table_element_station"
 )
 
 // Columns holds all SQL columns for station fields.
@@ -67,4 +77,25 @@ func ByConnectedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByDisconnectedAt orders the results by the disconnected_at field.
 func ByDisconnectedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDisconnectedAt, opts...).ToFunc()
+}
+
+// ByTableElementCount orders the results by table_element count.
+func ByTableElementCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTableElementStep(), opts...)
+	}
+}
+
+// ByTableElement orders the results by table_element terms.
+func ByTableElement(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTableElementStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTableElementStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TableElementInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, TableElementTable, TableElementColumn),
+	)
 }

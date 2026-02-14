@@ -12,9 +12,24 @@ import (
 func TestHttpContestRepositoryGetNextContest(t *testing.T) {
 	now := time.Now()
 	contests := []contestDTO{
-		{ID: "past", Name: "Past Contest", StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-1 * time.Hour)},
-		{ID: "current", Name: "Current Contest", StartTime: now.Add(-30 * time.Minute), EndTime: now.Add(1 * time.Hour)},
-		{ID: "future", Name: "Future Contest", StartTime: now.Add(2 * time.Hour), EndTime: now.Add(3 * time.Hour)},
+		{
+			ID:        "past",
+			Name:      "Past Contest",
+			StartTime: now.Add(-2 * time.Hour),
+			EndTime:   now.Add(-1 * time.Hour),
+		},
+		{
+			ID:        "current",
+			Name:      "Current Contest",
+			StartTime: now.Add(-30 * time.Minute),
+			EndTime:   now.Add(1 * time.Hour),
+		},
+		{
+			ID:        "future",
+			Name:      "Future Contest",
+			StartTime: now.Add(2 * time.Hour),
+			EndTime:   now.Add(3 * time.Hour),
+		},
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,8 +60,18 @@ func TestHttpContestRepositoryGetNextContest(t *testing.T) {
 func TestHttpContestRepositoryGetNextContestNoUpcoming(t *testing.T) {
 	now := time.Now()
 	contests := []contestDTO{
-		{ID: "past1", Name: "Past 1", StartTime: now.Add(-3 * time.Hour), EndTime: now.Add(-2 * time.Hour)},
-		{ID: "past2", Name: "Past 2", StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-1 * time.Hour)},
+		{
+			ID:        "past1",
+			Name:      "Past 1",
+			StartTime: now.Add(-3 * time.Hour),
+			EndTime:   now.Add(-2 * time.Hour),
+		},
+		{
+			ID:        "past2",
+			Name:      "Past 2",
+			StartTime: now.Add(-2 * time.Hour),
+			EndTime:   now.Add(-1 * time.Hour),
+		},
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -106,9 +131,24 @@ func TestHttpContestRepositoryGetNextContestApiError(t *testing.T) {
 func TestHttpContestRepositoryGetNextContestSortsByStartTime(t *testing.T) {
 	now := time.Now()
 	contests := []contestDTO{
-		{ID: "later", Name: "Later", StartTime: now.Add(3 * time.Hour), EndTime: now.Add(4 * time.Hour)},
-		{ID: "sooner", Name: "Sooner", StartTime: now.Add(1 * time.Hour), EndTime: now.Add(2 * time.Hour)},
-		{ID: "middle", Name: "Middle", StartTime: now.Add(2 * time.Hour), EndTime: now.Add(3 * time.Hour)},
+		{
+			ID:        "later",
+			Name:      "Later",
+			StartTime: now.Add(3 * time.Hour),
+			EndTime:   now.Add(4 * time.Hour),
+		},
+		{
+			ID:        "sooner",
+			Name:      "Sooner",
+			StartTime: now.Add(1 * time.Hour),
+			EndTime:   now.Add(2 * time.Hour),
+		},
+		{
+			ID:        "middle",
+			Name:      "Middle",
+			StartTime: now.Add(2 * time.Hour),
+			EndTime:   now.Add(3 * time.Hour),
+		},
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 )
 
 func TestEntWallpaperRepositorySetAndGet(t *testing.T) {
@@ -36,7 +37,11 @@ func TestEntWallpaperRepositorySetAndGet(t *testing.T) {
 
 func TestEntWallpaperRepositoryGetNotFound(t *testing.T) {
 	ctx := context.Background()
-	client := enttest.Open(t, "sqlite3", "file:ent_wallpaper_notfound?mode=memory&cache=shared&_fk=1")
+	client := enttest.Open(
+		t,
+		"sqlite3",
+		"file:ent_wallpaper_notfound?mode=memory&cache=shared&_fk=1",
+	)
 	t.Cleanup(func() { _ = client.Close() })
 
 	repo := NewEntWallpaperRepository(client)

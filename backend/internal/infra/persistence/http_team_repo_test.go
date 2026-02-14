@@ -66,7 +66,15 @@ func TestHttpTeamRepositoryGetAllApiError(t *testing.T) {
 
 func TestHttpTeamRepositorySetIp(t *testing.T) {
 	users := []apiUser{
-		{ID: "user-1", TeamID: "team-1", IP: "", Name: "User 1", Username: "user1", Email: "u1@test.com", Enabled: true},
+		{
+			ID:       "user-1",
+			TeamID:   "team-1",
+			IP:       "",
+			Name:     "User 1",
+			Username: "user1",
+			Email:    "u1@test.com",
+			Enabled:  true,
+		},
 	}
 
 	var putCalled bool
@@ -129,7 +137,15 @@ func TestHttpTeamRepositorySetIpAlreadyUsed(t *testing.T) {
 
 func TestHttpTeamRepositorySetIpNil(t *testing.T) {
 	users := []apiUser{
-		{ID: "user-1", TeamID: "team-1", IP: "10.0.0.1", Name: "User 1", Username: "user1", Email: "u1@test.com", Enabled: true},
+		{
+			ID:       "user-1",
+			TeamID:   "team-1",
+			IP:       "10.0.0.1",
+			Name:     "User 1",
+			Username: "user1",
+			Email:    "u1@test.com",
+			Enabled:  true,
+		},
 	}
 
 	var putCalled bool
@@ -160,8 +176,24 @@ func TestHttpTeamRepositorySetIpNil(t *testing.T) {
 
 func TestHttpTeamRepositorySetIpMultipleUsers(t *testing.T) {
 	users := []apiUser{
-		{ID: "user-1", TeamID: "team-1", IP: "", Name: "User 1", Username: "user1", Email: "u1@test.com", Enabled: true},
-		{ID: "user-2", TeamID: "team-1", IP: "", Name: "User 2", Username: "user2", Email: "u2@test.com", Enabled: true},
+		{
+			ID:       "user-1",
+			TeamID:   "team-1",
+			IP:       "",
+			Name:     "User 1",
+			Username: "user1",
+			Email:    "u1@test.com",
+			Enabled:  true,
+		},
+		{
+			ID:       "user-2",
+			TeamID:   "team-1",
+			IP:       "",
+			Name:     "User 2",
+			Username: "user2",
+			Email:    "u2@test.com",
+			Enabled:  true,
+		},
 	}
 
 	putCount := 0

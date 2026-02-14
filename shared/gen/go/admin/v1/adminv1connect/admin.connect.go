@@ -51,6 +51,16 @@ const (
 	// AdminServiceGetWallpaperProcedure is the fully-qualified name of the AdminService's GetWallpaper
 	// RPC.
 	AdminServiceGetWallpaperProcedure = "/admin.v1.AdminService/GetWallpaper"
+	// AdminServiceGetAllMapsProcedure is the fully-qualified name of the AdminService's GetAllMaps RPC.
+	AdminServiceGetAllMapsProcedure = "/admin.v1.AdminService/GetAllMaps"
+	// AdminServiceSetMapProcedure is the fully-qualified name of the AdminService's SetMap RPC.
+	AdminServiceSetMapProcedure = "/admin.v1.AdminService/SetMap"
+	// AdminServiceCreateMapProcedure is the fully-qualified name of the AdminService's CreateMap RPC.
+	AdminServiceCreateMapProcedure = "/admin.v1.AdminService/CreateMap"
+	// AdminServiceGetMapProcedure is the fully-qualified name of the AdminService's GetMap RPC.
+	AdminServiceGetMapProcedure = "/admin.v1.AdminService/GetMap"
+	// AdminServiceUpdateMapProcedure is the fully-qualified name of the AdminService's UpdateMap RPC.
+	AdminServiceUpdateMapProcedure = "/admin.v1.AdminService/UpdateMap"
 )
 
 // AdminServiceClient is a client for the admin.v1.AdminService service.
@@ -64,9 +74,19 @@ type AdminServiceClient interface {
 	// Sets the ip for some team. Only allows ips that are not used by a different team yet
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
-	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
+	SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error)
 	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
+	// Gets all maps in the system
+	GetAllMaps(context.Context, *emptypb.Empty) (*v1.GetAllMapsResponse, error)
+	// Sets the map for some contest, does not error of either does not exist
+	SetMap(context.Context, *v1.SetMapRequest) (*emptypb.Empty, error)
+	// Creates a new map
+	CreateMap(context.Context, *v1.CreateMapRequest) (*v1.MapResponse, error)
+	// Gets a map
+	GetMap(context.Context, *v1.GetMapRequest) (*v1.MapResponse, error)
+	// Updates a map
+	UpdateMap(context.Context, *v1.UpdateMapRequest) (*emptypb.Empty, error)
 }
 
 // NewAdminServiceClient constructs a client for the admin.v1.AdminService service. By default, it
@@ -104,7 +124,7 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("SetIp")),
 			connect.WithClientOptions(opts...),
 		),
-		setWallpaper: connect.NewClient[v1.UploadImageRequest, emptypb.Empty](
+		setWallpaper: connect.NewClient[v1.UploadWallpaperRequest, emptypb.Empty](
 			httpClient,
 			baseURL+AdminServiceSetWallpaperProcedure,
 			connect.WithSchema(adminServiceMethods.ByName("SetWallpaper")),
@@ -116,6 +136,36 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("GetWallpaper")),
 			connect.WithClientOptions(opts...),
 		),
+		getAllMaps: connect.NewClient[emptypb.Empty, v1.GetAllMapsResponse](
+			httpClient,
+			baseURL+AdminServiceGetAllMapsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("GetAllMaps")),
+			connect.WithClientOptions(opts...),
+		),
+		setMap: connect.NewClient[v1.SetMapRequest, emptypb.Empty](
+			httpClient,
+			baseURL+AdminServiceSetMapProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("SetMap")),
+			connect.WithClientOptions(opts...),
+		),
+		createMap: connect.NewClient[v1.CreateMapRequest, v1.MapResponse](
+			httpClient,
+			baseURL+AdminServiceCreateMapProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("CreateMap")),
+			connect.WithClientOptions(opts...),
+		),
+		getMap: connect.NewClient[v1.GetMapRequest, v1.MapResponse](
+			httpClient,
+			baseURL+AdminServiceGetMapProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("GetMap")),
+			connect.WithClientOptions(opts...),
+		),
+		updateMap: connect.NewClient[v1.UpdateMapRequest, emptypb.Empty](
+			httpClient,
+			baseURL+AdminServiceUpdateMapProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateMap")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -125,8 +175,13 @@ type adminServiceClient struct {
 	getActiveTeams *connect.Client[emptypb.Empty, v1.TeamsResponse]
 	getStations    *connect.Client[emptypb.Empty, v1.StationsResponse]
 	setIp          *connect.Client[v1.SetIpRequest, emptypb.Empty]
-	setWallpaper   *connect.Client[v1.UploadImageRequest, emptypb.Empty]
+	setWallpaper   *connect.Client[v1.UploadWallpaperRequest, emptypb.Empty]
 	getWallpaper   *connect.Client[v1.GetWallpaperRequest, v1.WallpaperResponse]
+	getAllMaps     *connect.Client[emptypb.Empty, v1.GetAllMapsResponse]
+	setMap         *connect.Client[v1.SetMapRequest, emptypb.Empty]
+	createMap      *connect.Client[v1.CreateMapRequest, v1.MapResponse]
+	getMap         *connect.Client[v1.GetMapRequest, v1.MapResponse]
+	updateMap      *connect.Client[v1.UpdateMapRequest, emptypb.Empty]
 }
 
 // GetNextContest calls admin.v1.AdminService.GetNextContest.
@@ -166,7 +221,7 @@ func (c *adminServiceClient) SetIp(ctx context.Context, req *v1.SetIpRequest) (*
 }
 
 // SetWallpaper calls admin.v1.AdminService.SetWallpaper.
-func (c *adminServiceClient) SetWallpaper(ctx context.Context, req *v1.UploadImageRequest) (*emptypb.Empty, error) {
+func (c *adminServiceClient) SetWallpaper(ctx context.Context, req *v1.UploadWallpaperRequest) (*emptypb.Empty, error) {
 	response, err := c.setWallpaper.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
@@ -177,6 +232,51 @@ func (c *adminServiceClient) SetWallpaper(ctx context.Context, req *v1.UploadIma
 // GetWallpaper calls admin.v1.AdminService.GetWallpaper.
 func (c *adminServiceClient) GetWallpaper(ctx context.Context, req *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error) {
 	response, err := c.getWallpaper.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetAllMaps calls admin.v1.AdminService.GetAllMaps.
+func (c *adminServiceClient) GetAllMaps(ctx context.Context, req *emptypb.Empty) (*v1.GetAllMapsResponse, error) {
+	response, err := c.getAllMaps.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// SetMap calls admin.v1.AdminService.SetMap.
+func (c *adminServiceClient) SetMap(ctx context.Context, req *v1.SetMapRequest) (*emptypb.Empty, error) {
+	response, err := c.setMap.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// CreateMap calls admin.v1.AdminService.CreateMap.
+func (c *adminServiceClient) CreateMap(ctx context.Context, req *v1.CreateMapRequest) (*v1.MapResponse, error) {
+	response, err := c.createMap.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetMap calls admin.v1.AdminService.GetMap.
+func (c *adminServiceClient) GetMap(ctx context.Context, req *v1.GetMapRequest) (*v1.MapResponse, error) {
+	response, err := c.getMap.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// UpdateMap calls admin.v1.AdminService.UpdateMap.
+func (c *adminServiceClient) UpdateMap(ctx context.Context, req *v1.UpdateMapRequest) (*emptypb.Empty, error) {
+	response, err := c.updateMap.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -194,9 +294,19 @@ type AdminServiceHandler interface {
 	// Sets the ip for some team. Only allows ips that are not used by a different team yet
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
-	SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error)
+	SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error)
 	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
+	// Gets all maps in the system
+	GetAllMaps(context.Context, *emptypb.Empty) (*v1.GetAllMapsResponse, error)
+	// Sets the map for some contest, does not error of either does not exist
+	SetMap(context.Context, *v1.SetMapRequest) (*emptypb.Empty, error)
+	// Creates a new map
+	CreateMap(context.Context, *v1.CreateMapRequest) (*v1.MapResponse, error)
+	// Gets a map
+	GetMap(context.Context, *v1.GetMapRequest) (*v1.MapResponse, error)
+	// Updates a map
+	UpdateMap(context.Context, *v1.UpdateMapRequest) (*emptypb.Empty, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -242,6 +352,36 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("GetWallpaper")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceGetAllMapsHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceGetAllMapsProcedure,
+		svc.GetAllMaps,
+		connect.WithSchema(adminServiceMethods.ByName("GetAllMaps")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceSetMapHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceSetMapProcedure,
+		svc.SetMap,
+		connect.WithSchema(adminServiceMethods.ByName("SetMap")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceCreateMapHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceCreateMapProcedure,
+		svc.CreateMap,
+		connect.WithSchema(adminServiceMethods.ByName("CreateMap")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceGetMapHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceGetMapProcedure,
+		svc.GetMap,
+		connect.WithSchema(adminServiceMethods.ByName("GetMap")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateMapHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceUpdateMapProcedure,
+		svc.UpdateMap,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateMap")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admin.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceGetNextContestProcedure:
@@ -256,6 +396,16 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSetWallpaperHandler.ServeHTTP(w, r)
 		case AdminServiceGetWallpaperProcedure:
 			adminServiceGetWallpaperHandler.ServeHTTP(w, r)
+		case AdminServiceGetAllMapsProcedure:
+			adminServiceGetAllMapsHandler.ServeHTTP(w, r)
+		case AdminServiceSetMapProcedure:
+			adminServiceSetMapHandler.ServeHTTP(w, r)
+		case AdminServiceCreateMapProcedure:
+			adminServiceCreateMapHandler.ServeHTTP(w, r)
+		case AdminServiceGetMapProcedure:
+			adminServiceGetMapHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateMapProcedure:
+			adminServiceUpdateMapHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -281,10 +431,30 @@ func (UnimplementedAdminServiceHandler) SetIp(context.Context, *v1.SetIpRequest)
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetIp is not implemented"))
 }
 
-func (UnimplementedAdminServiceHandler) SetWallpaper(context.Context, *v1.UploadImageRequest) (*emptypb.Empty, error) {
+func (UnimplementedAdminServiceHandler) SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetWallpaper is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.GetWallpaper is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) GetAllMaps(context.Context, *emptypb.Empty) (*v1.GetAllMapsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.GetAllMaps is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) SetMap(context.Context, *v1.SetMapRequest) (*emptypb.Empty, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetMap is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) CreateMap(context.Context, *v1.CreateMapRequest) (*v1.MapResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.CreateMap is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) GetMap(context.Context, *v1.GetMapRequest) (*v1.MapResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.GetMap is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateMap(context.Context, *v1.UpdateMapRequest) (*emptypb.Empty, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.UpdateMap is not implemented"))
 }

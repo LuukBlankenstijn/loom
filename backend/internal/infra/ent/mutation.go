@@ -12,10 +12,16 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contest"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestareamap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestmap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/doorelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/predicate"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/team"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallpaper"
+	"github.com/google/uuid"
 )
 
 const (
@@ -27,10 +33,15 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeContest   = "Contest"
-	TypeStation   = "Station"
-	TypeTeam      = "Team"
-	TypeWallpaper = "Wallpaper"
+	TypeContest        = "Contest"
+	TypeContestAreaMap = "ContestAreaMap"
+	TypeContestMap     = "ContestMap"
+	TypeDoorElement    = "DoorElement"
+	TypeStation        = "Station"
+	TypeTableElement   = "TableElement"
+	TypeTeam           = "Team"
+	TypeWallElement    = "WallElement"
+	TypeWallpaper      = "Wallpaper"
 )
 
 // ContestMutation represents an operation that mutates the Contest nodes in the graph.
@@ -566,19 +577,1599 @@ func (m *ContestMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Contest edge %s", name)
 }
 
+// ContestAreaMapMutation represents an operation that mutates the ContestAreaMap nodes in the graph.
+type ContestAreaMapMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	_Name         *string
+	clearedFields map[string]struct{}
+	doors         map[uuid.UUID]struct{}
+	removeddoors  map[uuid.UUID]struct{}
+	cleareddoors  bool
+	walls         map[uuid.UUID]struct{}
+	removedwalls  map[uuid.UUID]struct{}
+	clearedwalls  bool
+	tables        map[uuid.UUID]struct{}
+	removedtables map[uuid.UUID]struct{}
+	clearedtables bool
+	done          bool
+	oldValue      func(context.Context) (*ContestAreaMap, error)
+	predicates    []predicate.ContestAreaMap
+}
+
+var _ ent.Mutation = (*ContestAreaMapMutation)(nil)
+
+// contestareamapOption allows management of the mutation configuration using functional options.
+type contestareamapOption func(*ContestAreaMapMutation)
+
+// newContestAreaMapMutation creates new mutation for the ContestAreaMap entity.
+func newContestAreaMapMutation(c config, op Op, opts ...contestareamapOption) *ContestAreaMapMutation {
+	m := &ContestAreaMapMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeContestAreaMap,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withContestAreaMapID sets the ID field of the mutation.
+func withContestAreaMapID(id int) contestareamapOption {
+	return func(m *ContestAreaMapMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ContestAreaMap
+		)
+		m.oldValue = func(ctx context.Context) (*ContestAreaMap, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ContestAreaMap.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withContestAreaMap sets the old ContestAreaMap of the mutation.
+func withContestAreaMap(node *ContestAreaMap) contestareamapOption {
+	return func(m *ContestAreaMapMutation) {
+		m.oldValue = func(context.Context) (*ContestAreaMap, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ContestAreaMapMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ContestAreaMapMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ContestAreaMapMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ContestAreaMapMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ContestAreaMap.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "Name" field.
+func (m *ContestAreaMapMutation) SetName(s string) {
+	m._Name = &s
+}
+
+// Name returns the value of the "Name" field in the mutation.
+func (m *ContestAreaMapMutation) Name() (r string, exists bool) {
+	v := m._Name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "Name" field's value of the ContestAreaMap entity.
+// If the ContestAreaMap object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContestAreaMapMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "Name" field.
+func (m *ContestAreaMapMutation) ResetName() {
+	m._Name = nil
+}
+
+// AddDoorIDs adds the "doors" edge to the DoorElement entity by ids.
+func (m *ContestAreaMapMutation) AddDoorIDs(ids ...uuid.UUID) {
+	if m.doors == nil {
+		m.doors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.doors[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDoors clears the "doors" edge to the DoorElement entity.
+func (m *ContestAreaMapMutation) ClearDoors() {
+	m.cleareddoors = true
+}
+
+// DoorsCleared reports if the "doors" edge to the DoorElement entity was cleared.
+func (m *ContestAreaMapMutation) DoorsCleared() bool {
+	return m.cleareddoors
+}
+
+// RemoveDoorIDs removes the "doors" edge to the DoorElement entity by IDs.
+func (m *ContestAreaMapMutation) RemoveDoorIDs(ids ...uuid.UUID) {
+	if m.removeddoors == nil {
+		m.removeddoors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.doors, ids[i])
+		m.removeddoors[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDoors returns the removed IDs of the "doors" edge to the DoorElement entity.
+func (m *ContestAreaMapMutation) RemovedDoorsIDs() (ids []uuid.UUID) {
+	for id := range m.removeddoors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DoorsIDs returns the "doors" edge IDs in the mutation.
+func (m *ContestAreaMapMutation) DoorsIDs() (ids []uuid.UUID) {
+	for id := range m.doors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDoors resets all changes to the "doors" edge.
+func (m *ContestAreaMapMutation) ResetDoors() {
+	m.doors = nil
+	m.cleareddoors = false
+	m.removeddoors = nil
+}
+
+// AddWallIDs adds the "walls" edge to the WallElement entity by ids.
+func (m *ContestAreaMapMutation) AddWallIDs(ids ...uuid.UUID) {
+	if m.walls == nil {
+		m.walls = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.walls[ids[i]] = struct{}{}
+	}
+}
+
+// ClearWalls clears the "walls" edge to the WallElement entity.
+func (m *ContestAreaMapMutation) ClearWalls() {
+	m.clearedwalls = true
+}
+
+// WallsCleared reports if the "walls" edge to the WallElement entity was cleared.
+func (m *ContestAreaMapMutation) WallsCleared() bool {
+	return m.clearedwalls
+}
+
+// RemoveWallIDs removes the "walls" edge to the WallElement entity by IDs.
+func (m *ContestAreaMapMutation) RemoveWallIDs(ids ...uuid.UUID) {
+	if m.removedwalls == nil {
+		m.removedwalls = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.walls, ids[i])
+		m.removedwalls[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWalls returns the removed IDs of the "walls" edge to the WallElement entity.
+func (m *ContestAreaMapMutation) RemovedWallsIDs() (ids []uuid.UUID) {
+	for id := range m.removedwalls {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// WallsIDs returns the "walls" edge IDs in the mutation.
+func (m *ContestAreaMapMutation) WallsIDs() (ids []uuid.UUID) {
+	for id := range m.walls {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetWalls resets all changes to the "walls" edge.
+func (m *ContestAreaMapMutation) ResetWalls() {
+	m.walls = nil
+	m.clearedwalls = false
+	m.removedwalls = nil
+}
+
+// AddTableIDs adds the "tables" edge to the TableElement entity by ids.
+func (m *ContestAreaMapMutation) AddTableIDs(ids ...uuid.UUID) {
+	if m.tables == nil {
+		m.tables = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.tables[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTables clears the "tables" edge to the TableElement entity.
+func (m *ContestAreaMapMutation) ClearTables() {
+	m.clearedtables = true
+}
+
+// TablesCleared reports if the "tables" edge to the TableElement entity was cleared.
+func (m *ContestAreaMapMutation) TablesCleared() bool {
+	return m.clearedtables
+}
+
+// RemoveTableIDs removes the "tables" edge to the TableElement entity by IDs.
+func (m *ContestAreaMapMutation) RemoveTableIDs(ids ...uuid.UUID) {
+	if m.removedtables == nil {
+		m.removedtables = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.tables, ids[i])
+		m.removedtables[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTables returns the removed IDs of the "tables" edge to the TableElement entity.
+func (m *ContestAreaMapMutation) RemovedTablesIDs() (ids []uuid.UUID) {
+	for id := range m.removedtables {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TablesIDs returns the "tables" edge IDs in the mutation.
+func (m *ContestAreaMapMutation) TablesIDs() (ids []uuid.UUID) {
+	for id := range m.tables {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTables resets all changes to the "tables" edge.
+func (m *ContestAreaMapMutation) ResetTables() {
+	m.tables = nil
+	m.clearedtables = false
+	m.removedtables = nil
+}
+
+// Where appends a list predicates to the ContestAreaMapMutation builder.
+func (m *ContestAreaMapMutation) Where(ps ...predicate.ContestAreaMap) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ContestAreaMapMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ContestAreaMapMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ContestAreaMap, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ContestAreaMapMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ContestAreaMapMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ContestAreaMap).
+func (m *ContestAreaMapMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ContestAreaMapMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m._Name != nil {
+		fields = append(fields, contestareamap.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ContestAreaMapMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case contestareamap.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ContestAreaMapMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case contestareamap.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown ContestAreaMap field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ContestAreaMapMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case contestareamap.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ContestAreaMap field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ContestAreaMapMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ContestAreaMapMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ContestAreaMapMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ContestAreaMap numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ContestAreaMapMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ContestAreaMapMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ContestAreaMapMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ContestAreaMap nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ContestAreaMapMutation) ResetField(name string) error {
+	switch name {
+	case contestareamap.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown ContestAreaMap field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ContestAreaMapMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.doors != nil {
+		edges = append(edges, contestareamap.EdgeDoors)
+	}
+	if m.walls != nil {
+		edges = append(edges, contestareamap.EdgeWalls)
+	}
+	if m.tables != nil {
+		edges = append(edges, contestareamap.EdgeTables)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ContestAreaMapMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case contestareamap.EdgeDoors:
+		ids := make([]ent.Value, 0, len(m.doors))
+		for id := range m.doors {
+			ids = append(ids, id)
+		}
+		return ids
+	case contestareamap.EdgeWalls:
+		ids := make([]ent.Value, 0, len(m.walls))
+		for id := range m.walls {
+			ids = append(ids, id)
+		}
+		return ids
+	case contestareamap.EdgeTables:
+		ids := make([]ent.Value, 0, len(m.tables))
+		for id := range m.tables {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ContestAreaMapMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removeddoors != nil {
+		edges = append(edges, contestareamap.EdgeDoors)
+	}
+	if m.removedwalls != nil {
+		edges = append(edges, contestareamap.EdgeWalls)
+	}
+	if m.removedtables != nil {
+		edges = append(edges, contestareamap.EdgeTables)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ContestAreaMapMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case contestareamap.EdgeDoors:
+		ids := make([]ent.Value, 0, len(m.removeddoors))
+		for id := range m.removeddoors {
+			ids = append(ids, id)
+		}
+		return ids
+	case contestareamap.EdgeWalls:
+		ids := make([]ent.Value, 0, len(m.removedwalls))
+		for id := range m.removedwalls {
+			ids = append(ids, id)
+		}
+		return ids
+	case contestareamap.EdgeTables:
+		ids := make([]ent.Value, 0, len(m.removedtables))
+		for id := range m.removedtables {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ContestAreaMapMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.cleareddoors {
+		edges = append(edges, contestareamap.EdgeDoors)
+	}
+	if m.clearedwalls {
+		edges = append(edges, contestareamap.EdgeWalls)
+	}
+	if m.clearedtables {
+		edges = append(edges, contestareamap.EdgeTables)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ContestAreaMapMutation) EdgeCleared(name string) bool {
+	switch name {
+	case contestareamap.EdgeDoors:
+		return m.cleareddoors
+	case contestareamap.EdgeWalls:
+		return m.clearedwalls
+	case contestareamap.EdgeTables:
+		return m.clearedtables
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ContestAreaMapMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown ContestAreaMap unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ContestAreaMapMutation) ResetEdge(name string) error {
+	switch name {
+	case contestareamap.EdgeDoors:
+		m.ResetDoors()
+		return nil
+	case contestareamap.EdgeWalls:
+		m.ResetWalls()
+		return nil
+	case contestareamap.EdgeTables:
+		m.ResetTables()
+		return nil
+	}
+	return fmt.Errorf("unknown ContestAreaMap edge %s", name)
+}
+
+// ContestMapMutation represents an operation that mutates the ContestMap nodes in the graph.
+type ContestMapMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	contest_id    *string
+	map_id        *int
+	addmap_id     *int
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*ContestMap, error)
+	predicates    []predicate.ContestMap
+}
+
+var _ ent.Mutation = (*ContestMapMutation)(nil)
+
+// contestmapOption allows management of the mutation configuration using functional options.
+type contestmapOption func(*ContestMapMutation)
+
+// newContestMapMutation creates new mutation for the ContestMap entity.
+func newContestMapMutation(c config, op Op, opts ...contestmapOption) *ContestMapMutation {
+	m := &ContestMapMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeContestMap,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withContestMapID sets the ID field of the mutation.
+func withContestMapID(id int) contestmapOption {
+	return func(m *ContestMapMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ContestMap
+		)
+		m.oldValue = func(ctx context.Context) (*ContestMap, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ContestMap.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withContestMap sets the old ContestMap of the mutation.
+func withContestMap(node *ContestMap) contestmapOption {
+	return func(m *ContestMapMutation) {
+		m.oldValue = func(context.Context) (*ContestMap, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ContestMapMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ContestMapMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ContestMapMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ContestMapMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ContestMap.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetContestID sets the "contest_id" field.
+func (m *ContestMapMutation) SetContestID(s string) {
+	m.contest_id = &s
+}
+
+// ContestID returns the value of the "contest_id" field in the mutation.
+func (m *ContestMapMutation) ContestID() (r string, exists bool) {
+	v := m.contest_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContestID returns the old "contest_id" field's value of the ContestMap entity.
+// If the ContestMap object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContestMapMutation) OldContestID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContestID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContestID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContestID: %w", err)
+	}
+	return oldValue.ContestID, nil
+}
+
+// ResetContestID resets all changes to the "contest_id" field.
+func (m *ContestMapMutation) ResetContestID() {
+	m.contest_id = nil
+}
+
+// SetMapID sets the "map_id" field.
+func (m *ContestMapMutation) SetMapID(i int) {
+	m.map_id = &i
+	m.addmap_id = nil
+}
+
+// MapID returns the value of the "map_id" field in the mutation.
+func (m *ContestMapMutation) MapID() (r int, exists bool) {
+	v := m.map_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMapID returns the old "map_id" field's value of the ContestMap entity.
+// If the ContestMap object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ContestMapMutation) OldMapID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMapID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMapID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMapID: %w", err)
+	}
+	return oldValue.MapID, nil
+}
+
+// AddMapID adds i to the "map_id" field.
+func (m *ContestMapMutation) AddMapID(i int) {
+	if m.addmap_id != nil {
+		*m.addmap_id += i
+	} else {
+		m.addmap_id = &i
+	}
+}
+
+// AddedMapID returns the value that was added to the "map_id" field in this mutation.
+func (m *ContestMapMutation) AddedMapID() (r int, exists bool) {
+	v := m.addmap_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMapID resets all changes to the "map_id" field.
+func (m *ContestMapMutation) ResetMapID() {
+	m.map_id = nil
+	m.addmap_id = nil
+}
+
+// Where appends a list predicates to the ContestMapMutation builder.
+func (m *ContestMapMutation) Where(ps ...predicate.ContestMap) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ContestMapMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ContestMapMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ContestMap, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ContestMapMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ContestMapMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ContestMap).
+func (m *ContestMapMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ContestMapMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.contest_id != nil {
+		fields = append(fields, contestmap.FieldContestID)
+	}
+	if m.map_id != nil {
+		fields = append(fields, contestmap.FieldMapID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ContestMapMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case contestmap.FieldContestID:
+		return m.ContestID()
+	case contestmap.FieldMapID:
+		return m.MapID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ContestMapMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case contestmap.FieldContestID:
+		return m.OldContestID(ctx)
+	case contestmap.FieldMapID:
+		return m.OldMapID(ctx)
+	}
+	return nil, fmt.Errorf("unknown ContestMap field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ContestMapMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case contestmap.FieldContestID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContestID(v)
+		return nil
+	case contestmap.FieldMapID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMapID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ContestMap field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ContestMapMutation) AddedFields() []string {
+	var fields []string
+	if m.addmap_id != nil {
+		fields = append(fields, contestmap.FieldMapID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ContestMapMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case contestmap.FieldMapID:
+		return m.AddedMapID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ContestMapMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case contestmap.FieldMapID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMapID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ContestMap numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ContestMapMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ContestMapMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ContestMapMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown ContestMap nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ContestMapMutation) ResetField(name string) error {
+	switch name {
+	case contestmap.FieldContestID:
+		m.ResetContestID()
+		return nil
+	case contestmap.FieldMapID:
+		m.ResetMapID()
+		return nil
+	}
+	return fmt.Errorf("unknown ContestMap field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ContestMapMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ContestMapMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ContestMapMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ContestMapMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ContestMapMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ContestMapMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ContestMapMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ContestMap unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ContestMapMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ContestMap edge %s", name)
+}
+
+// DoorElementMutation represents an operation that mutates the DoorElement nodes in the graph.
+type DoorElementMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	x             *int
+	addx          *int
+	y             *int
+	addy          *int
+	rotation      *doorelement.Rotation
+	clearedFields map[string]struct{}
+	_map          *int
+	cleared_map   bool
+	done          bool
+	oldValue      func(context.Context) (*DoorElement, error)
+	predicates    []predicate.DoorElement
+}
+
+var _ ent.Mutation = (*DoorElementMutation)(nil)
+
+// doorelementOption allows management of the mutation configuration using functional options.
+type doorelementOption func(*DoorElementMutation)
+
+// newDoorElementMutation creates new mutation for the DoorElement entity.
+func newDoorElementMutation(c config, op Op, opts ...doorelementOption) *DoorElementMutation {
+	m := &DoorElementMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeDoorElement,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withDoorElementID sets the ID field of the mutation.
+func withDoorElementID(id uuid.UUID) doorelementOption {
+	return func(m *DoorElementMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *DoorElement
+		)
+		m.oldValue = func(ctx context.Context) (*DoorElement, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().DoorElement.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withDoorElement sets the old DoorElement of the mutation.
+func withDoorElement(node *DoorElement) doorelementOption {
+	return func(m *DoorElementMutation) {
+		m.oldValue = func(context.Context) (*DoorElement, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m DoorElementMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m DoorElementMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of DoorElement entities.
+func (m *DoorElementMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *DoorElementMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *DoorElementMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().DoorElement.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetX sets the "x" field.
+func (m *DoorElementMutation) SetX(i int) {
+	m.x = &i
+	m.addx = nil
+}
+
+// X returns the value of the "x" field in the mutation.
+func (m *DoorElementMutation) X() (r int, exists bool) {
+	v := m.x
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldX returns the old "x" field's value of the DoorElement entity.
+// If the DoorElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DoorElementMutation) OldX(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldX is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldX requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldX: %w", err)
+	}
+	return oldValue.X, nil
+}
+
+// AddX adds i to the "x" field.
+func (m *DoorElementMutation) AddX(i int) {
+	if m.addx != nil {
+		*m.addx += i
+	} else {
+		m.addx = &i
+	}
+}
+
+// AddedX returns the value that was added to the "x" field in this mutation.
+func (m *DoorElementMutation) AddedX() (r int, exists bool) {
+	v := m.addx
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetX resets all changes to the "x" field.
+func (m *DoorElementMutation) ResetX() {
+	m.x = nil
+	m.addx = nil
+}
+
+// SetY sets the "y" field.
+func (m *DoorElementMutation) SetY(i int) {
+	m.y = &i
+	m.addy = nil
+}
+
+// Y returns the value of the "y" field in the mutation.
+func (m *DoorElementMutation) Y() (r int, exists bool) {
+	v := m.y
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldY returns the old "y" field's value of the DoorElement entity.
+// If the DoorElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DoorElementMutation) OldY(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldY is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldY requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldY: %w", err)
+	}
+	return oldValue.Y, nil
+}
+
+// AddY adds i to the "y" field.
+func (m *DoorElementMutation) AddY(i int) {
+	if m.addy != nil {
+		*m.addy += i
+	} else {
+		m.addy = &i
+	}
+}
+
+// AddedY returns the value that was added to the "y" field in this mutation.
+func (m *DoorElementMutation) AddedY() (r int, exists bool) {
+	v := m.addy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetY resets all changes to the "y" field.
+func (m *DoorElementMutation) ResetY() {
+	m.y = nil
+	m.addy = nil
+}
+
+// SetRotation sets the "rotation" field.
+func (m *DoorElementMutation) SetRotation(d doorelement.Rotation) {
+	m.rotation = &d
+}
+
+// Rotation returns the value of the "rotation" field in the mutation.
+func (m *DoorElementMutation) Rotation() (r doorelement.Rotation, exists bool) {
+	v := m.rotation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRotation returns the old "rotation" field's value of the DoorElement entity.
+// If the DoorElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DoorElementMutation) OldRotation(ctx context.Context) (v doorelement.Rotation, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRotation is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRotation requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRotation: %w", err)
+	}
+	return oldValue.Rotation, nil
+}
+
+// ResetRotation resets all changes to the "rotation" field.
+func (m *DoorElementMutation) ResetRotation() {
+	m.rotation = nil
+}
+
+// SetMapID sets the "map" edge to the ContestAreaMap entity by id.
+func (m *DoorElementMutation) SetMapID(id int) {
+	m._map = &id
+}
+
+// ClearMap clears the "map" edge to the ContestAreaMap entity.
+func (m *DoorElementMutation) ClearMap() {
+	m.cleared_map = true
+}
+
+// MapCleared reports if the "map" edge to the ContestAreaMap entity was cleared.
+func (m *DoorElementMutation) MapCleared() bool {
+	return m.cleared_map
+}
+
+// MapID returns the "map" edge ID in the mutation.
+func (m *DoorElementMutation) MapID() (id int, exists bool) {
+	if m._map != nil {
+		return *m._map, true
+	}
+	return
+}
+
+// MapIDs returns the "map" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MapID instead. It exists only for internal usage by the builders.
+func (m *DoorElementMutation) MapIDs() (ids []int) {
+	if id := m._map; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMap resets all changes to the "map" edge.
+func (m *DoorElementMutation) ResetMap() {
+	m._map = nil
+	m.cleared_map = false
+}
+
+// Where appends a list predicates to the DoorElementMutation builder.
+func (m *DoorElementMutation) Where(ps ...predicate.DoorElement) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the DoorElementMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *DoorElementMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.DoorElement, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *DoorElementMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *DoorElementMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (DoorElement).
+func (m *DoorElementMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *DoorElementMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.x != nil {
+		fields = append(fields, doorelement.FieldX)
+	}
+	if m.y != nil {
+		fields = append(fields, doorelement.FieldY)
+	}
+	if m.rotation != nil {
+		fields = append(fields, doorelement.FieldRotation)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *DoorElementMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case doorelement.FieldX:
+		return m.X()
+	case doorelement.FieldY:
+		return m.Y()
+	case doorelement.FieldRotation:
+		return m.Rotation()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *DoorElementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case doorelement.FieldX:
+		return m.OldX(ctx)
+	case doorelement.FieldY:
+		return m.OldY(ctx)
+	case doorelement.FieldRotation:
+		return m.OldRotation(ctx)
+	}
+	return nil, fmt.Errorf("unknown DoorElement field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DoorElementMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case doorelement.FieldX:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetX(v)
+		return nil
+	case doorelement.FieldY:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetY(v)
+		return nil
+	case doorelement.FieldRotation:
+		v, ok := value.(doorelement.Rotation)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRotation(v)
+		return nil
+	}
+	return fmt.Errorf("unknown DoorElement field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *DoorElementMutation) AddedFields() []string {
+	var fields []string
+	if m.addx != nil {
+		fields = append(fields, doorelement.FieldX)
+	}
+	if m.addy != nil {
+		fields = append(fields, doorelement.FieldY)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *DoorElementMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case doorelement.FieldX:
+		return m.AddedX()
+	case doorelement.FieldY:
+		return m.AddedY()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DoorElementMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case doorelement.FieldX:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddX(v)
+		return nil
+	case doorelement.FieldY:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddY(v)
+		return nil
+	}
+	return fmt.Errorf("unknown DoorElement numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *DoorElementMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *DoorElementMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *DoorElementMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown DoorElement nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *DoorElementMutation) ResetField(name string) error {
+	switch name {
+	case doorelement.FieldX:
+		m.ResetX()
+		return nil
+	case doorelement.FieldY:
+		m.ResetY()
+		return nil
+	case doorelement.FieldRotation:
+		m.ResetRotation()
+		return nil
+	}
+	return fmt.Errorf("unknown DoorElement field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *DoorElementMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m._map != nil {
+		edges = append(edges, doorelement.EdgeMap)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *DoorElementMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case doorelement.EdgeMap:
+		if id := m._map; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DoorElementMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DoorElementMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DoorElementMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleared_map {
+		edges = append(edges, doorelement.EdgeMap)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DoorElementMutation) EdgeCleared(name string) bool {
+	switch name {
+	case doorelement.EdgeMap:
+		return m.cleared_map
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DoorElementMutation) ClearEdge(name string) error {
+	switch name {
+	case doorelement.EdgeMap:
+		m.ClearMap()
+		return nil
+	}
+	return fmt.Errorf("unknown DoorElement unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DoorElementMutation) ResetEdge(name string) error {
+	switch name {
+	case doorelement.EdgeMap:
+		m.ResetMap()
+		return nil
+	}
+	return fmt.Errorf("unknown DoorElement edge %s", name)
+}
+
 // StationMutation represents an operation that mutates the Station nodes in the graph.
 type StationMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	ip              *string
-	connected_at    *time.Time
-	disconnected_at *time.Time
-	clearedFields   map[string]struct{}
-	done            bool
-	oldValue        func(context.Context) (*Station, error)
-	predicates      []predicate.Station
+	op                   Op
+	typ                  string
+	id                   *int
+	ip                   *string
+	connected_at         *time.Time
+	disconnected_at      *time.Time
+	clearedFields        map[string]struct{}
+	table_element        map[uuid.UUID]struct{}
+	removedtable_element map[uuid.UUID]struct{}
+	clearedtable_element bool
+	done                 bool
+	oldValue             func(context.Context) (*Station, error)
+	predicates           []predicate.Station
 }
 
 var _ ent.Mutation = (*StationMutation)(nil)
@@ -800,6 +2391,60 @@ func (m *StationMutation) ResetDisconnectedAt() {
 	delete(m.clearedFields, station.FieldDisconnectedAt)
 }
 
+// AddTableElementIDs adds the "table_element" edge to the TableElement entity by ids.
+func (m *StationMutation) AddTableElementIDs(ids ...uuid.UUID) {
+	if m.table_element == nil {
+		m.table_element = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.table_element[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTableElement clears the "table_element" edge to the TableElement entity.
+func (m *StationMutation) ClearTableElement() {
+	m.clearedtable_element = true
+}
+
+// TableElementCleared reports if the "table_element" edge to the TableElement entity was cleared.
+func (m *StationMutation) TableElementCleared() bool {
+	return m.clearedtable_element
+}
+
+// RemoveTableElementIDs removes the "table_element" edge to the TableElement entity by IDs.
+func (m *StationMutation) RemoveTableElementIDs(ids ...uuid.UUID) {
+	if m.removedtable_element == nil {
+		m.removedtable_element = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.table_element, ids[i])
+		m.removedtable_element[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTableElement returns the removed IDs of the "table_element" edge to the TableElement entity.
+func (m *StationMutation) RemovedTableElementIDs() (ids []uuid.UUID) {
+	for id := range m.removedtable_element {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TableElementIDs returns the "table_element" edge IDs in the mutation.
+func (m *StationMutation) TableElementIDs() (ids []uuid.UUID) {
+	for id := range m.table_element {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTableElement resets all changes to the "table_element" edge.
+func (m *StationMutation) ResetTableElement() {
+	m.table_element = nil
+	m.clearedtable_element = false
+	m.removedtable_element = nil
+}
+
 // Where appends a list predicates to the StationMutation builder.
 func (m *StationMutation) Where(ps ...predicate.Station) {
 	m.predicates = append(m.predicates, ps...)
@@ -976,50 +2621,721 @@ func (m *StationMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *StationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.table_element != nil {
+		edges = append(edges, station.EdgeTableElement)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *StationMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case station.EdgeTableElement:
+		ids := make([]ent.Value, 0, len(m.table_element))
+		for id := range m.table_element {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *StationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedtable_element != nil {
+		edges = append(edges, station.EdgeTableElement)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *StationMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case station.EdgeTableElement:
+		ids := make([]ent.Value, 0, len(m.removedtable_element))
+		for id := range m.removedtable_element {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *StationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedtable_element {
+		edges = append(edges, station.EdgeTableElement)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *StationMutation) EdgeCleared(name string) bool {
+	switch name {
+	case station.EdgeTableElement:
+		return m.clearedtable_element
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *StationMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Station unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *StationMutation) ResetEdge(name string) error {
+	switch name {
+	case station.EdgeTableElement:
+		m.ResetTableElement()
+		return nil
+	}
 	return fmt.Errorf("unknown Station edge %s", name)
+}
+
+// TableElementMutation represents an operation that mutates the TableElement nodes in the graph.
+type TableElementMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	x              *int
+	addx           *int
+	y              *int
+	addy           *int
+	rotation       *tableelement.Rotation
+	clearedFields  map[string]struct{}
+	_map           *int
+	cleared_map    bool
+	station        *int
+	clearedstation bool
+	done           bool
+	oldValue       func(context.Context) (*TableElement, error)
+	predicates     []predicate.TableElement
+}
+
+var _ ent.Mutation = (*TableElementMutation)(nil)
+
+// tableelementOption allows management of the mutation configuration using functional options.
+type tableelementOption func(*TableElementMutation)
+
+// newTableElementMutation creates new mutation for the TableElement entity.
+func newTableElementMutation(c config, op Op, opts ...tableelementOption) *TableElementMutation {
+	m := &TableElementMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTableElement,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTableElementID sets the ID field of the mutation.
+func withTableElementID(id uuid.UUID) tableelementOption {
+	return func(m *TableElementMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TableElement
+		)
+		m.oldValue = func(ctx context.Context) (*TableElement, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TableElement.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTableElement sets the old TableElement of the mutation.
+func withTableElement(node *TableElement) tableelementOption {
+	return func(m *TableElementMutation) {
+		m.oldValue = func(context.Context) (*TableElement, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TableElementMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TableElementMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TableElement entities.
+func (m *TableElementMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TableElementMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TableElementMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TableElement.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetX sets the "x" field.
+func (m *TableElementMutation) SetX(i int) {
+	m.x = &i
+	m.addx = nil
+}
+
+// X returns the value of the "x" field in the mutation.
+func (m *TableElementMutation) X() (r int, exists bool) {
+	v := m.x
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldX returns the old "x" field's value of the TableElement entity.
+// If the TableElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TableElementMutation) OldX(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldX is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldX requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldX: %w", err)
+	}
+	return oldValue.X, nil
+}
+
+// AddX adds i to the "x" field.
+func (m *TableElementMutation) AddX(i int) {
+	if m.addx != nil {
+		*m.addx += i
+	} else {
+		m.addx = &i
+	}
+}
+
+// AddedX returns the value that was added to the "x" field in this mutation.
+func (m *TableElementMutation) AddedX() (r int, exists bool) {
+	v := m.addx
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetX resets all changes to the "x" field.
+func (m *TableElementMutation) ResetX() {
+	m.x = nil
+	m.addx = nil
+}
+
+// SetY sets the "y" field.
+func (m *TableElementMutation) SetY(i int) {
+	m.y = &i
+	m.addy = nil
+}
+
+// Y returns the value of the "y" field in the mutation.
+func (m *TableElementMutation) Y() (r int, exists bool) {
+	v := m.y
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldY returns the old "y" field's value of the TableElement entity.
+// If the TableElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TableElementMutation) OldY(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldY is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldY requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldY: %w", err)
+	}
+	return oldValue.Y, nil
+}
+
+// AddY adds i to the "y" field.
+func (m *TableElementMutation) AddY(i int) {
+	if m.addy != nil {
+		*m.addy += i
+	} else {
+		m.addy = &i
+	}
+}
+
+// AddedY returns the value that was added to the "y" field in this mutation.
+func (m *TableElementMutation) AddedY() (r int, exists bool) {
+	v := m.addy
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetY resets all changes to the "y" field.
+func (m *TableElementMutation) ResetY() {
+	m.y = nil
+	m.addy = nil
+}
+
+// SetRotation sets the "rotation" field.
+func (m *TableElementMutation) SetRotation(t tableelement.Rotation) {
+	m.rotation = &t
+}
+
+// Rotation returns the value of the "rotation" field in the mutation.
+func (m *TableElementMutation) Rotation() (r tableelement.Rotation, exists bool) {
+	v := m.rotation
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRotation returns the old "rotation" field's value of the TableElement entity.
+// If the TableElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TableElementMutation) OldRotation(ctx context.Context) (v tableelement.Rotation, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRotation is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRotation requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRotation: %w", err)
+	}
+	return oldValue.Rotation, nil
+}
+
+// ResetRotation resets all changes to the "rotation" field.
+func (m *TableElementMutation) ResetRotation() {
+	m.rotation = nil
+}
+
+// SetMapID sets the "map" edge to the ContestAreaMap entity by id.
+func (m *TableElementMutation) SetMapID(id int) {
+	m._map = &id
+}
+
+// ClearMap clears the "map" edge to the ContestAreaMap entity.
+func (m *TableElementMutation) ClearMap() {
+	m.cleared_map = true
+}
+
+// MapCleared reports if the "map" edge to the ContestAreaMap entity was cleared.
+func (m *TableElementMutation) MapCleared() bool {
+	return m.cleared_map
+}
+
+// MapID returns the "map" edge ID in the mutation.
+func (m *TableElementMutation) MapID() (id int, exists bool) {
+	if m._map != nil {
+		return *m._map, true
+	}
+	return
+}
+
+// MapIDs returns the "map" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MapID instead. It exists only for internal usage by the builders.
+func (m *TableElementMutation) MapIDs() (ids []int) {
+	if id := m._map; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMap resets all changes to the "map" edge.
+func (m *TableElementMutation) ResetMap() {
+	m._map = nil
+	m.cleared_map = false
+}
+
+// SetStationID sets the "station" edge to the Station entity by id.
+func (m *TableElementMutation) SetStationID(id int) {
+	m.station = &id
+}
+
+// ClearStation clears the "station" edge to the Station entity.
+func (m *TableElementMutation) ClearStation() {
+	m.clearedstation = true
+}
+
+// StationCleared reports if the "station" edge to the Station entity was cleared.
+func (m *TableElementMutation) StationCleared() bool {
+	return m.clearedstation
+}
+
+// StationID returns the "station" edge ID in the mutation.
+func (m *TableElementMutation) StationID() (id int, exists bool) {
+	if m.station != nil {
+		return *m.station, true
+	}
+	return
+}
+
+// StationIDs returns the "station" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// StationID instead. It exists only for internal usage by the builders.
+func (m *TableElementMutation) StationIDs() (ids []int) {
+	if id := m.station; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetStation resets all changes to the "station" edge.
+func (m *TableElementMutation) ResetStation() {
+	m.station = nil
+	m.clearedstation = false
+}
+
+// Where appends a list predicates to the TableElementMutation builder.
+func (m *TableElementMutation) Where(ps ...predicate.TableElement) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TableElementMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TableElementMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TableElement, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TableElementMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TableElementMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TableElement).
+func (m *TableElementMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TableElementMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.x != nil {
+		fields = append(fields, tableelement.FieldX)
+	}
+	if m.y != nil {
+		fields = append(fields, tableelement.FieldY)
+	}
+	if m.rotation != nil {
+		fields = append(fields, tableelement.FieldRotation)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TableElementMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tableelement.FieldX:
+		return m.X()
+	case tableelement.FieldY:
+		return m.Y()
+	case tableelement.FieldRotation:
+		return m.Rotation()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TableElementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tableelement.FieldX:
+		return m.OldX(ctx)
+	case tableelement.FieldY:
+		return m.OldY(ctx)
+	case tableelement.FieldRotation:
+		return m.OldRotation(ctx)
+	}
+	return nil, fmt.Errorf("unknown TableElement field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TableElementMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tableelement.FieldX:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetX(v)
+		return nil
+	case tableelement.FieldY:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetY(v)
+		return nil
+	case tableelement.FieldRotation:
+		v, ok := value.(tableelement.Rotation)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRotation(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TableElement field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TableElementMutation) AddedFields() []string {
+	var fields []string
+	if m.addx != nil {
+		fields = append(fields, tableelement.FieldX)
+	}
+	if m.addy != nil {
+		fields = append(fields, tableelement.FieldY)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TableElementMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tableelement.FieldX:
+		return m.AddedX()
+	case tableelement.FieldY:
+		return m.AddedY()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TableElementMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case tableelement.FieldX:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddX(v)
+		return nil
+	case tableelement.FieldY:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddY(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TableElement numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TableElementMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TableElementMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TableElementMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown TableElement nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TableElementMutation) ResetField(name string) error {
+	switch name {
+	case tableelement.FieldX:
+		m.ResetX()
+		return nil
+	case tableelement.FieldY:
+		m.ResetY()
+		return nil
+	case tableelement.FieldRotation:
+		m.ResetRotation()
+		return nil
+	}
+	return fmt.Errorf("unknown TableElement field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TableElementMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m._map != nil {
+		edges = append(edges, tableelement.EdgeMap)
+	}
+	if m.station != nil {
+		edges = append(edges, tableelement.EdgeStation)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TableElementMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tableelement.EdgeMap:
+		if id := m._map; id != nil {
+			return []ent.Value{*id}
+		}
+	case tableelement.EdgeStation:
+		if id := m.station; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TableElementMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TableElementMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TableElementMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleared_map {
+		edges = append(edges, tableelement.EdgeMap)
+	}
+	if m.clearedstation {
+		edges = append(edges, tableelement.EdgeStation)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TableElementMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tableelement.EdgeMap:
+		return m.cleared_map
+	case tableelement.EdgeStation:
+		return m.clearedstation
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TableElementMutation) ClearEdge(name string) error {
+	switch name {
+	case tableelement.EdgeMap:
+		m.ClearMap()
+		return nil
+	case tableelement.EdgeStation:
+		m.ClearStation()
+		return nil
+	}
+	return fmt.Errorf("unknown TableElement unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TableElementMutation) ResetEdge(name string) error {
+	switch name {
+	case tableelement.EdgeMap:
+		m.ResetMap()
+		return nil
+	case tableelement.EdgeStation:
+		m.ResetStation()
+		return nil
+	}
+	return fmt.Errorf("unknown TableElement edge %s", name)
 }
 
 // TeamMutation represents an operation that mutates the Team nodes in the graph.
@@ -1504,6 +3820,702 @@ func (m *TeamMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Team edge %s", name)
+}
+
+// WallElementMutation represents an operation that mutates the WallElement nodes in the graph.
+type WallElementMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	x_start       *int
+	addx_start    *int
+	y_start       *int
+	addy_start    *int
+	x_end         *int
+	addx_end      *int
+	y_end         *int
+	addy_end      *int
+	clearedFields map[string]struct{}
+	_map          *int
+	cleared_map   bool
+	done          bool
+	oldValue      func(context.Context) (*WallElement, error)
+	predicates    []predicate.WallElement
+}
+
+var _ ent.Mutation = (*WallElementMutation)(nil)
+
+// wallelementOption allows management of the mutation configuration using functional options.
+type wallelementOption func(*WallElementMutation)
+
+// newWallElementMutation creates new mutation for the WallElement entity.
+func newWallElementMutation(c config, op Op, opts ...wallelementOption) *WallElementMutation {
+	m := &WallElementMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeWallElement,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withWallElementID sets the ID field of the mutation.
+func withWallElementID(id uuid.UUID) wallelementOption {
+	return func(m *WallElementMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *WallElement
+		)
+		m.oldValue = func(ctx context.Context) (*WallElement, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().WallElement.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withWallElement sets the old WallElement of the mutation.
+func withWallElement(node *WallElement) wallelementOption {
+	return func(m *WallElementMutation) {
+		m.oldValue = func(context.Context) (*WallElement, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m WallElementMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m WallElementMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of WallElement entities.
+func (m *WallElementMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *WallElementMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *WallElementMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().WallElement.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetXStart sets the "x_start" field.
+func (m *WallElementMutation) SetXStart(i int) {
+	m.x_start = &i
+	m.addx_start = nil
+}
+
+// XStart returns the value of the "x_start" field in the mutation.
+func (m *WallElementMutation) XStart() (r int, exists bool) {
+	v := m.x_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldXStart returns the old "x_start" field's value of the WallElement entity.
+// If the WallElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallElementMutation) OldXStart(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldXStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldXStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldXStart: %w", err)
+	}
+	return oldValue.XStart, nil
+}
+
+// AddXStart adds i to the "x_start" field.
+func (m *WallElementMutation) AddXStart(i int) {
+	if m.addx_start != nil {
+		*m.addx_start += i
+	} else {
+		m.addx_start = &i
+	}
+}
+
+// AddedXStart returns the value that was added to the "x_start" field in this mutation.
+func (m *WallElementMutation) AddedXStart() (r int, exists bool) {
+	v := m.addx_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetXStart resets all changes to the "x_start" field.
+func (m *WallElementMutation) ResetXStart() {
+	m.x_start = nil
+	m.addx_start = nil
+}
+
+// SetYStart sets the "y_start" field.
+func (m *WallElementMutation) SetYStart(i int) {
+	m.y_start = &i
+	m.addy_start = nil
+}
+
+// YStart returns the value of the "y_start" field in the mutation.
+func (m *WallElementMutation) YStart() (r int, exists bool) {
+	v := m.y_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldYStart returns the old "y_start" field's value of the WallElement entity.
+// If the WallElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallElementMutation) OldYStart(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldYStart is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldYStart requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldYStart: %w", err)
+	}
+	return oldValue.YStart, nil
+}
+
+// AddYStart adds i to the "y_start" field.
+func (m *WallElementMutation) AddYStart(i int) {
+	if m.addy_start != nil {
+		*m.addy_start += i
+	} else {
+		m.addy_start = &i
+	}
+}
+
+// AddedYStart returns the value that was added to the "y_start" field in this mutation.
+func (m *WallElementMutation) AddedYStart() (r int, exists bool) {
+	v := m.addy_start
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetYStart resets all changes to the "y_start" field.
+func (m *WallElementMutation) ResetYStart() {
+	m.y_start = nil
+	m.addy_start = nil
+}
+
+// SetXEnd sets the "x_end" field.
+func (m *WallElementMutation) SetXEnd(i int) {
+	m.x_end = &i
+	m.addx_end = nil
+}
+
+// XEnd returns the value of the "x_end" field in the mutation.
+func (m *WallElementMutation) XEnd() (r int, exists bool) {
+	v := m.x_end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldXEnd returns the old "x_end" field's value of the WallElement entity.
+// If the WallElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallElementMutation) OldXEnd(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldXEnd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldXEnd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldXEnd: %w", err)
+	}
+	return oldValue.XEnd, nil
+}
+
+// AddXEnd adds i to the "x_end" field.
+func (m *WallElementMutation) AddXEnd(i int) {
+	if m.addx_end != nil {
+		*m.addx_end += i
+	} else {
+		m.addx_end = &i
+	}
+}
+
+// AddedXEnd returns the value that was added to the "x_end" field in this mutation.
+func (m *WallElementMutation) AddedXEnd() (r int, exists bool) {
+	v := m.addx_end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetXEnd resets all changes to the "x_end" field.
+func (m *WallElementMutation) ResetXEnd() {
+	m.x_end = nil
+	m.addx_end = nil
+}
+
+// SetYEnd sets the "y_end" field.
+func (m *WallElementMutation) SetYEnd(i int) {
+	m.y_end = &i
+	m.addy_end = nil
+}
+
+// YEnd returns the value of the "y_end" field in the mutation.
+func (m *WallElementMutation) YEnd() (r int, exists bool) {
+	v := m.y_end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldYEnd returns the old "y_end" field's value of the WallElement entity.
+// If the WallElement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallElementMutation) OldYEnd(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldYEnd is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldYEnd requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldYEnd: %w", err)
+	}
+	return oldValue.YEnd, nil
+}
+
+// AddYEnd adds i to the "y_end" field.
+func (m *WallElementMutation) AddYEnd(i int) {
+	if m.addy_end != nil {
+		*m.addy_end += i
+	} else {
+		m.addy_end = &i
+	}
+}
+
+// AddedYEnd returns the value that was added to the "y_end" field in this mutation.
+func (m *WallElementMutation) AddedYEnd() (r int, exists bool) {
+	v := m.addy_end
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetYEnd resets all changes to the "y_end" field.
+func (m *WallElementMutation) ResetYEnd() {
+	m.y_end = nil
+	m.addy_end = nil
+}
+
+// SetMapID sets the "map" edge to the ContestAreaMap entity by id.
+func (m *WallElementMutation) SetMapID(id int) {
+	m._map = &id
+}
+
+// ClearMap clears the "map" edge to the ContestAreaMap entity.
+func (m *WallElementMutation) ClearMap() {
+	m.cleared_map = true
+}
+
+// MapCleared reports if the "map" edge to the ContestAreaMap entity was cleared.
+func (m *WallElementMutation) MapCleared() bool {
+	return m.cleared_map
+}
+
+// MapID returns the "map" edge ID in the mutation.
+func (m *WallElementMutation) MapID() (id int, exists bool) {
+	if m._map != nil {
+		return *m._map, true
+	}
+	return
+}
+
+// MapIDs returns the "map" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// MapID instead. It exists only for internal usage by the builders.
+func (m *WallElementMutation) MapIDs() (ids []int) {
+	if id := m._map; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetMap resets all changes to the "map" edge.
+func (m *WallElementMutation) ResetMap() {
+	m._map = nil
+	m.cleared_map = false
+}
+
+// Where appends a list predicates to the WallElementMutation builder.
+func (m *WallElementMutation) Where(ps ...predicate.WallElement) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the WallElementMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *WallElementMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.WallElement, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *WallElementMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *WallElementMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (WallElement).
+func (m *WallElementMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *WallElementMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.x_start != nil {
+		fields = append(fields, wallelement.FieldXStart)
+	}
+	if m.y_start != nil {
+		fields = append(fields, wallelement.FieldYStart)
+	}
+	if m.x_end != nil {
+		fields = append(fields, wallelement.FieldXEnd)
+	}
+	if m.y_end != nil {
+		fields = append(fields, wallelement.FieldYEnd)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *WallElementMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case wallelement.FieldXStart:
+		return m.XStart()
+	case wallelement.FieldYStart:
+		return m.YStart()
+	case wallelement.FieldXEnd:
+		return m.XEnd()
+	case wallelement.FieldYEnd:
+		return m.YEnd()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *WallElementMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case wallelement.FieldXStart:
+		return m.OldXStart(ctx)
+	case wallelement.FieldYStart:
+		return m.OldYStart(ctx)
+	case wallelement.FieldXEnd:
+		return m.OldXEnd(ctx)
+	case wallelement.FieldYEnd:
+		return m.OldYEnd(ctx)
+	}
+	return nil, fmt.Errorf("unknown WallElement field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WallElementMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case wallelement.FieldXStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetXStart(v)
+		return nil
+	case wallelement.FieldYStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetYStart(v)
+		return nil
+	case wallelement.FieldXEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetXEnd(v)
+		return nil
+	case wallelement.FieldYEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetYEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown WallElement field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *WallElementMutation) AddedFields() []string {
+	var fields []string
+	if m.addx_start != nil {
+		fields = append(fields, wallelement.FieldXStart)
+	}
+	if m.addy_start != nil {
+		fields = append(fields, wallelement.FieldYStart)
+	}
+	if m.addx_end != nil {
+		fields = append(fields, wallelement.FieldXEnd)
+	}
+	if m.addy_end != nil {
+		fields = append(fields, wallelement.FieldYEnd)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *WallElementMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case wallelement.FieldXStart:
+		return m.AddedXStart()
+	case wallelement.FieldYStart:
+		return m.AddedYStart()
+	case wallelement.FieldXEnd:
+		return m.AddedXEnd()
+	case wallelement.FieldYEnd:
+		return m.AddedYEnd()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *WallElementMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case wallelement.FieldXStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddXStart(v)
+		return nil
+	case wallelement.FieldYStart:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddYStart(v)
+		return nil
+	case wallelement.FieldXEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddXEnd(v)
+		return nil
+	case wallelement.FieldYEnd:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddYEnd(v)
+		return nil
+	}
+	return fmt.Errorf("unknown WallElement numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *WallElementMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *WallElementMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *WallElementMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown WallElement nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *WallElementMutation) ResetField(name string) error {
+	switch name {
+	case wallelement.FieldXStart:
+		m.ResetXStart()
+		return nil
+	case wallelement.FieldYStart:
+		m.ResetYStart()
+		return nil
+	case wallelement.FieldXEnd:
+		m.ResetXEnd()
+		return nil
+	case wallelement.FieldYEnd:
+		m.ResetYEnd()
+		return nil
+	}
+	return fmt.Errorf("unknown WallElement field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *WallElementMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m._map != nil {
+		edges = append(edges, wallelement.EdgeMap)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *WallElementMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case wallelement.EdgeMap:
+		if id := m._map; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *WallElementMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *WallElementMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *WallElementMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleared_map {
+		edges = append(edges, wallelement.EdgeMap)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *WallElementMutation) EdgeCleared(name string) bool {
+	switch name {
+	case wallelement.EdgeMap:
+		return m.cleared_map
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *WallElementMutation) ClearEdge(name string) error {
+	switch name {
+	case wallelement.EdgeMap:
+		m.ClearMap()
+		return nil
+	}
+	return fmt.Errorf("unknown WallElement unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *WallElementMutation) ResetEdge(name string) error {
+	switch name {
+	case wallelement.EdgeMap:
+		m.ResetMap()
+		return nil
+	}
+	return fmt.Errorf("unknown WallElement edge %s", name)
 }
 
 // WallpaperMutation represents an operation that mutates the Wallpaper nodes in the graph.

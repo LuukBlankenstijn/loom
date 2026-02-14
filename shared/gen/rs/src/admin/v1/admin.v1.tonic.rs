@@ -190,7 +190,7 @@ pub mod admin_service_client {
 */
         pub async fn set_wallpaper(
             &mut self,
-            request: impl tonic::IntoRequest<super::UploadImageRequest>,
+            request: impl tonic::IntoRequest<super::UploadWallpaperRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner
                 .ready()
@@ -233,6 +233,124 @@ pub mod admin_service_client {
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("admin.v1.AdminService", "GetWallpaper"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Gets all maps in the system
+*/
+        pub async fn get_all_maps(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetAllMapsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/GetAllMaps",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "GetAllMaps"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Sets the map for some contest, does not error of either does not exist
+*/
+        pub async fn set_map(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SetMapRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/SetMap",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "SetMap"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Creates a new map
+*/
+        pub async fn create_map(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateMapRequest>,
+        ) -> std::result::Result<tonic::Response<super::MapResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/CreateMap",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "CreateMap"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Gets a map
+*/
+        pub async fn get_map(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetMapRequest>,
+        ) -> std::result::Result<tonic::Response<super::MapResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/GetMap",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "GetMap"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Updates a map
+*/
+        pub async fn update_map(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateMapRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/UpdateMap",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.AdminService", "UpdateMap"));
             self.inner.unary(req, path, codec).await
         }
     }

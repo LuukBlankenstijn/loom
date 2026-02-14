@@ -21,6 +21,51 @@ var (
 		Columns:    ContestsColumns,
 		PrimaryKey: []*schema.Column{ContestsColumns[0]},
 	}
+	// ContestAreaMapsColumns holds the columns for the "contest_area_maps" table.
+	ContestAreaMapsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+	}
+	// ContestAreaMapsTable holds the schema information for the "contest_area_maps" table.
+	ContestAreaMapsTable = &schema.Table{
+		Name:       "contest_area_maps",
+		Columns:    ContestAreaMapsColumns,
+		PrimaryKey: []*schema.Column{ContestAreaMapsColumns[0]},
+	}
+	// ContestMapsColumns holds the columns for the "contest_maps" table.
+	ContestMapsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "contest_id", Type: field.TypeString, Unique: true},
+		{Name: "map_id", Type: field.TypeInt},
+	}
+	// ContestMapsTable holds the schema information for the "contest_maps" table.
+	ContestMapsTable = &schema.Table{
+		Name:       "contest_maps",
+		Columns:    ContestMapsColumns,
+		PrimaryKey: []*schema.Column{ContestMapsColumns[0]},
+	}
+	// DoorElementsColumns holds the columns for the "door_elements" table.
+	DoorElementsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "x", Type: field.TypeInt},
+		{Name: "y", Type: field.TypeInt},
+		{Name: "rotation", Type: field.TypeEnum, Enums: []string{"0", "90", "180", "270"}, Default: "0"},
+		{Name: "contest_area_map_doors", Type: field.TypeInt, Nullable: true},
+	}
+	// DoorElementsTable holds the schema information for the "door_elements" table.
+	DoorElementsTable = &schema.Table{
+		Name:       "door_elements",
+		Columns:    DoorElementsColumns,
+		PrimaryKey: []*schema.Column{DoorElementsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "door_elements_contest_area_maps_doors",
+				Columns:    []*schema.Column{DoorElementsColumns[4]},
+				RefColumns: []*schema.Column{ContestAreaMapsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// StationsColumns holds the columns for the "stations" table.
 	StationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -33,6 +78,35 @@ var (
 		Name:       "stations",
 		Columns:    StationsColumns,
 		PrimaryKey: []*schema.Column{StationsColumns[0]},
+	}
+	// TableElementsColumns holds the columns for the "table_elements" table.
+	TableElementsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "x", Type: field.TypeInt},
+		{Name: "y", Type: field.TypeInt},
+		{Name: "rotation", Type: field.TypeEnum, Enums: []string{"0", "90", "180", "270"}, Default: "0"},
+		{Name: "contest_area_map_tables", Type: field.TypeInt, Nullable: true},
+		{Name: "table_element_station", Type: field.TypeInt, Nullable: true},
+	}
+	// TableElementsTable holds the schema information for the "table_elements" table.
+	TableElementsTable = &schema.Table{
+		Name:       "table_elements",
+		Columns:    TableElementsColumns,
+		PrimaryKey: []*schema.Column{TableElementsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "table_elements_contest_area_maps_tables",
+				Columns:    []*schema.Column{TableElementsColumns[4]},
+				RefColumns: []*schema.Column{ContestAreaMapsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "table_elements_stations_station",
+				Columns:    []*schema.Column{TableElementsColumns[5]},
+				RefColumns: []*schema.Column{StationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
@@ -50,6 +124,29 @@ var (
 				Symbol:     "teams_stations_station",
 				Columns:    []*schema.Column{TeamsColumns[2]},
 				RefColumns: []*schema.Column{StationsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// WallElementsColumns holds the columns for the "wall_elements" table.
+	WallElementsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "x_start", Type: field.TypeInt},
+		{Name: "y_start", Type: field.TypeInt},
+		{Name: "x_end", Type: field.TypeInt},
+		{Name: "y_end", Type: field.TypeInt},
+		{Name: "contest_area_map_walls", Type: field.TypeInt, Nullable: true},
+	}
+	// WallElementsTable holds the schema information for the "wall_elements" table.
+	WallElementsTable = &schema.Table{
+		Name:       "wall_elements",
+		Columns:    WallElementsColumns,
+		PrimaryKey: []*schema.Column{WallElementsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "wall_elements_contest_area_maps_walls",
+				Columns:    []*schema.Column{WallElementsColumns[5]},
+				RefColumns: []*schema.Column{ContestAreaMapsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -94,15 +191,24 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ContestsTable,
+		ContestAreaMapsTable,
+		ContestMapsTable,
+		DoorElementsTable,
 		StationsTable,
+		TableElementsTable,
 		TeamsTable,
+		WallElementsTable,
 		WallpapersTable,
 		ContestTeamsTable,
 	}
 )
 
 func init() {
+	DoorElementsTable.ForeignKeys[0].RefTable = ContestAreaMapsTable
+	TableElementsTable.ForeignKeys[0].RefTable = ContestAreaMapsTable
+	TableElementsTable.ForeignKeys[1].RefTable = StationsTable
 	TeamsTable.ForeignKeys[0].RefTable = StationsTable
+	WallElementsTable.ForeignKeys[0].RefTable = ContestAreaMapsTable
 	ContestTeamsTable.ForeignKeys[0].RefTable = ContestsTable
 	ContestTeamsTable.ForeignKeys[1].RefTable = TeamsTable
 }

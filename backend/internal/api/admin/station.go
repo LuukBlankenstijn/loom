@@ -11,7 +11,10 @@ import (
 )
 
 // Gets all stations
-func (a *adminServer) GetStations(ctx context.Context, empty *emptypb.Empty) (*adminv1.StationsResponse, error) {
+func (a *adminHandler) GetStations(
+	ctx context.Context,
+	empty *emptypb.Empty,
+) (*adminv1.StationsResponse, error) {
 	domainStations, err := a.stationRepo.GetAll(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get stations"))

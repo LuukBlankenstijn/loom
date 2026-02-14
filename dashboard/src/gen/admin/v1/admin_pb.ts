@@ -4,6 +4,8 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { CreateMapRequestSchema, GetAllMapsResponseSchema, GetMapRequestSchema, MapResponseSchema, SetMapRequestSchema, UpdateMapRequestSchema } from "./map_pb";
+import { file_admin_v1_map } from "./map_pb";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
@@ -13,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file admin/v1/admin.proto.
  */
 export const file_admin_v1_admin: GenFile = /*@__PURE__*/
-  fileDesc("ChRhZG1pbi92MS9hZG1pbi5wcm90bxIIYWRtaW4udjEilgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAEiQQoEVGVhbRIKCgJpZBgBIAEoCRIYCgJpcBgCIAEoCUIHukgEcgJwAUgAiAEBEgwKBG5hbWUYAyABKAlCBQoDX2lwIrABCgdTdGF0aW9uEgoKAmlkGAEgASgFEhMKAmlwGAIgASgJQge6SARyAnABEjgKDGNvbm5lY3RlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCBrpIA8gBARI3Cg5kaWNvbm5lY3RlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBIAIgBAUIRCg9fZGljb25uZWN0ZWRfYXQiLgoNVGVhbXNSZXNwb25zZRIdCgV0ZWFtcxgBIAMoCzIOLmFkbWluLnYxLlRlYW0iNwoQU3RhdGlvbnNSZXNwb25zZRIjCghzdGF0aW9ucxgBIAMoCzIRLmFkbWluLnYxLlN0YXRpb24iNwoMU2V0SXBSZXF1ZXN0Eg8KB3RlYW1faWQYASABKAkSDwoCaXAYAiABKAlIAIgBAUIFCgNfaXAiUAoSVXBsb2FkSW1hZ2VSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIjsKEVdhbGxwYXBlclJlc3BvbnNlEhcKCmltYWdlX2RhdGEYASABKAxIAIgBAUINCgtfaW1hZ2VfZGF0YTKoAwoMQWRtaW5TZXJ2aWNlEj0KDkdldE5leHRDb250ZXN0EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhEuYWRtaW4udjEuQ29udGVzdCIAEkMKDkdldEFjdGl2ZVRlYW1zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuYWRtaW4udjEuVGVhbXNSZXNwb25zZSIAEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEjkKBVNldElwEhYuYWRtaW4udjEuU2V0SXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASRgoMU2V0V2FsbHBhcGVyEhwuYWRtaW4udjEuVXBsb2FkSW1hZ2VSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASTAoMR2V0V2FsbHBhcGVyEh0uYWRtaW4udjEuR2V0V2FsbHBhcGVyUmVxdWVzdBobLmFkbWluLnYxLldhbGxwYXBlclJlc3BvbnNlIgBClQEKDGNvbS5hZG1pbi52MUIKQWRtaW5Qcm90b1ABWjhnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vYWRtaW4vdjE7YWRtaW52MaICA0FYWKoCCEFkbWluLlYxygIIQWRtaW5cVjHiAhRBZG1pblxWMVxHUEJNZXRhZGF0YeoCCUFkbWluOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("ChRhZG1pbi92MS9hZG1pbi5wcm90bxIIYWRtaW4udjEitgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAESEwoGbWFwX2lkGAUgASgFSACIAQFCCQoHX21hcF9pZCJBCgRUZWFtEgoKAmlkGAEgASgJEhgKAmlwGAIgASgJQge6SARyAnABSACIAQESDAoEbmFtZRgDIAEoCUIFCgNfaXAisAEKB1N0YXRpb24SCgoCaWQYASABKAUSEwoCaXAYAiABKAlCB7pIBHICcAESOAoMY29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjcKDmRpY29ubmVjdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAiAEBQhEKD19kaWNvbm5lY3RlZF9hdCIuCg1UZWFtc1Jlc3BvbnNlEh0KBXRlYW1zGAEgAygLMg4uYWRtaW4udjEuVGVhbSI3ChBTdGF0aW9uc1Jlc3BvbnNlEiMKCHN0YXRpb25zGAEgAygLMhEuYWRtaW4udjEuU3RhdGlvbiI3CgxTZXRJcFJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgJpcBgCIAEoCUgAiAEBQgUKA19pcCJUChZVcGxvYWRXYWxscGFwZXJSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIjsKEVdhbGxwYXBlclJlc3BvbnNlEhcKCmltYWdlX2RhdGEYASABKAxIAIgBAUINCgtfaW1hZ2VfZGF0YTLwBQoMQWRtaW5TZXJ2aWNlEj0KDkdldE5leHRDb250ZXN0EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhEuYWRtaW4udjEuQ29udGVzdCIAEkMKDkdldEFjdGl2ZVRlYW1zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuYWRtaW4udjEuVGVhbXNSZXNwb25zZSIAEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEjkKBVNldElwEhYuYWRtaW4udjEuU2V0SXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASSgoMU2V0V2FsbHBhcGVyEiAuYWRtaW4udjEuVXBsb2FkV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkwKDEdldFdhbGxwYXBlchIdLmFkbWluLnYxLkdldFdhbGxwYXBlclJlcXVlc3QaGy5hZG1pbi52MS5XYWxscGFwZXJSZXNwb25zZSIAEkQKCkdldEFsbE1hcHMSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaHC5hZG1pbi52MS5HZXRBbGxNYXBzUmVzcG9uc2UiABI7CgZTZXRNYXASFy5hZG1pbi52MS5TZXRNYXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASQAoJQ3JlYXRlTWFwEhouYWRtaW4udjEuQ3JlYXRlTWFwUmVxdWVzdBoVLmFkbWluLnYxLk1hcFJlc3BvbnNlIgASOgoGR2V0TWFwEhcuYWRtaW4udjEuR2V0TWFwUmVxdWVzdBoVLmFkbWluLnYxLk1hcFJlc3BvbnNlIgASQQoJVXBkYXRlTWFwEhouYWRtaW4udjEuVXBkYXRlTWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpUBCgxjb20uYWRtaW4udjFCCkFkbWluUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL2FkbWluL3YxO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_admin_v1_map, file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
 
 /**
  * @generated from message admin.v1.Contest
@@ -38,6 +40,11 @@ export type Contest = Message<"admin.v1.Contest"> & {
    * @generated from field: google.protobuf.Timestamp end_time = 4;
    */
   endTime?: Timestamp;
+
+  /**
+   * @generated from field: optional int32 map_id = 5;
+   */
+  mapId?: number;
 };
 
 /**
@@ -163,9 +170,9 @@ export const SetIpRequestSchema: GenMessage<SetIpRequest> = /*@__PURE__*/
   messageDesc(file_admin_v1_admin, 5);
 
 /**
- * @generated from message admin.v1.UploadImageRequest
+ * @generated from message admin.v1.UploadWallpaperRequest
  */
-export type UploadImageRequest = Message<"admin.v1.UploadImageRequest"> & {
+export type UploadWallpaperRequest = Message<"admin.v1.UploadWallpaperRequest"> & {
   /**
    * @generated from field: string contest_id = 1;
    */
@@ -178,10 +185,10 @@ export type UploadImageRequest = Message<"admin.v1.UploadImageRequest"> & {
 };
 
 /**
- * Describes the message admin.v1.UploadImageRequest.
- * Use `create(UploadImageRequestSchema)` to create a new message.
+ * Describes the message admin.v1.UploadWallpaperRequest.
+ * Use `create(UploadWallpaperRequestSchema)` to create a new message.
  */
-export const UploadImageRequestSchema: GenMessage<UploadImageRequest> = /*@__PURE__*/
+export const UploadWallpaperRequestSchema: GenMessage<UploadWallpaperRequest> = /*@__PURE__*/
   messageDesc(file_admin_v1_admin, 6);
 
 /**
@@ -269,7 +276,7 @@ export const AdminService: GenService<{
    */
   setWallpaper: {
     methodKind: "unary";
-    input: typeof UploadImageRequestSchema;
+    input: typeof UploadWallpaperRequestSchema;
     output: typeof EmptySchema;
   },
   /**
@@ -281,6 +288,56 @@ export const AdminService: GenService<{
     methodKind: "unary";
     input: typeof GetWallpaperRequestSchema;
     output: typeof WallpaperResponseSchema;
+  },
+  /**
+   * Gets all maps in the system
+   *
+   * @generated from rpc admin.v1.AdminService.GetAllMaps
+   */
+  getAllMaps: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof GetAllMapsResponseSchema;
+  },
+  /**
+   * Sets the map for some contest, does not error of either does not exist
+   *
+   * @generated from rpc admin.v1.AdminService.SetMap
+   */
+  setMap: {
+    methodKind: "unary";
+    input: typeof SetMapRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * Creates a new map
+   *
+   * @generated from rpc admin.v1.AdminService.CreateMap
+   */
+  createMap: {
+    methodKind: "unary";
+    input: typeof CreateMapRequestSchema;
+    output: typeof MapResponseSchema;
+  },
+  /**
+   * Gets a map
+   *
+   * @generated from rpc admin.v1.AdminService.GetMap
+   */
+  getMap: {
+    methodKind: "unary";
+    input: typeof GetMapRequestSchema;
+    output: typeof MapResponseSchema;
+  },
+  /**
+   * Updates a map
+   *
+   * @generated from rpc admin.v1.AdminService.UpdateMap
+   */
+  updateMap: {
+    methodKind: "unary";
+    input: typeof UpdateMapRequestSchema;
+    output: typeof EmptySchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_admin_v1_admin, 0);

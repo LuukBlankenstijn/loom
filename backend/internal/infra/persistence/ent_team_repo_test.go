@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/team"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestEntTeamRepositorySetIp(t *testing.T) {
@@ -15,7 +16,10 @@ func TestEntTeamRepositorySetIp(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent_team_setip?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
 
-	stationRec, err := client.Station.Create().SetIP("10.0.0.3").SetConnectedAt(time.Now()).Save(ctx)
+	stationRec, err := client.Station.Create().
+		SetIP("10.0.0.3").
+		SetConnectedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		t.Fatalf("create station: %v", err)
 	}
@@ -44,7 +48,10 @@ func TestEntTeamRepositorySetIpAlreadyUsed(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent_team_setip_used?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
 
-	stationRec, err := client.Station.Create().SetIP("10.0.0.4").SetConnectedAt(time.Now()).Save(ctx)
+	stationRec, err := client.Station.Create().
+		SetIP("10.0.0.4").
+		SetConnectedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		t.Fatalf("create station: %v", err)
 	}
@@ -77,11 +84,18 @@ func TestEntTeamRepositorySetIpNilRemovesStation(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent_team_setip_nil?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
 
-	stationRec, err := client.Station.Create().SetIP("10.0.0.5").SetConnectedAt(time.Now()).Save(ctx)
+	stationRec, err := client.Station.Create().
+		SetIP("10.0.0.5").
+		SetConnectedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		t.Fatalf("create station: %v", err)
 	}
-	teamRec, err := client.Team.Create().SetID("team-c").SetName("Team C").SetStation(stationRec).Save(ctx)
+	teamRec, err := client.Team.Create().
+		SetID("team-c").
+		SetName("Team C").
+		SetStation(stationRec).
+		Save(ctx)
 	if err != nil {
 		t.Fatalf("create team: %v", err)
 	}
@@ -113,7 +127,11 @@ func TestEntTeamRepositoryGetAllWithContestFilter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create station2: %v", err)
 	}
-	team1, err := client.Team.Create().SetID("team-1").SetName("Team 1").SetStation(station1).Save(ctx)
+	team1, err := client.Team.Create().
+		SetID("team-1").
+		SetName("Team 1").
+		SetStation(station1).
+		Save(ctx)
 	if err != nil {
 		t.Fatalf("create team1: %v", err)
 	}

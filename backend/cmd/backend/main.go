@@ -8,6 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/api/admin"
 	"github.com/LuukBlankenstijn/loom/backend/internal/api/stations"
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
@@ -15,15 +18,14 @@ import (
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/hub"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/persistence"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 type repoContainer struct {
-	team      domain.TeamRepository
-	contest   domain.ContestRepository
-	station   domain.StationRepository
-	wallpaper domain.WallpaperRepository
+	team       domain.TeamRepository
+	contest    domain.ContestRepository
+	station    domain.StationRepository
+	wallpaper  domain.WallpaperRepository
+	contestMap domain.MapRepository
 }
 
 func init() {
@@ -46,10 +48,20 @@ func main() {
 
 	hub := hub.New()
 	repoContainer := createRepos(client)
-	stationsServer := stations.New(hub, repoContainer.station)
 	wallpaperService := domain.NewWallpaperService(repoContainer.contest, repoContainer.wallpaper)
 	teamService := domain.NewTeamService(repoContainer.team, repoContainer.contest)
-	adminServer := admin.New(*teamService, repoContainer.station, repoContainer.team, repoContainer.contest, repoContainer.wallpaper, *wallpaperService)
+
+	stationsServer := stations.New(hub, repoContainer.station)
+	adminHandler := admin.NewAdminHandler(
+		*teamService,
+		repoContainer.station,
+		repoContainer.team,
+		repoContainer.contest,
+		repoContainer.wallpaper,
+		*wallpaperService,
+		repoContainer.contestMap,
+	)
+
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
@@ -59,7 +71,7 @@ func main() {
 		}
 	}()
 	go func() {
-		if err := adminServer.Run(); err != nil {
+		if err := adminHandler.Run(); err != nil {
 			slog.Error("failed to run admin server", slog.Any("error", err))
 		}
 	}()
@@ -103,5 +115,6 @@ func createRepos(client *ent.Client) *repoContainer {
 	}
 	container.station = persistence.NewEntStationRepository(client)
 	container.wallpaper = persistence.NewEntWallpaperRepository(client)
+	container.contestMap = persistence.NewEntMapRepository(client)
 	return &container
 }

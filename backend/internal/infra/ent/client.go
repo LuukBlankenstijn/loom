@@ -10,14 +10,20 @@ import (
 	"reflect"
 
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/migrate"
+	"github.com/google/uuid"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contest"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestareamap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/contestmap"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/doorelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/team"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallelement"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallpaper"
 )
 
@@ -28,10 +34,20 @@ type Client struct {
 	Schema *migrate.Schema
 	// Contest is the client for interacting with the Contest builders.
 	Contest *ContestClient
+	// ContestAreaMap is the client for interacting with the ContestAreaMap builders.
+	ContestAreaMap *ContestAreaMapClient
+	// ContestMap is the client for interacting with the ContestMap builders.
+	ContestMap *ContestMapClient
+	// DoorElement is the client for interacting with the DoorElement builders.
+	DoorElement *DoorElementClient
 	// Station is the client for interacting with the Station builders.
 	Station *StationClient
+	// TableElement is the client for interacting with the TableElement builders.
+	TableElement *TableElementClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
+	// WallElement is the client for interacting with the WallElement builders.
+	WallElement *WallElementClient
 	// Wallpaper is the client for interacting with the Wallpaper builders.
 	Wallpaper *WallpaperClient
 }
@@ -46,8 +62,13 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Contest = NewContestClient(c.config)
+	c.ContestAreaMap = NewContestAreaMapClient(c.config)
+	c.ContestMap = NewContestMapClient(c.config)
+	c.DoorElement = NewDoorElementClient(c.config)
 	c.Station = NewStationClient(c.config)
+	c.TableElement = NewTableElementClient(c.config)
 	c.Team = NewTeamClient(c.config)
+	c.WallElement = NewWallElementClient(c.config)
 	c.Wallpaper = NewWallpaperClient(c.config)
 }
 
@@ -139,12 +160,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Contest:   NewContestClient(cfg),
-		Station:   NewStationClient(cfg),
-		Team:      NewTeamClient(cfg),
-		Wallpaper: NewWallpaperClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Contest:        NewContestClient(cfg),
+		ContestAreaMap: NewContestAreaMapClient(cfg),
+		ContestMap:     NewContestMapClient(cfg),
+		DoorElement:    NewDoorElementClient(cfg),
+		Station:        NewStationClient(cfg),
+		TableElement:   NewTableElementClient(cfg),
+		Team:           NewTeamClient(cfg),
+		WallElement:    NewWallElementClient(cfg),
+		Wallpaper:      NewWallpaperClient(cfg),
 	}, nil
 }
 
@@ -162,12 +188,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Contest:   NewContestClient(cfg),
-		Station:   NewStationClient(cfg),
-		Team:      NewTeamClient(cfg),
-		Wallpaper: NewWallpaperClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Contest:        NewContestClient(cfg),
+		ContestAreaMap: NewContestAreaMapClient(cfg),
+		ContestMap:     NewContestMapClient(cfg),
+		DoorElement:    NewDoorElementClient(cfg),
+		Station:        NewStationClient(cfg),
+		TableElement:   NewTableElementClient(cfg),
+		Team:           NewTeamClient(cfg),
+		WallElement:    NewWallElementClient(cfg),
+		Wallpaper:      NewWallpaperClient(cfg),
 	}, nil
 }
 
@@ -196,19 +227,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Contest.Use(hooks...)
-	c.Station.Use(hooks...)
-	c.Team.Use(hooks...)
-	c.Wallpaper.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Contest, c.ContestAreaMap, c.ContestMap, c.DoorElement, c.Station,
+		c.TableElement, c.Team, c.WallElement, c.Wallpaper,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Contest.Intercept(interceptors...)
-	c.Station.Intercept(interceptors...)
-	c.Team.Intercept(interceptors...)
-	c.Wallpaper.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Contest, c.ContestAreaMap, c.ContestMap, c.DoorElement, c.Station,
+		c.TableElement, c.Team, c.WallElement, c.Wallpaper,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -216,10 +251,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *ContestMutation:
 		return c.Contest.mutate(ctx, m)
+	case *ContestAreaMapMutation:
+		return c.ContestAreaMap.mutate(ctx, m)
+	case *ContestMapMutation:
+		return c.ContestMap.mutate(ctx, m)
+	case *DoorElementMutation:
+		return c.DoorElement.mutate(ctx, m)
 	case *StationMutation:
 		return c.Station.mutate(ctx, m)
+	case *TableElementMutation:
+		return c.TableElement.mutate(ctx, m)
 	case *TeamMutation:
 		return c.Team.mutate(ctx, m)
+	case *WallElementMutation:
+		return c.WallElement.mutate(ctx, m)
 	case *WallpaperMutation:
 		return c.Wallpaper.mutate(ctx, m)
 	default:
@@ -376,6 +421,469 @@ func (c *ContestClient) mutate(ctx context.Context, m *ContestMutation) (Value, 
 	}
 }
 
+// ContestAreaMapClient is a client for the ContestAreaMap schema.
+type ContestAreaMapClient struct {
+	config
+}
+
+// NewContestAreaMapClient returns a client for the ContestAreaMap from the given config.
+func NewContestAreaMapClient(c config) *ContestAreaMapClient {
+	return &ContestAreaMapClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `contestareamap.Hooks(f(g(h())))`.
+func (c *ContestAreaMapClient) Use(hooks ...Hook) {
+	c.hooks.ContestAreaMap = append(c.hooks.ContestAreaMap, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `contestareamap.Intercept(f(g(h())))`.
+func (c *ContestAreaMapClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ContestAreaMap = append(c.inters.ContestAreaMap, interceptors...)
+}
+
+// Create returns a builder for creating a ContestAreaMap entity.
+func (c *ContestAreaMapClient) Create() *ContestAreaMapCreate {
+	mutation := newContestAreaMapMutation(c.config, OpCreate)
+	return &ContestAreaMapCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ContestAreaMap entities.
+func (c *ContestAreaMapClient) CreateBulk(builders ...*ContestAreaMapCreate) *ContestAreaMapCreateBulk {
+	return &ContestAreaMapCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ContestAreaMapClient) MapCreateBulk(slice any, setFunc func(*ContestAreaMapCreate, int)) *ContestAreaMapCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ContestAreaMapCreateBulk{err: fmt.Errorf("calling to ContestAreaMapClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ContestAreaMapCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ContestAreaMapCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ContestAreaMap.
+func (c *ContestAreaMapClient) Update() *ContestAreaMapUpdate {
+	mutation := newContestAreaMapMutation(c.config, OpUpdate)
+	return &ContestAreaMapUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ContestAreaMapClient) UpdateOne(_m *ContestAreaMap) *ContestAreaMapUpdateOne {
+	mutation := newContestAreaMapMutation(c.config, OpUpdateOne, withContestAreaMap(_m))
+	return &ContestAreaMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ContestAreaMapClient) UpdateOneID(id int) *ContestAreaMapUpdateOne {
+	mutation := newContestAreaMapMutation(c.config, OpUpdateOne, withContestAreaMapID(id))
+	return &ContestAreaMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ContestAreaMap.
+func (c *ContestAreaMapClient) Delete() *ContestAreaMapDelete {
+	mutation := newContestAreaMapMutation(c.config, OpDelete)
+	return &ContestAreaMapDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ContestAreaMapClient) DeleteOne(_m *ContestAreaMap) *ContestAreaMapDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ContestAreaMapClient) DeleteOneID(id int) *ContestAreaMapDeleteOne {
+	builder := c.Delete().Where(contestareamap.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ContestAreaMapDeleteOne{builder}
+}
+
+// Query returns a query builder for ContestAreaMap.
+func (c *ContestAreaMapClient) Query() *ContestAreaMapQuery {
+	return &ContestAreaMapQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeContestAreaMap},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ContestAreaMap entity by its id.
+func (c *ContestAreaMapClient) Get(ctx context.Context, id int) (*ContestAreaMap, error) {
+	return c.Query().Where(contestareamap.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ContestAreaMapClient) GetX(ctx context.Context, id int) *ContestAreaMap {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryDoors queries the doors edge of a ContestAreaMap.
+func (c *ContestAreaMapClient) QueryDoors(_m *ContestAreaMap) *DoorElementQuery {
+	query := (&DoorElementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(contestareamap.Table, contestareamap.FieldID, id),
+			sqlgraph.To(doorelement.Table, doorelement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, contestareamap.DoorsTable, contestareamap.DoorsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWalls queries the walls edge of a ContestAreaMap.
+func (c *ContestAreaMapClient) QueryWalls(_m *ContestAreaMap) *WallElementQuery {
+	query := (&WallElementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(contestareamap.Table, contestareamap.FieldID, id),
+			sqlgraph.To(wallelement.Table, wallelement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, contestareamap.WallsTable, contestareamap.WallsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTables queries the tables edge of a ContestAreaMap.
+func (c *ContestAreaMapClient) QueryTables(_m *ContestAreaMap) *TableElementQuery {
+	query := (&TableElementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(contestareamap.Table, contestareamap.FieldID, id),
+			sqlgraph.To(tableelement.Table, tableelement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, contestareamap.TablesTable, contestareamap.TablesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ContestAreaMapClient) Hooks() []Hook {
+	return c.hooks.ContestAreaMap
+}
+
+// Interceptors returns the client interceptors.
+func (c *ContestAreaMapClient) Interceptors() []Interceptor {
+	return c.inters.ContestAreaMap
+}
+
+func (c *ContestAreaMapClient) mutate(ctx context.Context, m *ContestAreaMapMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ContestAreaMapCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ContestAreaMapUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ContestAreaMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ContestAreaMapDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ContestAreaMap mutation op: %q", m.Op())
+	}
+}
+
+// ContestMapClient is a client for the ContestMap schema.
+type ContestMapClient struct {
+	config
+}
+
+// NewContestMapClient returns a client for the ContestMap from the given config.
+func NewContestMapClient(c config) *ContestMapClient {
+	return &ContestMapClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `contestmap.Hooks(f(g(h())))`.
+func (c *ContestMapClient) Use(hooks ...Hook) {
+	c.hooks.ContestMap = append(c.hooks.ContestMap, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `contestmap.Intercept(f(g(h())))`.
+func (c *ContestMapClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ContestMap = append(c.inters.ContestMap, interceptors...)
+}
+
+// Create returns a builder for creating a ContestMap entity.
+func (c *ContestMapClient) Create() *ContestMapCreate {
+	mutation := newContestMapMutation(c.config, OpCreate)
+	return &ContestMapCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ContestMap entities.
+func (c *ContestMapClient) CreateBulk(builders ...*ContestMapCreate) *ContestMapCreateBulk {
+	return &ContestMapCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ContestMapClient) MapCreateBulk(slice any, setFunc func(*ContestMapCreate, int)) *ContestMapCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ContestMapCreateBulk{err: fmt.Errorf("calling to ContestMapClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ContestMapCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ContestMapCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ContestMap.
+func (c *ContestMapClient) Update() *ContestMapUpdate {
+	mutation := newContestMapMutation(c.config, OpUpdate)
+	return &ContestMapUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ContestMapClient) UpdateOne(_m *ContestMap) *ContestMapUpdateOne {
+	mutation := newContestMapMutation(c.config, OpUpdateOne, withContestMap(_m))
+	return &ContestMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ContestMapClient) UpdateOneID(id int) *ContestMapUpdateOne {
+	mutation := newContestMapMutation(c.config, OpUpdateOne, withContestMapID(id))
+	return &ContestMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ContestMap.
+func (c *ContestMapClient) Delete() *ContestMapDelete {
+	mutation := newContestMapMutation(c.config, OpDelete)
+	return &ContestMapDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ContestMapClient) DeleteOne(_m *ContestMap) *ContestMapDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ContestMapClient) DeleteOneID(id int) *ContestMapDeleteOne {
+	builder := c.Delete().Where(contestmap.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ContestMapDeleteOne{builder}
+}
+
+// Query returns a query builder for ContestMap.
+func (c *ContestMapClient) Query() *ContestMapQuery {
+	return &ContestMapQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeContestMap},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ContestMap entity by its id.
+func (c *ContestMapClient) Get(ctx context.Context, id int) (*ContestMap, error) {
+	return c.Query().Where(contestmap.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ContestMapClient) GetX(ctx context.Context, id int) *ContestMap {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ContestMapClient) Hooks() []Hook {
+	return c.hooks.ContestMap
+}
+
+// Interceptors returns the client interceptors.
+func (c *ContestMapClient) Interceptors() []Interceptor {
+	return c.inters.ContestMap
+}
+
+func (c *ContestMapClient) mutate(ctx context.Context, m *ContestMapMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ContestMapCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ContestMapUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ContestMapUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ContestMapDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ContestMap mutation op: %q", m.Op())
+	}
+}
+
+// DoorElementClient is a client for the DoorElement schema.
+type DoorElementClient struct {
+	config
+}
+
+// NewDoorElementClient returns a client for the DoorElement from the given config.
+func NewDoorElementClient(c config) *DoorElementClient {
+	return &DoorElementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `doorelement.Hooks(f(g(h())))`.
+func (c *DoorElementClient) Use(hooks ...Hook) {
+	c.hooks.DoorElement = append(c.hooks.DoorElement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `doorelement.Intercept(f(g(h())))`.
+func (c *DoorElementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.DoorElement = append(c.inters.DoorElement, interceptors...)
+}
+
+// Create returns a builder for creating a DoorElement entity.
+func (c *DoorElementClient) Create() *DoorElementCreate {
+	mutation := newDoorElementMutation(c.config, OpCreate)
+	return &DoorElementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of DoorElement entities.
+func (c *DoorElementClient) CreateBulk(builders ...*DoorElementCreate) *DoorElementCreateBulk {
+	return &DoorElementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DoorElementClient) MapCreateBulk(slice any, setFunc func(*DoorElementCreate, int)) *DoorElementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DoorElementCreateBulk{err: fmt.Errorf("calling to DoorElementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DoorElementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DoorElementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for DoorElement.
+func (c *DoorElementClient) Update() *DoorElementUpdate {
+	mutation := newDoorElementMutation(c.config, OpUpdate)
+	return &DoorElementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DoorElementClient) UpdateOne(_m *DoorElement) *DoorElementUpdateOne {
+	mutation := newDoorElementMutation(c.config, OpUpdateOne, withDoorElement(_m))
+	return &DoorElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DoorElementClient) UpdateOneID(id uuid.UUID) *DoorElementUpdateOne {
+	mutation := newDoorElementMutation(c.config, OpUpdateOne, withDoorElementID(id))
+	return &DoorElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for DoorElement.
+func (c *DoorElementClient) Delete() *DoorElementDelete {
+	mutation := newDoorElementMutation(c.config, OpDelete)
+	return &DoorElementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DoorElementClient) DeleteOne(_m *DoorElement) *DoorElementDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DoorElementClient) DeleteOneID(id uuid.UUID) *DoorElementDeleteOne {
+	builder := c.Delete().Where(doorelement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DoorElementDeleteOne{builder}
+}
+
+// Query returns a query builder for DoorElement.
+func (c *DoorElementClient) Query() *DoorElementQuery {
+	return &DoorElementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDoorElement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a DoorElement entity by its id.
+func (c *DoorElementClient) Get(ctx context.Context, id uuid.UUID) (*DoorElement, error) {
+	return c.Query().Where(doorelement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DoorElementClient) GetX(ctx context.Context, id uuid.UUID) *DoorElement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMap queries the map edge of a DoorElement.
+func (c *DoorElementClient) QueryMap(_m *DoorElement) *ContestAreaMapQuery {
+	query := (&ContestAreaMapClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(doorelement.Table, doorelement.FieldID, id),
+			sqlgraph.To(contestareamap.Table, contestareamap.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, doorelement.MapTable, doorelement.MapColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DoorElementClient) Hooks() []Hook {
+	return c.hooks.DoorElement
+}
+
+// Interceptors returns the client interceptors.
+func (c *DoorElementClient) Interceptors() []Interceptor {
+	return c.inters.DoorElement
+}
+
+func (c *DoorElementClient) mutate(ctx context.Context, m *DoorElementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DoorElementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DoorElementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DoorElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DoorElementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown DoorElement mutation op: %q", m.Op())
+	}
+}
+
 // StationClient is a client for the Station schema.
 type StationClient struct {
 	config
@@ -484,6 +992,22 @@ func (c *StationClient) GetX(ctx context.Context, id int) *Station {
 	return obj
 }
 
+// QueryTableElement queries the table_element edge of a Station.
+func (c *StationClient) QueryTableElement(_m *Station) *TableElementQuery {
+	query := (&TableElementClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(station.Table, station.FieldID, id),
+			sqlgraph.To(tableelement.Table, tableelement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, station.TableElementTable, station.TableElementColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *StationClient) Hooks() []Hook {
 	return c.hooks.Station
@@ -506,6 +1030,171 @@ func (c *StationClient) mutate(ctx context.Context, m *StationMutation) (Value, 
 		return (&StationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Station mutation op: %q", m.Op())
+	}
+}
+
+// TableElementClient is a client for the TableElement schema.
+type TableElementClient struct {
+	config
+}
+
+// NewTableElementClient returns a client for the TableElement from the given config.
+func NewTableElementClient(c config) *TableElementClient {
+	return &TableElementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tableelement.Hooks(f(g(h())))`.
+func (c *TableElementClient) Use(hooks ...Hook) {
+	c.hooks.TableElement = append(c.hooks.TableElement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tableelement.Intercept(f(g(h())))`.
+func (c *TableElementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TableElement = append(c.inters.TableElement, interceptors...)
+}
+
+// Create returns a builder for creating a TableElement entity.
+func (c *TableElementClient) Create() *TableElementCreate {
+	mutation := newTableElementMutation(c.config, OpCreate)
+	return &TableElementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TableElement entities.
+func (c *TableElementClient) CreateBulk(builders ...*TableElementCreate) *TableElementCreateBulk {
+	return &TableElementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TableElementClient) MapCreateBulk(slice any, setFunc func(*TableElementCreate, int)) *TableElementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TableElementCreateBulk{err: fmt.Errorf("calling to TableElementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TableElementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TableElementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TableElement.
+func (c *TableElementClient) Update() *TableElementUpdate {
+	mutation := newTableElementMutation(c.config, OpUpdate)
+	return &TableElementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TableElementClient) UpdateOne(_m *TableElement) *TableElementUpdateOne {
+	mutation := newTableElementMutation(c.config, OpUpdateOne, withTableElement(_m))
+	return &TableElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TableElementClient) UpdateOneID(id uuid.UUID) *TableElementUpdateOne {
+	mutation := newTableElementMutation(c.config, OpUpdateOne, withTableElementID(id))
+	return &TableElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TableElement.
+func (c *TableElementClient) Delete() *TableElementDelete {
+	mutation := newTableElementMutation(c.config, OpDelete)
+	return &TableElementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TableElementClient) DeleteOne(_m *TableElement) *TableElementDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TableElementClient) DeleteOneID(id uuid.UUID) *TableElementDeleteOne {
+	builder := c.Delete().Where(tableelement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TableElementDeleteOne{builder}
+}
+
+// Query returns a query builder for TableElement.
+func (c *TableElementClient) Query() *TableElementQuery {
+	return &TableElementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTableElement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TableElement entity by its id.
+func (c *TableElementClient) Get(ctx context.Context, id uuid.UUID) (*TableElement, error) {
+	return c.Query().Where(tableelement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TableElementClient) GetX(ctx context.Context, id uuid.UUID) *TableElement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMap queries the map edge of a TableElement.
+func (c *TableElementClient) QueryMap(_m *TableElement) *ContestAreaMapQuery {
+	query := (&ContestAreaMapClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tableelement.Table, tableelement.FieldID, id),
+			sqlgraph.To(contestareamap.Table, contestareamap.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, tableelement.MapTable, tableelement.MapColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStation queries the station edge of a TableElement.
+func (c *TableElementClient) QueryStation(_m *TableElement) *StationQuery {
+	query := (&StationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tableelement.Table, tableelement.FieldID, id),
+			sqlgraph.To(station.Table, station.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, tableelement.StationTable, tableelement.StationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TableElementClient) Hooks() []Hook {
+	return c.hooks.TableElement
+}
+
+// Interceptors returns the client interceptors.
+func (c *TableElementClient) Interceptors() []Interceptor {
+	return c.inters.TableElement
+}
+
+func (c *TableElementClient) mutate(ctx context.Context, m *TableElementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TableElementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TableElementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TableElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TableElementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TableElement mutation op: %q", m.Op())
 	}
 }
 
@@ -674,6 +1363,155 @@ func (c *TeamClient) mutate(ctx context.Context, m *TeamMutation) (Value, error)
 	}
 }
 
+// WallElementClient is a client for the WallElement schema.
+type WallElementClient struct {
+	config
+}
+
+// NewWallElementClient returns a client for the WallElement from the given config.
+func NewWallElementClient(c config) *WallElementClient {
+	return &WallElementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `wallelement.Hooks(f(g(h())))`.
+func (c *WallElementClient) Use(hooks ...Hook) {
+	c.hooks.WallElement = append(c.hooks.WallElement, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `wallelement.Intercept(f(g(h())))`.
+func (c *WallElementClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WallElement = append(c.inters.WallElement, interceptors...)
+}
+
+// Create returns a builder for creating a WallElement entity.
+func (c *WallElementClient) Create() *WallElementCreate {
+	mutation := newWallElementMutation(c.config, OpCreate)
+	return &WallElementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WallElement entities.
+func (c *WallElementClient) CreateBulk(builders ...*WallElementCreate) *WallElementCreateBulk {
+	return &WallElementCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *WallElementClient) MapCreateBulk(slice any, setFunc func(*WallElementCreate, int)) *WallElementCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &WallElementCreateBulk{err: fmt.Errorf("calling to WallElementClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*WallElementCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &WallElementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WallElement.
+func (c *WallElementClient) Update() *WallElementUpdate {
+	mutation := newWallElementMutation(c.config, OpUpdate)
+	return &WallElementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WallElementClient) UpdateOne(_m *WallElement) *WallElementUpdateOne {
+	mutation := newWallElementMutation(c.config, OpUpdateOne, withWallElement(_m))
+	return &WallElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WallElementClient) UpdateOneID(id uuid.UUID) *WallElementUpdateOne {
+	mutation := newWallElementMutation(c.config, OpUpdateOne, withWallElementID(id))
+	return &WallElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WallElement.
+func (c *WallElementClient) Delete() *WallElementDelete {
+	mutation := newWallElementMutation(c.config, OpDelete)
+	return &WallElementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WallElementClient) DeleteOne(_m *WallElement) *WallElementDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WallElementClient) DeleteOneID(id uuid.UUID) *WallElementDeleteOne {
+	builder := c.Delete().Where(wallelement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WallElementDeleteOne{builder}
+}
+
+// Query returns a query builder for WallElement.
+func (c *WallElementClient) Query() *WallElementQuery {
+	return &WallElementQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWallElement},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WallElement entity by its id.
+func (c *WallElementClient) Get(ctx context.Context, id uuid.UUID) (*WallElement, error) {
+	return c.Query().Where(wallelement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WallElementClient) GetX(ctx context.Context, id uuid.UUID) *WallElement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMap queries the map edge of a WallElement.
+func (c *WallElementClient) QueryMap(_m *WallElement) *ContestAreaMapQuery {
+	query := (&ContestAreaMapClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(wallelement.Table, wallelement.FieldID, id),
+			sqlgraph.To(contestareamap.Table, contestareamap.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, wallelement.MapTable, wallelement.MapColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *WallElementClient) Hooks() []Hook {
+	return c.hooks.WallElement
+}
+
+// Interceptors returns the client interceptors.
+func (c *WallElementClient) Interceptors() []Interceptor {
+	return c.inters.WallElement
+}
+
+func (c *WallElementClient) mutate(ctx context.Context, m *WallElementMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WallElementCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WallElementUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WallElementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WallElementDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown WallElement mutation op: %q", m.Op())
+	}
+}
+
 // WallpaperClient is a client for the Wallpaper schema.
 type WallpaperClient struct {
 	config
@@ -810,9 +1648,11 @@ func (c *WallpaperClient) mutate(ctx context.Context, m *WallpaperMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Contest, Station, Team, Wallpaper []ent.Hook
+		Contest, ContestAreaMap, ContestMap, DoorElement, Station, TableElement, Team,
+		WallElement, Wallpaper []ent.Hook
 	}
 	inters struct {
-		Contest, Station, Team, Wallpaper []ent.Interceptor
+		Contest, ContestAreaMap, ContestMap, DoorElement, Station, TableElement, Team,
+		WallElement, Wallpaper []ent.Interceptor
 	}
 )

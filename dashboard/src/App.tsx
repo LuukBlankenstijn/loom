@@ -3,6 +3,7 @@ import { Layout } from "./components/Layout";
 import { ContestPage } from "./pages/ContestPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { StationsPage } from "./pages/StationsPage";
+import { MapsPage } from "./pages/MapsPage";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route index element={<ContestPage />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="stations" element={<StationsPage />} />
+          <Route path="maps" element={<MapsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

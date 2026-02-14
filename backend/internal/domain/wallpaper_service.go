@@ -9,7 +9,10 @@ type WallpaperService struct {
 	wallpaperRepo WallpaperRepository
 }
 
-func NewWallpaperService(contestRepo ContestRepository, wallpaperRepo WallpaperRepository) *WallpaperService {
+func NewWallpaperService(
+	contestRepo ContestRepository,
+	wallpaperRepo WallpaperRepository,
+) *WallpaperService {
 	return &WallpaperService{contestRepo, wallpaperRepo}
 }
 

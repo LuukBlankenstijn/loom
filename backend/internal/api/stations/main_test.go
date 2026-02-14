@@ -10,6 +10,7 @@ import (
 	"connectrpc.com/connect"
 	stationsv1 "github.com/LuukBlankenstijn/loom/gen/go/stations/v1"
 	"github.com/LuukBlankenstijn/loom/gen/go/stations/v1/stationsv1connect"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )
 
@@ -25,7 +26,7 @@ func (m *MockHub) Register(ip string) (<-chan domain.ConfigUpdatedEvent, func(),
 
 type MockRepo struct {
 	domain.StationRepository
-	UpsertFunc              func(ctx context.Context, ip string) error
+	UpsertFunc               func(ctx context.Context, ip string) error
 	UpdateDisconnectedAtFunc func(ctx context.Context, ip string) error
 }
 
@@ -106,7 +107,10 @@ func TestStationsServer_Connect(t *testing.T) {
 			return nil, nil, domain.ErrAlreadyRegistered
 		}
 
-		stream, err := client.Subscribe(context.Background(), &stationsv1.RegisterRequest{Ip: "127.0.0.1"})
+		stream, err := client.Subscribe(
+			context.Background(),
+			&stationsv1.RegisterRequest{Ip: "127.0.0.1"},
+		)
 		if err == nil {
 			if stream.Receive() {
 				t.Fatal("expected error, got message")

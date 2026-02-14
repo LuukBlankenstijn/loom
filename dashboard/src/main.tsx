@@ -8,8 +8,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000, // 30 seconds
-      gcTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 60 * 1000, // 1 minute - data considered fresh, won't refetch
+      gcTime: 10 * 60 * 1000, // 10 minutes - keep unused data in cache
+      refetchOnWindowFocus: false, // don't refetch when tab regains focus
     },
   },
 });

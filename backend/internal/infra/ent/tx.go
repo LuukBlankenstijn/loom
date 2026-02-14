@@ -14,10 +14,20 @@ type Tx struct {
 	config
 	// Contest is the client for interacting with the Contest builders.
 	Contest *ContestClient
+	// ContestAreaMap is the client for interacting with the ContestAreaMap builders.
+	ContestAreaMap *ContestAreaMapClient
+	// ContestMap is the client for interacting with the ContestMap builders.
+	ContestMap *ContestMapClient
+	// DoorElement is the client for interacting with the DoorElement builders.
+	DoorElement *DoorElementClient
 	// Station is the client for interacting with the Station builders.
 	Station *StationClient
+	// TableElement is the client for interacting with the TableElement builders.
+	TableElement *TableElementClient
 	// Team is the client for interacting with the Team builders.
 	Team *TeamClient
+	// WallElement is the client for interacting with the WallElement builders.
+	WallElement *WallElementClient
 	// Wallpaper is the client for interacting with the Wallpaper builders.
 	Wallpaper *WallpaperClient
 
@@ -152,8 +162,13 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Contest = NewContestClient(tx.config)
+	tx.ContestAreaMap = NewContestAreaMapClient(tx.config)
+	tx.ContestMap = NewContestMapClient(tx.config)
+	tx.DoorElement = NewDoorElementClient(tx.config)
 	tx.Station = NewStationClient(tx.config)
+	tx.TableElement = NewTableElementClient(tx.config)
 	tx.Team = NewTeamClient(tx.config)
+	tx.WallElement = NewWallElementClient(tx.config)
 	tx.Wallpaper = NewWallpaperClient(tx.config)
 }
 

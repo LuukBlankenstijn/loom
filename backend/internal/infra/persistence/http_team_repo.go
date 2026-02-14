@@ -9,8 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )
 
 type HttpTeamRepository struct {
@@ -132,7 +133,12 @@ func (r *HttpTeamRepository) SetIp(ctx context.Context, teamId string, ip *strin
 				form.Add("roles[]", role)
 			}
 
-			req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, strings.NewReader(form.Encode()))
+			req, err := http.NewRequestWithContext(
+				ctx,
+				http.MethodPut,
+				endpoint,
+				strings.NewReader(form.Encode()),
+			)
 			if err != nil {
 				slog.Error("failed to create http request", "error", err)
 				return err
@@ -159,7 +165,11 @@ func (r *HttpTeamRepository) SetIp(ctx context.Context, teamId string, ip *strin
 }
 
 // get all users, optionally filtering by team
-func (r *HttpTeamRepository) getUsers(ctx context.Context, target *[]apiUser, teamId *string) error {
+func (r *HttpTeamRepository) getUsers(
+	ctx context.Context,
+	target *[]apiUser,
+	teamId *string,
+) error {
 	url := fmt.Sprintf("%s/api/v4/users", r.baseURL)
 	if teamId != nil {
 		url = fmt.Sprintf("%s?team_id=%s", url, *teamId)

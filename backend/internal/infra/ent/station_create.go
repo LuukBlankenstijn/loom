@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
+	"github.com/google/uuid"
 )
 
 // StationCreate is the builder for creating a Station entity.
@@ -54,6 +56,21 @@ func (_c *StationCreate) SetNillableDisconnectedAt(v *time.Time) *StationCreate 
 		_c.SetDisconnectedAt(*v)
 	}
 	return _c
+}
+
+// AddTableElementIDs adds the "table_element" edge to the TableElement entity by IDs.
+func (_c *StationCreate) AddTableElementIDs(ids ...uuid.UUID) *StationCreate {
+	_c.mutation.AddTableElementIDs(ids...)
+	return _c
+}
+
+// AddTableElement adds the "table_element" edges to the TableElement entity.
+func (_c *StationCreate) AddTableElement(v ...*TableElement) *StationCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTableElementIDs(ids...)
 }
 
 // Mutation returns the StationMutation object of the builder.
@@ -143,6 +160,22 @@ func (_c *StationCreate) createSpec() (*Station, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.DisconnectedAt(); ok {
 		_spec.SetField(station.FieldDisconnectedAt, field.TypeTime, value)
 		_node.DisconnectedAt = &value
+	}
+	if nodes := _c.mutation.TableElementIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

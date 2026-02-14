@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/predicate"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
+	"github.com/google/uuid"
 )
 
 // StationUpdate is the builder for updating Station entities.
@@ -62,9 +64,45 @@ func (_u *StationUpdate) ClearDisconnectedAt() *StationUpdate {
 	return _u
 }
 
+// AddTableElementIDs adds the "table_element" edge to the TableElement entity by IDs.
+func (_u *StationUpdate) AddTableElementIDs(ids ...uuid.UUID) *StationUpdate {
+	_u.mutation.AddTableElementIDs(ids...)
+	return _u
+}
+
+// AddTableElement adds the "table_element" edges to the TableElement entity.
+func (_u *StationUpdate) AddTableElement(v ...*TableElement) *StationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTableElementIDs(ids...)
+}
+
 // Mutation returns the StationMutation object of the builder.
 func (_u *StationUpdate) Mutation() *StationMutation {
 	return _u.mutation
+}
+
+// ClearTableElement clears all "table_element" edges to the TableElement entity.
+func (_u *StationUpdate) ClearTableElement() *StationUpdate {
+	_u.mutation.ClearTableElement()
+	return _u
+}
+
+// RemoveTableElementIDs removes the "table_element" edge to TableElement entities by IDs.
+func (_u *StationUpdate) RemoveTableElementIDs(ids ...uuid.UUID) *StationUpdate {
+	_u.mutation.RemoveTableElementIDs(ids...)
+	return _u
+}
+
+// RemoveTableElement removes "table_element" edges to TableElement entities.
+func (_u *StationUpdate) RemoveTableElement(v ...*TableElement) *StationUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTableElementIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -111,6 +149,51 @@ func (_u *StationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.DisconnectedAtCleared() {
 		_spec.ClearField(station.FieldDisconnectedAt, field.TypeTime)
+	}
+	if _u.mutation.TableElementCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTableElementIDs(); len(nodes) > 0 && !_u.mutation.TableElementCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TableElementIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -166,9 +249,45 @@ func (_u *StationUpdateOne) ClearDisconnectedAt() *StationUpdateOne {
 	return _u
 }
 
+// AddTableElementIDs adds the "table_element" edge to the TableElement entity by IDs.
+func (_u *StationUpdateOne) AddTableElementIDs(ids ...uuid.UUID) *StationUpdateOne {
+	_u.mutation.AddTableElementIDs(ids...)
+	return _u
+}
+
+// AddTableElement adds the "table_element" edges to the TableElement entity.
+func (_u *StationUpdateOne) AddTableElement(v ...*TableElement) *StationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTableElementIDs(ids...)
+}
+
 // Mutation returns the StationMutation object of the builder.
 func (_u *StationUpdateOne) Mutation() *StationMutation {
 	return _u.mutation
+}
+
+// ClearTableElement clears all "table_element" edges to the TableElement entity.
+func (_u *StationUpdateOne) ClearTableElement() *StationUpdateOne {
+	_u.mutation.ClearTableElement()
+	return _u
+}
+
+// RemoveTableElementIDs removes the "table_element" edge to TableElement entities by IDs.
+func (_u *StationUpdateOne) RemoveTableElementIDs(ids ...uuid.UUID) *StationUpdateOne {
+	_u.mutation.RemoveTableElementIDs(ids...)
+	return _u
+}
+
+// RemoveTableElement removes "table_element" edges to TableElement entities.
+func (_u *StationUpdateOne) RemoveTableElement(v ...*TableElement) *StationUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTableElementIDs(ids...)
 }
 
 // Where appends a list predicates to the StationUpdate builder.
@@ -245,6 +364,51 @@ func (_u *StationUpdateOne) sqlSave(ctx context.Context) (_node *Station, err er
 	}
 	if _u.mutation.DisconnectedAtCleared() {
 		_spec.ClearField(station.FieldDisconnectedAt, field.TypeTime)
+	}
+	if _u.mutation.TableElementCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTableElementIDs(); len(nodes) > 0 && !_u.mutation.TableElementCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TableElementIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   station.TableElementTable,
+			Columns: []string{station.TableElementColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tableelement.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Station{config: _u.config}
 	_spec.Assign = _node.assignValues

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,15 +14,17 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/predicate"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/tableelement"
 )
 
 // StationQuery is the builder for querying Station entities.
 type StationQuery struct {
 	config
-	ctx        *QueryContext
-	order      []station.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Station
+	ctx              *QueryContext
+	order            []station.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.Station
+	withTableElement *TableElementQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (_q *StationQuery) Unique(unique bool) *StationQuery {
 func (_q *StationQuery) Order(o ...station.OrderOption) *StationQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryTableElement chains the current query on the "table_element" edge.
+func (_q *StationQuery) QueryTableElement() *TableElementQuery {
+	query := (&TableElementClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(station.Table, station.FieldID, selector),
+			sqlgraph.To(tableelement.Table, tableelement.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, station.TableElementTable, station.TableElementColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Station entity from the query.
@@ -245,15 +270,27 @@ func (_q *StationQuery) Clone() *StationQuery {
 		return nil
 	}
 	return &StationQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]station.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Station{}, _q.predicates...),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]station.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.Station{}, _q.predicates...),
+		withTableElement: _q.withTableElement.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithTableElement tells the query-builder to eager-load the nodes that are connected to
+// the "table_element" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *StationQuery) WithTableElement(opts ...func(*TableElementQuery)) *StationQuery {
+	query := (&TableElementClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withTableElement = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (_q *StationQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *StationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Station, error) {
 	var (
-		nodes = []*Station{}
-		_spec = _q.querySpec()
+		nodes       = []*Station{}
+		_spec       = _q.querySpec()
+		loadedTypes = [1]bool{
+			_q.withTableElement != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Station).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (_q *StationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Stat
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Station{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,46 @@ func (_q *StationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Stat
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withTableElement; query != nil {
+		if err := _q.loadTableElement(ctx, query, nodes,
+			func(n *Station) { n.Edges.TableElement = []*TableElement{} },
+			func(n *Station, e *TableElement) { n.Edges.TableElement = append(n.Edges.TableElement, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *StationQuery) loadTableElement(ctx context.Context, query *TableElementQuery, nodes []*Station, init func(*Station), assign func(*Station, *TableElement)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Station)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.TableElement(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(station.TableElementColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.table_element_station
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "table_element_station" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "table_element_station" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *StationQuery) sqlCount(ctx context.Context) (int, error) {

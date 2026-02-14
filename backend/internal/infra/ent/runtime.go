@@ -21,12 +21,16 @@ func init() {
 	contestDescID := contestFields[0].Descriptor()
 	// contest.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	contest.IDValidator = contestDescID.Validators[0].(func(string) error)
+	doorelementFields := schema.DoorElement{}.Fields()
+	_ = doorelementFields
 	stationFields := schema.Station{}.Fields()
 	_ = stationFields
 	// stationDescConnectedAt is the schema descriptor for connected_at field.
 	stationDescConnectedAt := stationFields[1].Descriptor()
 	// station.DefaultConnectedAt holds the default value on creation for the connected_at field.
 	station.DefaultConnectedAt = stationDescConnectedAt.Default.(time.Time)
+	tableelementFields := schema.TableElement{}.Fields()
+	_ = tableelementFields
 	teamFields := schema.Team{}.Fields()
 	_ = teamFields
 	// teamDescID is the schema descriptor for id field.

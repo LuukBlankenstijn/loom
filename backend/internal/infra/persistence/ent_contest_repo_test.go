@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/enttest"
 )
 
 func TestEntContestRepositoryGetNextContest(t *testing.T) {

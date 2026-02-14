@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"

@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	stationsv1 "github.com/LuukBlankenstijn/loom/gen/go/stations/v1"
+
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )
 
@@ -24,7 +25,10 @@ func (s *stationsServer) Subscribe(
 	if err != nil {
 		if errors.Is(err, domain.ErrAlreadyRegistered) {
 			slog.Warn("Station registered while it was already connected", "ip", connectRequest.Ip)
-			return connect.NewError(connect.CodeFailedPrecondition, errors.New("station already connected"))
+			return connect.NewError(
+				connect.CodeFailedPrecondition,
+				errors.New("station already connected"),
+			)
 		} else {
 			return connect.NewError(connect.CodeInternal, err)
 		}
