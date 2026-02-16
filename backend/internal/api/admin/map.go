@@ -118,6 +118,7 @@ func (m *adminHandler) UpdateMap(
 	ctx context.Context,
 	request *adminv1.UpdateMapRequest,
 ) (*emptypb.Empty, error) {
+	println(fmt.Sprintf("%+v", request))
 	deletedIds := []uuid.UUID{}
 	for _, d := range request.Deleted {
 		if id, err := uuid.Parse(d); err != nil {
@@ -134,7 +135,7 @@ func (m *adminHandler) UpdateMap(
 	for _, u := range request.Updated {
 		switch updated := u.Element.(type) {
 		case *adminv1.Element_Door:
-			if id, err := uuid.Parse(updated.Door.Id); err != nil {
+			if id, err := uuid.Parse(updated.Door.Id); err == nil {
 				doors = append(doors, domain.Door{
 					Id:       id,
 					Position: domain.NewPosition(int(updated.Door.Location.X), int(updated.Door.Location.Y)),
@@ -142,7 +143,7 @@ func (m *adminHandler) UpdateMap(
 				})
 			}
 		case *adminv1.Element_Wall:
-			if id, err := uuid.Parse(updated.Wall.Id); err != nil {
+			if id, err := uuid.Parse(updated.Wall.Id); err == nil {
 				walls = append(walls, domain.Wall{
 					Id:    id,
 					Start: domain.NewPosition(int(updated.Wall.Start.X), int(updated.Wall.Start.Y)),
@@ -150,7 +151,7 @@ func (m *adminHandler) UpdateMap(
 				})
 			}
 		case *adminv1.Element_Table:
-			if id, err := uuid.Parse(updated.Table.Id); err != nil {
+			if id, err := uuid.Parse(updated.Table.Id); err == nil {
 				tables = append(tables, domain.Table{
 					Id:       id,
 					Position: domain.NewPosition(int(updated.Table.Location.X), int(updated.Table.Location.Y)),
@@ -159,6 +160,7 @@ func (m *adminHandler) UpdateMap(
 			}
 		}
 	}
+	println(fmt.Sprintf("%+v, %+v, %+v", walls, doors, tables))
 	err = m.mapRepo.UpsertElements(ctx, int(request.Id), walls, doors, tables)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)

@@ -1,9 +1,10 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use iced::{
     Event, Rectangle, Renderer, Theme, mouse,
     widget::canvas::{self, Frame, Geometry, Path, Program, Stroke},
 };
+use ordermap::OrderMap;
 use uuid::Uuid;
 
 use crate::{MapMode, Message};
@@ -13,7 +14,7 @@ use super::types::{Drawable, MapElement};
 
 pub struct MapCanvas<'a> {
     grid: &'a Grid,
-    elements: &'a HashMap<Uuid, MapElement>,
+    elements: &'a OrderMap<Uuid, MapElement>,
     selected: &'a HashSet<Uuid>,
     mode: MapMode,
 }
@@ -21,7 +22,7 @@ pub struct MapCanvas<'a> {
 impl<'a> MapCanvas<'a> {
     pub fn new(
         grid: &'a Grid,
-        elements: &'a HashMap<Uuid, MapElement>,
+        elements: &'a OrderMap<Uuid, MapElement>,
         selected: &'a HashSet<Uuid>,
         mode: MapMode,
     ) -> Self {
@@ -50,11 +51,13 @@ impl<'a> Program<Message> for MapCanvas<'a> {
         frame.translate(self.grid.offset);
         frame.scale(self.grid.zoom);
 
-        self.grid.draw_grid(&mut frame, bounds, theme);
+        if matches!(self.mode, MapMode::Edit) {
+            self.grid.draw_grid(&mut frame, bounds);
+        }
 
         for element in self.elements.values() {
             let selected = self.selected.contains(&element.get_id());
-            element.draw(&mut frame, theme, selected);
+            element.draw(&mut frame, self.grid.zoom, selected);
         }
 
         if let Some(start) = state.draw_start {

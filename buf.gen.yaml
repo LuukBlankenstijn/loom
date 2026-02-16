@@ -17,12 +17,12 @@ plugins:
     out: shared/gen/rs/src
     opt:
       - no_server
+      - no_transport
   - local: protoc-gen-prost-crate
     out: shared/gen/rs
     strategy: all
     opt:
-      - gen_crate=shared/gen/rs/Cargo.toml
-      - no_features
+      - gen_crate=shared/gen/rs/Cargo.toml.tpl
   - local: protoc-gen-es
     out: dashboard/src/gen
     opt:

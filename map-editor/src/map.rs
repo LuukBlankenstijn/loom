@@ -1,35 +1,32 @@
+use std::sync::Arc;
+
 use iced::{
-    Border, Color, Element, Length, Point, Task,
+    Border, Color, Element, Length, Task,
     alignment::{Horizontal, Vertical},
     border,
+    futures::FutureExt,
     widget::{
         button, column, container, row,
         rule::{self, Style},
         space, stack, text,
     },
 };
-use loom_map::{Door, MapElement, MapMode, Rotation, Wall};
+use loom_map::{Door, MapElement, MapMode, Station};
+use loom_rpc::admin::v1::{
+    GetMapRequest, UpdateMapRequest, admin_service_client::AdminServiceClient,
+};
+use tonic_web_wasm_client::Client;
+
+use crate::client::{FromProto, ToProto};
 
 #[derive(Debug)]
 pub struct Map {
+    client: Arc<AdminServiceClient<Client>>,
+    map_id: i32,
     map_mode: MapMode,
     map: loom_map::Map,
     is_colapsed: bool,
-}
-
-impl Default for Map {
-    fn default() -> Self {
-        let elements = get_doors()
-            .into_iter()
-            .map(MapElement::Door)
-            .chain(get_walls().into_iter().map(MapElement::Wall))
-            .collect();
-        Self {
-            map: loom_map::Map::new(elements),
-            map_mode: Default::default(),
-            is_colapsed: false,
-        }
-    }
+    error: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -37,20 +34,39 @@ pub enum Message {
     ToggleHud,
     Map(loom_map::Message),
     ToggleMapMode,
+    FetchMap,
+    MapFetched(Result<Vec<MapElement>, String>),
+    UpdateMap,
+    MapUpdated(Option<String>),
+    ClearError,
 }
 
 impl Map {
+    pub fn new(client: Arc<AdminServiceClient<Client>>, map_id: i32) -> (Self, Task<Message>) {
+        (
+            Self {
+                client,
+                map_id,
+                map_mode: MapMode::default(),
+                map: loom_map::Map::new(Vec::new()),
+                is_colapsed: true,
+                error: None,
+            },
+            Task::done(Message::FetchMap),
+        )
+    }
     pub fn view(&self) -> Element<'_, Message> {
         stack![
             self.map.view(self.map_mode.clone()).map(Message::Map),
-            self.view_hud()
+            self.view_hud(),
+            self.view_error_banner()
         ]
         .into()
     }
 
     fn view_hud(&self) -> Element<'_, Message> {
         let hud_style = |_: &iced::Theme| container::Style {
-            background: Some(Color::from_rgba(0.95, 0.95, 0.95, 0.05).into()),
+            background: Some(Color::from_rgb(0.15, 0.15, 0.15).into()),
             text_color: Some(Color::WHITE),
             border: Border {
                 color: Color::from_rgba(1.0, 1.0, 1.0, 0.2),
@@ -91,19 +107,16 @@ impl Map {
                             Color::from_rgb(1.0, 0.3, 0.3),
                             Message::Map(loom_map::Message::DeleteSelection)
                         ),
-                        space().height(1),
                         self.view_hud_button(
                             "Clear Selection",
                             Color::from_rgb(1.0, 0.8, 0.2),
                             Message::Map(loom_map::Message::ClearSelection)
                         ),
-                        space().height(1),
                         self.view_hud_button(
                             "Duplicate Selection",
                             Color::from_rgb(0.2, 0.8, 1.0),
                             Message::Map(loom_map::Message::DuplicateSelection)
                         ),
-                        space().height(1),
                         self.view_hud_button(
                             "Rotate Selection",
                             Color::from_rgb(0.2, 0.8, 1.0),
@@ -119,8 +132,26 @@ impl Map {
                             "New Door",
                             Color::from_rgb(0.0, 1.0, 0.0),
                             Message::Map(loom_map::Message::AddElement(|point| {
-                                loom_map::Door::new(point, None).into()
+                                Door::new(point, None).into()
                             }))
+                        ),
+                        self.view_hud_button(
+                            "New Station",
+                            Color::from_rgb(0.0, 1.0, 0.0),
+                            Message::Map(loom_map::Message::AddElement(|point| {
+                                Station::new(point, None).into()
+                            }))
+                        ),
+                        rule::horizontal(1).style(|t| {
+                            Style {
+                                color: Color::WHITE,
+                                ..rule::default(t)
+                            }
+                        }),
+                        self.view_hud_button(
+                            "Save",
+                            Color::from_rgb(0.0, 1.0, 0.0),
+                            Message::UpdateMap
                         ),
                     ]
                     .spacing(5)
@@ -150,6 +181,8 @@ impl Map {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        let client = self.client.clone();
+        let map_id = self.map_id;
         match message {
             Message::ToggleHud => self.is_colapsed = !self.is_colapsed,
             Message::Map(message) => {
@@ -162,8 +195,110 @@ impl Map {
                     return Task::done(Message::Map(loom_map::Message::ClearSelection));
                 }
             },
+            Message::FetchMap => {
+                return Task::perform(
+                    async move {
+                        let mut client = (*client).clone();
+                        let inner = client
+                            .get_map(GetMapRequest { id: map_id })
+                            .boxed_local()
+                            .await
+                            .map_err(|e| e.to_string())?
+                            .into_inner();
+
+                        if inner.map.is_none() {
+                            return Err("No map found".to_string());
+                        }
+
+                        let elements: Vec<MapElement> = inner
+                            .elements
+                            .into_iter()
+                            .filter_map(FromProto::from_proto)
+                            .collect();
+
+                        Ok(elements)
+                    },
+                    Message::MapFetched,
+                );
+            }
+            Message::MapFetched(result) => match result {
+                Ok(elements) => {
+                    self.error = None;
+                    self.map.update_elements(elements);
+                }
+                Err(error) => self.error = Some(error),
+            },
+            Message::UpdateMap => {
+                let (mut deleted, mut updated) = self.map.get_changes();
+                return Task::perform(
+                    async move {
+                        let mut client = (*client).clone();
+                        let result = client
+                            .update_map(UpdateMapRequest {
+                                id: map_id,
+                                deleted: deleted.iter_mut().map(|d| d.to_string()).collect(),
+                                updated: updated.iter_mut().map(|u| u.to_proto()).collect(),
+                            })
+                            .boxed_local()
+                            .await;
+                        match result {
+                            Ok(_) => None,
+                            Err(e) => Some(e.to_string()),
+                        }
+                    },
+                    Message::MapUpdated,
+                );
+            }
+            Message::MapUpdated(error) => {
+                if error.is_some() {
+                    self.error = error
+                } else {
+                    self.error = None;
+                    return Task::done(Message::FetchMap);
+                }
+            }
+            Message::ClearError => self.error = None,
         }
         Task::none()
+    }
+
+    fn view_error_banner(&self) -> Element<'_, Message> {
+        if let Some(error_msg) = &self.error {
+            let banner_style = |_: &iced::Theme| container::Style {
+                background: Some(Color::from_rgba(0.8, 0.1, 0.1, 0.8).into()), // 80% Red
+                text_color: Some(Color::WHITE),
+                border: Border {
+                    color: Color::from_rgba(1.0, 1.0, 1.0, 0.2),
+                    width: 1.0,
+                    radius: border::radius(0),
+                },
+                ..Default::default()
+            };
+
+            container(
+                row![
+                    text(format!("Error: {}", error_msg))
+                        .size(14)
+                        .width(Length::Fill),
+                    button("Close")
+                        .padding([2, 8])
+                        .on_press(Message::ClearError)
+                        .style(|_, _| button::Style {
+                            background: Some(Color::from_rgba(1.0, 1.0, 1.0, 0.1).into()),
+                            text_color: Color::WHITE,
+                            ..Default::default()
+                        })
+                ]
+                .spacing(20)
+                .align_y(Vertical::Center),
+            )
+            .width(Length::Fill)
+            .padding(10)
+            .style(banner_style)
+            .into()
+        } else {
+            space().width(0).height(0).into()
+        }
     }
 
     fn view_edit_mode_toggle(&self) -> Element<'_, Message> {
@@ -182,7 +317,7 @@ impl Map {
             ..Default::default()
         };
 
-        let toggle_label = if self.is_colapsed { "◀" } else { "▼" };
+        let toggle_label = if self.is_colapsed { "<" } else { "v" };
 
         button(text(toggle_label).size(16))
             .on_press(Message::ToggleHud)
@@ -216,18 +351,4 @@ impl Map {
         })
         .into()
     }
-}
-
-fn get_doors() -> Vec<Door> {
-    vec![
-        Door::new(Point::new(0.0, 0.0), None),
-        Door::new(Point::new(200.0, 200.0), Some(Rotation::Deg90)),
-    ]
-}
-
-fn get_walls() -> Vec<Wall> {
-    vec![
-        Wall::new(Point::new(50.0, 0.0), Point::new(200.0, 0.0)),
-        Wall::new(Point::new(200.0, 0.0), Point::new(200.0, 150.0)),
-    ]
 }

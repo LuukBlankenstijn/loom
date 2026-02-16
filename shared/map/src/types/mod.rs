@@ -1,23 +1,26 @@
 use enum_dispatch::enum_dispatch;
-use iced::{Point, Theme, Vector, widget::canvas::Frame};
+use iced::{Point, Vector, widget::canvas::Frame};
 use uuid::Uuid;
 
 mod door;
+mod station;
 mod wall;
 
 pub use door::Door;
+pub use station::Station;
 pub use wall::Wall;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[enum_dispatch(Drawable, MapElement)]
 pub enum MapElement {
     Door(Door),
     Wall(Wall),
+    Station(Station),
 }
 
 #[enum_dispatch]
 pub trait Drawable {
-    fn draw(&self, frame: &mut Frame, theme: &Theme, selected: bool);
+    fn draw(&self, frame: &mut Frame, scale: f32, selected: bool);
     fn get_id(&self) -> Uuid;
     fn is_hit(&self, point: Point) -> bool;
     fn move_by(&mut self, delta: Vector);

@@ -1,5 +1,5 @@
 use iced::{
-    Color, Point, Radians, Theme, Vector,
+    Color, Point, Radians, Vector,
     widget::canvas::{self, Frame, LineDash, Path, Stroke},
 };
 use uuid::Uuid;
@@ -8,11 +8,11 @@ use crate::types::Rotation;
 
 use super::Drawable;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Door {
-    id: Uuid,
-    position: Point,
-    rotation: Rotation,
+    pub id: Uuid,
+    pub position: Point,
+    pub rotation: Rotation,
 }
 
 impl Door {
@@ -24,23 +24,28 @@ impl Door {
             rotation: rotation.unwrap_or_default(),
         }
     }
+    pub fn construct(id: Uuid, position: impl Into<Point>, rotation: impl Into<Rotation>) -> Self {
+        Self {
+            id,
+            position: position.into(),
+            rotation: rotation.into(),
+        }
+    }
 }
 
 impl Drawable for Door {
-    fn draw(&self, frame: &mut Frame, _theme: &Theme, selected: bool) {
+    fn draw(&self, frame: &mut Frame, scale: f32, selected: bool) {
         frame.with_save(|frame| {
             frame.translate(Vector::new(self.position.x, self.position.y));
 
             frame.rotate(self.rotation);
 
             let dot_radius = 3.0;
-            let stroke_width = 2.0;
-            let door_color = Color::from_rgb(0.0, 1.0, 0.0);
+            let stroke_width = 2.0 * scale;
+            let door_color = Color::from_rgb(0.99, 0.73, 0.19);
             if selected {
                 let selection_color = Color::from_rgba(0.0, 0.5, 1.0, 0.3);
                 let halo_width = 10.0;
-
-                // 1. Highlight the leaf line
                 frame.stroke(
                     &Path::line(
                         Point::new(-Self::WIDTH / 2.0, 0.0),
@@ -51,7 +56,6 @@ impl Drawable for Door {
                         .with_color(selection_color),
                 );
 
-                // 2. Highlight the swing arc
                 let arc_path = Path::new(|builder| {
                     builder.arc(canvas::path::Arc {
                         center: Point::new(-Self::WIDTH / 2.0, 0.0),
@@ -68,15 +72,12 @@ impl Drawable for Door {
                 );
             }
 
-            // 1. Draw the snap-point dots (Frame/Jambs)
-            // We create a path for a circle and fill it
             let left_dot = Path::circle(Point::new(-Self::WIDTH / 2.0, 0.0), dot_radius);
             let right_dot = Path::circle(Point::new(Self::WIDTH / 2.0, 0.0), dot_radius);
 
             frame.fill(&left_dot, door_color);
             frame.fill(&right_dot, door_color);
 
-            // 2. Draw the Door Leaf
             frame.stroke(
                 &Path::line(
                     Point::new(-Self::WIDTH / 2.0, 0.0),
@@ -87,7 +88,6 @@ impl Drawable for Door {
                     .with_color(door_color),
             );
 
-            // 3. Draw the Swing Arc
             let arc = Path::new(|builder| {
                 builder.arc(canvas::path::Arc {
                     center: Point::new(-Self::WIDTH / 2.0, 0.0),

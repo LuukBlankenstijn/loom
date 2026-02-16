@@ -5,9 +5,10 @@ mod types;
 
 use grid::Grid;
 pub use messsage::Message;
-pub use types::{Door, Drawable, MapElement, Rotation, Wall};
+use ordermap::OrderMap;
+pub use types::{Door, Drawable, MapElement, Rotation, Station, Wall};
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use iced::Length::Fill;
 use iced::widget::Canvas;
@@ -26,18 +27,42 @@ pub enum MapMode {
 #[derive(Debug)]
 pub struct Map {
     grid: Grid,
-    elements: HashMap<Uuid, MapElement>,
+    start_elements: OrderMap<Uuid, MapElement>,
+    elements: OrderMap<Uuid, MapElement>,
     selected: HashSet<Uuid>,
 }
 
 impl Map {
     pub fn new(elements: Vec<MapElement>) -> Self {
-        let elements = elements.into_iter().map(|e| (e.get_id(), e)).collect();
+        let elements: OrderMap<Uuid, MapElement> =
+            elements.into_iter().map(|e| (e.get_id(), e)).collect();
         Self {
+            start_elements: elements.clone(),
             elements,
             grid: Grid::new(),
             selected: Default::default(),
         }
+    }
+
+    pub fn get_changes(&self) -> (Vec<Uuid>, Vec<MapElement>) {
+        let start = self.start_elements.clone();
+        let current = self.elements.clone();
+        let deleted: Vec<_> = start
+            .keys()
+            .filter(|key| !current.contains_key(*key))
+            .cloned()
+            .collect();
+
+        let new_or_changed: Vec<_> = current
+            .iter()
+            .filter(|(key, value)| start.get(*key) != Some(*value))
+            .map(|(_, value)| value.clone())
+            .collect();
+        (deleted, new_or_changed)
+    }
+
+    pub fn update_elements(&mut self, elements: Vec<MapElement>) {
+        self.elements = elements.into_iter().map(|e| (e.get_id(), e)).collect();
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -62,10 +87,7 @@ impl Map {
             },
             Message::System(msg) => match msg {
                 SystemMessage::AddElement(element) => {
-                    match element {
-                        MapElement::Door(door) => self.elements.insert(door.get_id(), door.into()),
-                        MapElement::Wall(wall) => self.elements.insert(wall.get_id(), wall.into()),
-                    };
+                    self.elements.insert(element.get_id(), element);
                 }
             },
             Message::ClearSelection => self.selected.clear(),

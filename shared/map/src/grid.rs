@@ -1,5 +1,5 @@
 use iced::{
-    Event, Point, Rectangle, Theme, Vector,
+    Color, Event, Point, Rectangle, Vector,
     keyboard::{self, Key, Modifiers, key::Named},
     mouse,
     widget::canvas::{self, Frame, Path, Stroke},
@@ -52,11 +52,9 @@ impl Grid {
         }
     }
 
-    pub fn draw_grid(&self, frame: &mut Frame, bounds: Rectangle, theme: &Theme) {
-        let palette = theme.extended_palette();
-
+    pub fn draw_grid(&self, frame: &mut Frame, bounds: Rectangle) {
         let grid_size = 100.0;
-        let grid_color = palette.secondary.weak.text.scale_alpha(0.3);
+        let grid_color = Color::WHITE.scale_alpha(0.5 * self.zoom);
 
         // Calculate the visible world-space coordinates
         let top_left = Point::new(-self.offset.x / self.zoom, -self.offset.y / self.zoom);
@@ -129,7 +127,7 @@ impl Grid {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         if let Some(pos) = cursor_position {
                             // panning and drawing logic
-                            if state.modifiers.control() && can_edit {
+                            if state.modifiers.shift() && can_edit {
                                 state.draw_start =
                                     Some(self.snap_to_grid(self.screen_to_world(pos)))
                             } else if state.modifiers.alt() && can_edit {
@@ -138,18 +136,20 @@ impl Grid {
                                 state.is_panning = true;
                             }
                             state.last_cursor_pos = pos;
-
+                            return Some(canvas::Action::request_redraw().and_capture());
+                        }
+                    }
+                    mouse::Event::ButtonPressed(mouse::Button::Right) => {
+                        if let Some(pos) = cursor_position {
                             // selection logic
-                            if state.modifiers.shift() && can_edit {
+                            if can_edit {
                                 let world_pos = self.screen_to_world(pos);
                                 return Some(canvas::Action::publish(
                                     GridMessage::RequestSelect(world_pos).into(),
                                 ));
                             }
-                            return Some(canvas::Action::request_redraw().and_capture());
                         }
-                    }
-                    mouse::Event::ButtonPressed(mouse::Button::Right) => {
+
                         state.draw_start = None;
                         return Some(canvas::Action::request_redraw().and_capture());
                     }

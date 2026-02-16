@@ -4,6 +4,7 @@ import { ContestPage } from "./pages/ContestPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { StationsPage } from "./pages/StationsPage";
 import { MapsPage } from "./pages/MapsPage";
+import { MapEditorPage } from "./pages/MapEditorPage";
 
 function App() {
   return (
@@ -15,6 +16,8 @@ function App() {
           <Route path="stations" element={<StationsPage />} />
           <Route path="maps" element={<MapsPage />} />
         </Route>
+        {/* Editor is outside layout - needs full screen for WASM canvas */}
+        <Route path="/maps/:mapId/edit" element={<MapEditorPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -6,11 +6,11 @@ use uuid::Uuid;
 
 use super::Drawable;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Wall {
-    id: Uuid,
-    start: Point,
-    end: Point,
+    pub id: Uuid,
+    pub start: Point,
+    pub end: Point,
 }
 
 impl Wall {
@@ -19,6 +19,13 @@ impl Wall {
             id: Uuid::now_v7(),
             start,
             end,
+        }
+    }
+    pub fn construct(id: Uuid, start: impl Into<Point>, end: impl Into<Point>) -> Self {
+        Self {
+            id,
+            start: start.into(),
+            end: end.into(),
         }
     }
     pub fn get_test() -> Vec<Self> {
@@ -30,10 +37,10 @@ impl Wall {
 }
 
 impl Drawable for Wall {
-    fn draw(&self, frame: &mut iced::widget::canvas::Frame, _theme: &iced::Theme, selected: bool) {
+    fn draw(&self, frame: &mut iced::widget::canvas::Frame, scale: f32, selected: bool) {
         let dot_radius = 3.0;
-        let stroke_width = 2.0;
-        let wall_color = Color::from_rgb(1.0, 0.0, 0.0);
+        let stroke_width = 2.0 * scale;
+        let wall_color = Color::from_rgb(0.69, 0.16, 0.11);
 
         // 1. Draw the snap-point dots (Frame/Jambs)
         // We create a path for a circle and fill it

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { adminClient } from "../lib/client";
 
 export function MapsPage() {
@@ -108,14 +109,15 @@ export function MapsPage() {
                 <span className="text-xs text-gray-500 font-mono">#{map.id}</span>
               </div>
               <h3 className="text-lg font-medium text-white mb-4">{map.name}</h3>
-              <button
+              <Link
+                to={`/maps/${map.id}/edit`}
                 className="w-full px-3 py-2 bg-surface-700 hover:bg-surface-600 text-gray-300 hover:text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Edit
-              </button>
+              </Link>
             </div>
           ))}
         </div>
