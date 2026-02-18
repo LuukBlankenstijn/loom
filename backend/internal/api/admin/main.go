@@ -14,27 +14,21 @@ import (
 )
 
 type adminHandler struct {
-	teamService      domain.TeamService
-	wallpaperService domain.WallpaperService
-	stationRepo      domain.StationRepository
-	teamRepo         domain.TeamRepository
-	contestRepo      domain.ContestRepository
-	wallpaperRepo    domain.WallpaperRepository
-	mapRepo          domain.MapRepository
+	stationRepo   domain.StationRepository
+	teamRepo      domain.TeamRepository
+	contestRepo   domain.ContestRepository
+	wallpaperRepo domain.WallpaperRepository
+	mapRepo       domain.MapRepository
 }
 
 func NewAdminHandler(
-	teamService domain.TeamService,
 	stationRepo domain.StationRepository,
 	teamRepo domain.TeamRepository,
 	contestRepo domain.ContestRepository,
 	wallpaperRepo domain.WallpaperRepository,
-	wallpaperService domain.WallpaperService,
 	mapRepo domain.MapRepository,
 ) *adminHandler {
 	return &adminHandler{
-		teamService,
-		wallpaperService,
 		stationRepo,
 		teamRepo,
 		contestRepo,

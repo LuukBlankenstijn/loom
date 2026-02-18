@@ -50,7 +50,7 @@ func TestStationsServer_Connect(t *testing.T) {
 	repo := &MockRepo{}
 
 	// 2. Start Test Server
-	server := &stationsServer{stationsHub: mock, repo: repo}
+	server := &stationsServer{stationsHub: mock, stationsRepo: repo}
 	mux := http.NewServeMux()
 	mux.Handle(stationsv1connect.NewStationServiceHandler(server))
 	listener, err := net.Listen("tcp", "127.0.0.1:0")

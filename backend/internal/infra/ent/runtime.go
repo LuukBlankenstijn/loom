@@ -9,6 +9,7 @@ import (
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/schema"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/station"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/team"
+	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/wallpaper"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -37,4 +38,18 @@ func init() {
 	teamDescID := teamFields[0].Descriptor()
 	// team.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	team.IDValidator = teamDescID.Validators[0].(func(string) error)
+	wallpaperFields := schema.Wallpaper{}.Fields()
+	_ = wallpaperFields
+	// wallpaperDescColor is the schema descriptor for color field.
+	wallpaperDescColor := wallpaperFields[2].Descriptor()
+	// wallpaper.DefaultColor holds the default value on creation for the color field.
+	wallpaper.DefaultColor = wallpaperDescColor.Default.(string)
+	// wallpaper.ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	wallpaper.ColorValidator = wallpaperDescColor.Validators[0].(func(string) error)
+	// wallpaperDescUpdatedAt is the schema descriptor for updated_at field.
+	wallpaperDescUpdatedAt := wallpaperFields[3].Descriptor()
+	// wallpaper.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	wallpaper.DefaultUpdatedAt = wallpaperDescUpdatedAt.Default.(func() time.Time)
+	// wallpaper.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	wallpaper.UpdateDefaultUpdatedAt = wallpaperDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

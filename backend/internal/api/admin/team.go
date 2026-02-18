@@ -7,6 +7,8 @@ import (
 	"connectrpc.com/connect"
 	adminv1 "github.com/LuukBlankenstijn/loom/gen/go/admin/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )
 
 // Gets all teams for the next active contest
@@ -14,9 +16,18 @@ func (a *adminHandler) GetActiveTeams(
 	ctx context.Context,
 	empty *emptypb.Empty,
 ) (*adminv1.TeamsResponse, error) {
-	domainTeams, err := a.teamService.GetTeamsForActiveContest(ctx)
+	contest, err := a.contestRepo.GetNextContest(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get teams"))
+	}
+	var domainTeams []domain.Team
+	if contest == nil {
+		domainTeams = []domain.Team{}
+	} else {
+		domainTeams, err = a.teamRepo.GetAll(ctx, contest.Id)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, errors.New("failed to get teams"))
+		}
 	}
 	teams := []*adminv1.Team{}
 	for _, s := range domainTeams {

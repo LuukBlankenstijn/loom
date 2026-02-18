@@ -32,6 +32,9 @@ export const adminClient = {
   setWallpaper: async (contestId: string, imageData: Uint8Array): Promise<void> => {
     await client.setWallpaper({ contestId, imageData });
   },
+  setWallpaperTextColor: async (contestId: string, color: string): Promise<void> => {
+    await client.setWallpaperTextColor({ contestId, color });
+  },
   getAllMaps: async (): Promise<GetAllMapsResponse> => {
     return await client.getAllMaps(create(EmptySchema)) as GetAllMapsResponse;
   },

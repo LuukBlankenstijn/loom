@@ -3,6 +3,7 @@ package stations
 import (
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
@@ -12,18 +13,33 @@ import (
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )
 
+type wallpaperState struct {
+	mu        sync.RWMutex
+	wallpaper *domain.Wallpaper
+}
+
 type stationsServer struct {
-	stationsHub domain.Hub
-	repo        domain.StationRepository
+	contestRepo    domain.ContestRepository
+	stationsHub    domain.Hub
+	stationsRepo   domain.StationRepository
+	teamRepo       domain.TeamRepository
+	wallpaperCache wallpaperState
+	wallpaperRepo  domain.WallpaperRepository
 }
 
 func New(
 	hub domain.Hub,
-	repo domain.StationRepository,
+	contestRepo domain.ContestRepository,
+	stationsRepo domain.StationRepository,
+	teamRepo domain.TeamRepository,
+	wallpaperRepo domain.WallpaperRepository,
 ) *stationsServer {
 	return &stationsServer{
-		stationsHub: hub,
-		repo:        repo,
+		contestRepo:   contestRepo,
+		stationsHub:   hub,
+		stationsRepo:  stationsRepo,
+		teamRepo:      teamRepo,
+		wallpaperRepo: wallpaperRepo,
 	}
 }
 
@@ -34,6 +50,7 @@ func (s *stationsServer) Run() error {
 		connect.WithInterceptors(validate.NewInterceptor()),
 	)
 	mux.Handle(path, handler)
+	mux.HandleFunc("/wallpaper", s.WallpaperHandler)
 
 	reflector := grpcreflect.NewStaticReflector(
 		stationsv1connect.StationServiceName,

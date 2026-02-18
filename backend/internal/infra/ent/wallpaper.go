@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -18,6 +19,12 @@ type Wallpaper struct {
 	ID int `json:"id,omitempty"`
 	// ImageData holds the value of the "image_data" field.
 	ImageData []byte `json:"image_data,omitempty"`
+	// MimeType holds the value of the "mime_type" field.
+	MimeType string `json:"mime_type,omitempty"`
+	// Hexadecimal color value
+	Color string `json:"color,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// ContestID holds the value of the "contest_id" field.
 	ContestID    string `json:"contest_id,omitempty"`
 	selectValues sql.SelectValues
@@ -32,8 +39,10 @@ func (*Wallpaper) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case wallpaper.FieldID:
 			values[i] = new(sql.NullInt64)
-		case wallpaper.FieldContestID:
+		case wallpaper.FieldMimeType, wallpaper.FieldColor, wallpaper.FieldContestID:
 			values[i] = new(sql.NullString)
+		case wallpaper.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -60,6 +69,24 @@ func (_m *Wallpaper) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field image_data", values[i])
 			} else if value != nil {
 				_m.ImageData = *value
+			}
+		case wallpaper.FieldMimeType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field mime_type", values[i])
+			} else if value.Valid {
+				_m.MimeType = value.String
+			}
+		case wallpaper.FieldColor:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field color", values[i])
+			} else if value.Valid {
+				_m.Color = value.String
+			}
+		case wallpaper.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				_m.UpdatedAt = value.Time
 			}
 		case wallpaper.FieldContestID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -105,6 +132,15 @@ func (_m *Wallpaper) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("image_data=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ImageData))
+	builder.WriteString(", ")
+	builder.WriteString("mime_type=")
+	builder.WriteString(_m.MimeType)
+	builder.WriteString(", ")
+	builder.WriteString("color=")
+	builder.WriteString(_m.Color)
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("contest_id=")
 	builder.WriteString(_m.ContestID)

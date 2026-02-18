@@ -3,6 +3,8 @@
 package wallpaper
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"github.com/LuukBlankenstijn/loom/backend/internal/infra/ent/predicate"
 )
@@ -57,6 +59,21 @@ func ImageData(v []byte) predicate.Wallpaper {
 	return predicate.Wallpaper(sql.FieldEQ(FieldImageData, v))
 }
 
+// MimeType applies equality check predicate on the "mime_type" field. It's identical to MimeTypeEQ.
+func MimeType(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldMimeType, v))
+}
+
+// Color applies equality check predicate on the "color" field. It's identical to ColorEQ.
+func Color(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldColor, v))
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
 // ContestID applies equality check predicate on the "contest_id" field. It's identical to ContestIDEQ.
 func ContestID(v string) predicate.Wallpaper {
 	return predicate.Wallpaper(sql.FieldEQ(FieldContestID, v))
@@ -100,6 +117,176 @@ func ImageDataLT(v []byte) predicate.Wallpaper {
 // ImageDataLTE applies the LTE predicate on the "image_data" field.
 func ImageDataLTE(v []byte) predicate.Wallpaper {
 	return predicate.Wallpaper(sql.FieldLTE(FieldImageData, v))
+}
+
+// MimeTypeEQ applies the EQ predicate on the "mime_type" field.
+func MimeTypeEQ(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldMimeType, v))
+}
+
+// MimeTypeNEQ applies the NEQ predicate on the "mime_type" field.
+func MimeTypeNEQ(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNEQ(FieldMimeType, v))
+}
+
+// MimeTypeIn applies the In predicate on the "mime_type" field.
+func MimeTypeIn(vs ...string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldIn(FieldMimeType, vs...))
+}
+
+// MimeTypeNotIn applies the NotIn predicate on the "mime_type" field.
+func MimeTypeNotIn(vs ...string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNotIn(FieldMimeType, vs...))
+}
+
+// MimeTypeGT applies the GT predicate on the "mime_type" field.
+func MimeTypeGT(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGT(FieldMimeType, v))
+}
+
+// MimeTypeGTE applies the GTE predicate on the "mime_type" field.
+func MimeTypeGTE(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGTE(FieldMimeType, v))
+}
+
+// MimeTypeLT applies the LT predicate on the "mime_type" field.
+func MimeTypeLT(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLT(FieldMimeType, v))
+}
+
+// MimeTypeLTE applies the LTE predicate on the "mime_type" field.
+func MimeTypeLTE(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLTE(FieldMimeType, v))
+}
+
+// MimeTypeContains applies the Contains predicate on the "mime_type" field.
+func MimeTypeContains(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldContains(FieldMimeType, v))
+}
+
+// MimeTypeHasPrefix applies the HasPrefix predicate on the "mime_type" field.
+func MimeTypeHasPrefix(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldHasPrefix(FieldMimeType, v))
+}
+
+// MimeTypeHasSuffix applies the HasSuffix predicate on the "mime_type" field.
+func MimeTypeHasSuffix(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldHasSuffix(FieldMimeType, v))
+}
+
+// MimeTypeEqualFold applies the EqualFold predicate on the "mime_type" field.
+func MimeTypeEqualFold(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEqualFold(FieldMimeType, v))
+}
+
+// MimeTypeContainsFold applies the ContainsFold predicate on the "mime_type" field.
+func MimeTypeContainsFold(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldContainsFold(FieldMimeType, v))
+}
+
+// ColorEQ applies the EQ predicate on the "color" field.
+func ColorEQ(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldColor, v))
+}
+
+// ColorNEQ applies the NEQ predicate on the "color" field.
+func ColorNEQ(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNEQ(FieldColor, v))
+}
+
+// ColorIn applies the In predicate on the "color" field.
+func ColorIn(vs ...string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldIn(FieldColor, vs...))
+}
+
+// ColorNotIn applies the NotIn predicate on the "color" field.
+func ColorNotIn(vs ...string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNotIn(FieldColor, vs...))
+}
+
+// ColorGT applies the GT predicate on the "color" field.
+func ColorGT(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGT(FieldColor, v))
+}
+
+// ColorGTE applies the GTE predicate on the "color" field.
+func ColorGTE(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGTE(FieldColor, v))
+}
+
+// ColorLT applies the LT predicate on the "color" field.
+func ColorLT(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLT(FieldColor, v))
+}
+
+// ColorLTE applies the LTE predicate on the "color" field.
+func ColorLTE(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLTE(FieldColor, v))
+}
+
+// ColorContains applies the Contains predicate on the "color" field.
+func ColorContains(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldContains(FieldColor, v))
+}
+
+// ColorHasPrefix applies the HasPrefix predicate on the "color" field.
+func ColorHasPrefix(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldHasPrefix(FieldColor, v))
+}
+
+// ColorHasSuffix applies the HasSuffix predicate on the "color" field.
+func ColorHasSuffix(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldHasSuffix(FieldColor, v))
+}
+
+// ColorEqualFold applies the EqualFold predicate on the "color" field.
+func ColorEqualFold(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEqualFold(FieldColor, v))
+}
+
+// ColorContainsFold applies the ContainsFold predicate on the "color" field.
+func ColorContainsFold(v string) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldContainsFold(FieldColor, v))
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNEQ(FieldUpdatedAt, v))
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldNotIn(FieldUpdatedAt, vs...))
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldGTE(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLT(FieldUpdatedAt, v))
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.Wallpaper {
+	return predicate.Wallpaper(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
 // ContestIDEQ applies the EQ predicate on the "contest_id" field.

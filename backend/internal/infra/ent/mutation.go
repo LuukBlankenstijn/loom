@@ -4525,6 +4525,9 @@ type WallpaperMutation struct {
 	typ           string
 	id            *int
 	image_data    *[]byte
+	mime_type     *string
+	color         *string
+	updated_at    *time.Time
 	contest_id    *string
 	clearedFields map[string]struct{}
 	done          bool
@@ -4666,6 +4669,114 @@ func (m *WallpaperMutation) ResetImageData() {
 	m.image_data = nil
 }
 
+// SetMimeType sets the "mime_type" field.
+func (m *WallpaperMutation) SetMimeType(s string) {
+	m.mime_type = &s
+}
+
+// MimeType returns the value of the "mime_type" field in the mutation.
+func (m *WallpaperMutation) MimeType() (r string, exists bool) {
+	v := m.mime_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMimeType returns the old "mime_type" field's value of the Wallpaper entity.
+// If the Wallpaper object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallpaperMutation) OldMimeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMimeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMimeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMimeType: %w", err)
+	}
+	return oldValue.MimeType, nil
+}
+
+// ResetMimeType resets all changes to the "mime_type" field.
+func (m *WallpaperMutation) ResetMimeType() {
+	m.mime_type = nil
+}
+
+// SetColor sets the "color" field.
+func (m *WallpaperMutation) SetColor(s string) {
+	m.color = &s
+}
+
+// Color returns the value of the "color" field in the mutation.
+func (m *WallpaperMutation) Color() (r string, exists bool) {
+	v := m.color
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldColor returns the old "color" field's value of the Wallpaper entity.
+// If the Wallpaper object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallpaperMutation) OldColor(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldColor is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldColor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldColor: %w", err)
+	}
+	return oldValue.Color, nil
+}
+
+// ResetColor resets all changes to the "color" field.
+func (m *WallpaperMutation) ResetColor() {
+	m.color = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *WallpaperMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *WallpaperMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Wallpaper entity.
+// If the Wallpaper object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *WallpaperMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *WallpaperMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
 // SetContestID sets the "contest_id" field.
 func (m *WallpaperMutation) SetContestID(s string) {
 	m.contest_id = &s
@@ -4736,9 +4847,18 @@ func (m *WallpaperMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *WallpaperMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 5)
 	if m.image_data != nil {
 		fields = append(fields, wallpaper.FieldImageData)
+	}
+	if m.mime_type != nil {
+		fields = append(fields, wallpaper.FieldMimeType)
+	}
+	if m.color != nil {
+		fields = append(fields, wallpaper.FieldColor)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, wallpaper.FieldUpdatedAt)
 	}
 	if m.contest_id != nil {
 		fields = append(fields, wallpaper.FieldContestID)
@@ -4753,6 +4873,12 @@ func (m *WallpaperMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case wallpaper.FieldImageData:
 		return m.ImageData()
+	case wallpaper.FieldMimeType:
+		return m.MimeType()
+	case wallpaper.FieldColor:
+		return m.Color()
+	case wallpaper.FieldUpdatedAt:
+		return m.UpdatedAt()
 	case wallpaper.FieldContestID:
 		return m.ContestID()
 	}
@@ -4766,6 +4892,12 @@ func (m *WallpaperMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case wallpaper.FieldImageData:
 		return m.OldImageData(ctx)
+	case wallpaper.FieldMimeType:
+		return m.OldMimeType(ctx)
+	case wallpaper.FieldColor:
+		return m.OldColor(ctx)
+	case wallpaper.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	case wallpaper.FieldContestID:
 		return m.OldContestID(ctx)
 	}
@@ -4783,6 +4915,27 @@ func (m *WallpaperMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetImageData(v)
+		return nil
+	case wallpaper.FieldMimeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMimeType(v)
+		return nil
+	case wallpaper.FieldColor:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetColor(v)
+		return nil
+	case wallpaper.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
 		return nil
 	case wallpaper.FieldContestID:
 		v, ok := value.(string)
@@ -4842,6 +4995,15 @@ func (m *WallpaperMutation) ResetField(name string) error {
 	switch name {
 	case wallpaper.FieldImageData:
 		m.ResetImageData()
+		return nil
+	case wallpaper.FieldMimeType:
+		m.ResetMimeType()
+		return nil
+	case wallpaper.FieldColor:
+		m.ResetColor()
+		return nil
+	case wallpaper.FieldUpdatedAt:
+		m.ResetUpdatedAt()
 		return nil
 	case wallpaper.FieldContestID:
 		m.ResetContestID()

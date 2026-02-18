@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
@@ -91,4 +92,23 @@ func (r *EntTeamRepository) GetAll(ctx context.Context, contestId string) ([]dom
 		})
 	}
 	return teams, nil
+}
+
+func (r *EntTeamRepository) GetByIp(ctx context.Context, ip string) (*domain.Team, error) {
+	eTeam, err := r.client.Team.Query().
+		WithStation().
+		Where(team.HasStationWith(station.IP(ip))).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		slog.Error("error while getting team by ip", slog.Any("err", err))
+		return nil, fmt.Errorf("unexpected error")
+	}
+	return &domain.Team{
+		Id:   eTeam.ID,
+		Name: eTeam.Name,
+		Ip:   &ip,
+	}, nil
 }

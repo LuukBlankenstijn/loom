@@ -3,6 +3,8 @@
 package wallpaper
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -13,6 +15,12 @@ const (
 	FieldID = "id"
 	// FieldImageData holds the string denoting the image_data field in the database.
 	FieldImageData = "image_data"
+	// FieldMimeType holds the string denoting the mime_type field in the database.
+	FieldMimeType = "mime_type"
+	// FieldColor holds the string denoting the color field in the database.
+	FieldColor = "color"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// FieldContestID holds the string denoting the contest_id field in the database.
 	FieldContestID = "contest_id"
 	// Table holds the table name of the wallpaper in the database.
@@ -23,6 +31,9 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldImageData,
+	FieldMimeType,
+	FieldColor,
+	FieldUpdatedAt,
 	FieldContestID,
 }
 
@@ -36,12 +47,38 @@ func ValidColumn(column string) bool {
 	return false
 }
 
+var (
+	// DefaultColor holds the default value on creation for the "color" field.
+	DefaultColor string
+	// ColorValidator is a validator for the "color" field. It is called by the builders before save.
+	ColorValidator func(string) error
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
+)
+
 // OrderOption defines the ordering options for the Wallpaper queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByMimeType orders the results by the mime_type field.
+func ByMimeType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMimeType, opts...).ToFunc()
+}
+
+// ByColor orders the results by the color field.
+func ByColor(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldColor, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByContestID orders the results by the contest_id field.

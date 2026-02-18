@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -33,6 +34,40 @@ func (_u *WallpaperUpdate) SetImageData(v []byte) *WallpaperUpdate {
 	return _u
 }
 
+// SetMimeType sets the "mime_type" field.
+func (_u *WallpaperUpdate) SetMimeType(v string) *WallpaperUpdate {
+	_u.mutation.SetMimeType(v)
+	return _u
+}
+
+// SetNillableMimeType sets the "mime_type" field if the given value is not nil.
+func (_u *WallpaperUpdate) SetNillableMimeType(v *string) *WallpaperUpdate {
+	if v != nil {
+		_u.SetMimeType(*v)
+	}
+	return _u
+}
+
+// SetColor sets the "color" field.
+func (_u *WallpaperUpdate) SetColor(v string) *WallpaperUpdate {
+	_u.mutation.SetColor(v)
+	return _u
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_u *WallpaperUpdate) SetNillableColor(v *string) *WallpaperUpdate {
+	if v != nil {
+		_u.SetColor(*v)
+	}
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *WallpaperUpdate) SetUpdatedAt(v time.Time) *WallpaperUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
 // Mutation returns the WallpaperMutation object of the builder.
 func (_u *WallpaperUpdate) Mutation() *WallpaperMutation {
 	return _u.mutation
@@ -40,6 +75,7 @@ func (_u *WallpaperUpdate) Mutation() *WallpaperMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *WallpaperUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -65,7 +101,28 @@ func (_u *WallpaperUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_u *WallpaperUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := wallpaper.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (_u *WallpaperUpdate) check() error {
+	if v, ok := _u.mutation.Color(); ok {
+		if err := wallpaper.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Wallpaper.color": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *WallpaperUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(wallpaper.Table, wallpaper.Columns, sqlgraph.NewFieldSpec(wallpaper.FieldID, field.TypeInt))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -76,6 +133,15 @@ func (_u *WallpaperUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
+	}
+	if value, ok := _u.mutation.MimeType(); ok {
+		_spec.SetField(wallpaper.FieldMimeType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Color(); ok {
+		_spec.SetField(wallpaper.FieldColor, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(wallpaper.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -103,6 +169,40 @@ func (_u *WallpaperUpdateOne) SetImageData(v []byte) *WallpaperUpdateOne {
 	return _u
 }
 
+// SetMimeType sets the "mime_type" field.
+func (_u *WallpaperUpdateOne) SetMimeType(v string) *WallpaperUpdateOne {
+	_u.mutation.SetMimeType(v)
+	return _u
+}
+
+// SetNillableMimeType sets the "mime_type" field if the given value is not nil.
+func (_u *WallpaperUpdateOne) SetNillableMimeType(v *string) *WallpaperUpdateOne {
+	if v != nil {
+		_u.SetMimeType(*v)
+	}
+	return _u
+}
+
+// SetColor sets the "color" field.
+func (_u *WallpaperUpdateOne) SetColor(v string) *WallpaperUpdateOne {
+	_u.mutation.SetColor(v)
+	return _u
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_u *WallpaperUpdateOne) SetNillableColor(v *string) *WallpaperUpdateOne {
+	if v != nil {
+		_u.SetColor(*v)
+	}
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *WallpaperUpdateOne) SetUpdatedAt(v time.Time) *WallpaperUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
 // Mutation returns the WallpaperMutation object of the builder.
 func (_u *WallpaperUpdateOne) Mutation() *WallpaperMutation {
 	return _u.mutation
@@ -123,6 +223,7 @@ func (_u *WallpaperUpdateOne) Select(field string, fields ...string) *WallpaperU
 
 // Save executes the query and returns the updated Wallpaper entity.
 func (_u *WallpaperUpdateOne) Save(ctx context.Context) (*Wallpaper, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -148,7 +249,28 @@ func (_u *WallpaperUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_u *WallpaperUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := wallpaper.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (_u *WallpaperUpdateOne) check() error {
+	if v, ok := _u.mutation.Color(); ok {
+		if err := wallpaper.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Wallpaper.color": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (_u *WallpaperUpdateOne) sqlSave(ctx context.Context) (_node *Wallpaper, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(wallpaper.Table, wallpaper.Columns, sqlgraph.NewFieldSpec(wallpaper.FieldID, field.TypeInt))
 	id, ok := _u.mutation.ID()
 	if !ok {
@@ -176,6 +298,15 @@ func (_u *WallpaperUpdateOne) sqlSave(ctx context.Context) (_node *Wallpaper, er
 	}
 	if value, ok := _u.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
+	}
+	if value, ok := _u.mutation.MimeType(); ok {
+		_spec.SetField(wallpaper.FieldMimeType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Color(); ok {
+		_spec.SetField(wallpaper.FieldColor, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(wallpaper.FieldUpdatedAt, field.TypeTime, value)
 	}
 	_node = &Wallpaper{config: _u.config}
 	_spec.Assign = _node.assignValues

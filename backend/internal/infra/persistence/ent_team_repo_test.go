@@ -160,3 +160,62 @@ func TestEntTeamRepositoryGetAllWithContestFilter(t *testing.T) {
 		t.Fatalf("unexpected filtered teams: %+v", filtered)
 	}
 }
+
+func TestEntTeamRepositoryGetByIp(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:ent_team_getbyip?mode=memory&cache=shared&_fk=1")
+	t.Cleanup(func() { _ = client.Close() })
+
+	stationRec, err := client.Station.Create().
+		SetIP("10.0.0.10").
+		SetConnectedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("create station: %v", err)
+	}
+	teamRec, err := client.Team.Create().
+		SetID("team-x").
+		SetName("Team X").
+		SetStation(stationRec).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+
+	repo := NewEntTeamRepository(client)
+
+	// Test finding a team by IP
+	result, err := repo.GetByIp(ctx, "10.0.0.10")
+	if err != nil {
+		t.Fatalf("GetByIp failed: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected team, got nil")
+	}
+	if result.Id != teamRec.ID {
+		t.Errorf("expected team id '%s', got '%s'", teamRec.ID, result.Id)
+	}
+	if result.Name != "Team X" {
+		t.Errorf("expected team name 'Team X', got '%s'", result.Name)
+	}
+	if result.Ip == nil || *result.Ip != "10.0.0.10" {
+		t.Errorf("expected ip '10.0.0.10', got '%v'", result.Ip)
+	}
+}
+
+func TestEntTeamRepositoryGetByIpNotFound(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:ent_team_getbyip_notfound?mode=memory&cache=shared&_fk=1")
+	t.Cleanup(func() { _ = client.Close() })
+
+	repo := NewEntTeamRepository(client)
+
+	// Test getting a team by non-existent IP
+	result, err := repo.GetByIp(ctx, "10.0.0.99")
+	if err != nil {
+		t.Fatalf("GetByIp should not error for non-existent IP: %v", err)
+	}
+	if result != nil {
+		t.Errorf("expected nil for non-existent IP, got %+v", result)
+	}
+}

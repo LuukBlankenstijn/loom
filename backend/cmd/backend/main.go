@@ -48,17 +48,19 @@ func main() {
 
 	hub := hub.New()
 	repoContainer := createRepos(client)
-	wallpaperService := domain.NewWallpaperService(repoContainer.contest, repoContainer.wallpaper)
-	teamService := domain.NewTeamService(repoContainer.team, repoContainer.contest)
 
-	stationsServer := stations.New(hub, repoContainer.station)
+	stationsServer := stations.New(
+		hub,
+		repoContainer.contest,
+		repoContainer.station,
+		repoContainer.team,
+		repoContainer.wallpaper,
+	)
 	adminHandler := admin.NewAdminHandler(
-		*teamService,
 		repoContainer.station,
 		repoContainer.team,
 		repoContainer.contest,
 		repoContainer.wallpaper,
-		*wallpaperService,
 		repoContainer.contestMap,
 	)
 

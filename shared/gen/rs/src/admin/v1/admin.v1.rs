@@ -189,6 +189,13 @@ pub struct UploadWallpaperRequest {
     pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetWallpaperTextColorRequest {
+    #[prost(string, tag="1")]
+    pub contest_id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub color: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct GetWallpaperRequest {
     #[prost(string, optional, tag="1")]
     pub contest_id: ::core::option::Option<::prost::alloc::string::String>,
@@ -197,6 +204,8 @@ pub struct GetWallpaperRequest {
 pub struct WallpaperResponse {
     #[prost(bytes="vec", optional, tag="1")]
     pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
+    #[prost(string, optional, tag="2")]
+    pub color: ::core::option::Option<::prost::alloc::string::String>,
 }
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

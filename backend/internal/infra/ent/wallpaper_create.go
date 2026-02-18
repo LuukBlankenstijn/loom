@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,6 +28,40 @@ func (_c *WallpaperCreate) SetImageData(v []byte) *WallpaperCreate {
 	return _c
 }
 
+// SetMimeType sets the "mime_type" field.
+func (_c *WallpaperCreate) SetMimeType(v string) *WallpaperCreate {
+	_c.mutation.SetMimeType(v)
+	return _c
+}
+
+// SetColor sets the "color" field.
+func (_c *WallpaperCreate) SetColor(v string) *WallpaperCreate {
+	_c.mutation.SetColor(v)
+	return _c
+}
+
+// SetNillableColor sets the "color" field if the given value is not nil.
+func (_c *WallpaperCreate) SetNillableColor(v *string) *WallpaperCreate {
+	if v != nil {
+		_c.SetColor(*v)
+	}
+	return _c
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_c *WallpaperCreate) SetUpdatedAt(v time.Time) *WallpaperCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (_c *WallpaperCreate) SetNillableUpdatedAt(v *time.Time) *WallpaperCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
 // SetContestID sets the "contest_id" field.
 func (_c *WallpaperCreate) SetContestID(v string) *WallpaperCreate {
 	_c.mutation.SetContestID(v)
@@ -40,6 +75,7 @@ func (_c *WallpaperCreate) Mutation() *WallpaperMutation {
 
 // Save creates the Wallpaper in the database.
 func (_c *WallpaperCreate) Save(ctx context.Context) (*Wallpaper, error) {
+	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
@@ -65,10 +101,36 @@ func (_c *WallpaperCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_c *WallpaperCreate) defaults() {
+	if _, ok := _c.mutation.Color(); !ok {
+		v := wallpaper.DefaultColor
+		_c.mutation.SetColor(v)
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		v := wallpaper.DefaultUpdatedAt()
+		_c.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_c *WallpaperCreate) check() error {
 	if _, ok := _c.mutation.ImageData(); !ok {
 		return &ValidationError{Name: "image_data", err: errors.New(`ent: missing required field "Wallpaper.image_data"`)}
+	}
+	if _, ok := _c.mutation.MimeType(); !ok {
+		return &ValidationError{Name: "mime_type", err: errors.New(`ent: missing required field "Wallpaper.mime_type"`)}
+	}
+	if _, ok := _c.mutation.Color(); !ok {
+		return &ValidationError{Name: "color", err: errors.New(`ent: missing required field "Wallpaper.color"`)}
+	}
+	if v, ok := _c.mutation.Color(); ok {
+		if err := wallpaper.ColorValidator(v); err != nil {
+			return &ValidationError{Name: "color", err: fmt.Errorf(`ent: validator failed for field "Wallpaper.color": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Wallpaper.updated_at"`)}
 	}
 	if _, ok := _c.mutation.ContestID(); !ok {
 		return &ValidationError{Name: "contest_id", err: errors.New(`ent: missing required field "Wallpaper.contest_id"`)}
@@ -103,6 +165,18 @@ func (_c *WallpaperCreate) createSpec() (*Wallpaper, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ImageData(); ok {
 		_spec.SetField(wallpaper.FieldImageData, field.TypeBytes, value)
 		_node.ImageData = value
+	}
+	if value, ok := _c.mutation.MimeType(); ok {
+		_spec.SetField(wallpaper.FieldMimeType, field.TypeString, value)
+		_node.MimeType = value
+	}
+	if value, ok := _c.mutation.Color(); ok {
+		_spec.SetField(wallpaper.FieldColor, field.TypeString, value)
+		_node.Color = value
+	}
+	if value, ok := _c.mutation.UpdatedAt(); ok {
+		_spec.SetField(wallpaper.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	if value, ok := _c.mutation.ContestID(); ok {
 		_spec.SetField(wallpaper.FieldContestID, field.TypeString, value)
@@ -172,6 +246,42 @@ func (u *WallpaperUpsert) UpdateImageData() *WallpaperUpsert {
 	return u
 }
 
+// SetMimeType sets the "mime_type" field.
+func (u *WallpaperUpsert) SetMimeType(v string) *WallpaperUpsert {
+	u.Set(wallpaper.FieldMimeType, v)
+	return u
+}
+
+// UpdateMimeType sets the "mime_type" field to the value that was provided on create.
+func (u *WallpaperUpsert) UpdateMimeType() *WallpaperUpsert {
+	u.SetExcluded(wallpaper.FieldMimeType)
+	return u
+}
+
+// SetColor sets the "color" field.
+func (u *WallpaperUpsert) SetColor(v string) *WallpaperUpsert {
+	u.Set(wallpaper.FieldColor, v)
+	return u
+}
+
+// UpdateColor sets the "color" field to the value that was provided on create.
+func (u *WallpaperUpsert) UpdateColor() *WallpaperUpsert {
+	u.SetExcluded(wallpaper.FieldColor)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *WallpaperUpsert) SetUpdatedAt(v time.Time) *WallpaperUpsert {
+	u.Set(wallpaper.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *WallpaperUpsert) UpdateUpdatedAt() *WallpaperUpsert {
+	u.SetExcluded(wallpaper.FieldUpdatedAt)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -231,6 +341,48 @@ func (u *WallpaperUpsertOne) UpdateImageData() *WallpaperUpsertOne {
 	})
 }
 
+// SetMimeType sets the "mime_type" field.
+func (u *WallpaperUpsertOne) SetMimeType(v string) *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetMimeType(v)
+	})
+}
+
+// UpdateMimeType sets the "mime_type" field to the value that was provided on create.
+func (u *WallpaperUpsertOne) UpdateMimeType() *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateMimeType()
+	})
+}
+
+// SetColor sets the "color" field.
+func (u *WallpaperUpsertOne) SetColor(v string) *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetColor(v)
+	})
+}
+
+// UpdateColor sets the "color" field to the value that was provided on create.
+func (u *WallpaperUpsertOne) UpdateColor() *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateColor()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *WallpaperUpsertOne) SetUpdatedAt(v time.Time) *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *WallpaperUpsertOne) UpdateUpdatedAt() *WallpaperUpsertOne {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
 // Exec executes the query.
 func (u *WallpaperUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -283,6 +435,7 @@ func (_c *WallpaperCreateBulk) Save(ctx context.Context) ([]*Wallpaper, error) {
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*WallpaperMutation)
 				if !ok {
@@ -452,6 +605,48 @@ func (u *WallpaperUpsertBulk) SetImageData(v []byte) *WallpaperUpsertBulk {
 func (u *WallpaperUpsertBulk) UpdateImageData() *WallpaperUpsertBulk {
 	return u.Update(func(s *WallpaperUpsert) {
 		s.UpdateImageData()
+	})
+}
+
+// SetMimeType sets the "mime_type" field.
+func (u *WallpaperUpsertBulk) SetMimeType(v string) *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetMimeType(v)
+	})
+}
+
+// UpdateMimeType sets the "mime_type" field to the value that was provided on create.
+func (u *WallpaperUpsertBulk) UpdateMimeType() *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateMimeType()
+	})
+}
+
+// SetColor sets the "color" field.
+func (u *WallpaperUpsertBulk) SetColor(v string) *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetColor(v)
+	})
+}
+
+// UpdateColor sets the "color" field to the value that was provided on create.
+func (u *WallpaperUpsertBulk) UpdateColor() *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateColor()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *WallpaperUpsertBulk) SetUpdatedAt(v time.Time) *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *WallpaperUpsertBulk) UpdateUpdatedAt() *WallpaperUpsertBulk {
+	return u.Update(func(s *WallpaperUpsert) {
+		s.UpdateUpdatedAt()
 	})
 }
 

@@ -15,4 +15,7 @@ type TeamRepository interface {
 
 	// Gets all teams for some contest
 	GetAll(ctx context.Context, contestId string) ([]Team, error)
+
+	// Gets a team by ip
+	GetByIp(ctx context.Context, teamIp string) (*Team, error)
 }

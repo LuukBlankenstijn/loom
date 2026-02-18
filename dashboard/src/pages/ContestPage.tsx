@@ -9,6 +9,8 @@ export function ContestPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedMapId, setSelectedMapId] = useState<number | null>(null);
+  const [textColor, setTextColor] = useState<string>("#ffffff");
+  const [showPreview, setShowPreview] = useState<boolean>(false);
 
   const { data: contest, isLoading } = useQuery({
     queryKey: ["contest"],
@@ -44,6 +46,21 @@ export function ContestPage() {
       queryClient.invalidateQueries({ queryKey: ["wallpaper"] });
     },
   });
+
+  const textColorMutation = useMutation({
+    mutationFn: (color: string) =>
+      adminClient.setWallpaperTextColor(contest?.id ?? "", color),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wallpaper"] });
+    },
+  });
+
+  // Sync text color with server state
+  useEffect(() => {
+    if (wallpaper?.color) {
+      setTextColor(wallpaper.color);
+    }
+  }, [wallpaper?.color]);
 
   // Sync local state with server state
   useEffect(() => {
@@ -122,10 +139,20 @@ export function ContestPage() {
     }
   };
 
+  const handleTextColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    setTextColor(color);
+  };
+
+  const handleTextColorSave = () => {
+    textColorMutation.mutate(textColor);
+  };
+
   return (
     <div className="h-full flex">
-      <aside className="w-80 bg-surface-800 border-r border-surface-600 p-6 flex flex-col">
-        <h2 className="text-2xl font-semibold text-white mb-6">Contest Details</h2>
+      <aside className="w-80 bg-surface-800 border-r border-surface-600 flex flex-col overflow-hidden">
+        <h2 className="text-2xl font-semibold text-white px-6 pt-6 pb-4 flex-shrink-0">Contest Details</h2>
+        <div className="flex-1 overflow-y-auto min-h-0 px-6 pb-6 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {isLoading ? (
           <div className="text-gray-400">Loading...</div>
         ) : contest ? (
@@ -214,17 +241,73 @@ export function ContestPage() {
           {uploadMutation.isError && (
             <p className="text-danger-500 text-sm mt-2">Failed to upload image</p>
           )}
+
+          {wallpaperUrl && (
+            <div className="mt-4 p-4 rounded-lg bg-surface-700 border border-surface-600">
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">Text Color</p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={handleTextColorChange}
+                  className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
+                />
+                <input
+                  type="text"
+                  value={textColor}
+                  onChange={handleTextColorChange}
+                  className="flex-1 bg-surface-600 border border-surface-500 rounded px-3 py-2 text-gray-200 text-sm font-mono"
+                  placeholder="#ffffff"
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={handleTextColorSave}
+                  disabled={textColorMutation.isPending || textColor === wallpaper?.color}
+                  className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-600 disabled:text-gray-500 text-white rounded text-sm transition-colors"
+                >
+                  {textColorMutation.isPending ? "Saving..." : "Save Color"}
+                </button>
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className={`px-3 py-2 rounded text-sm transition-colors ${
+                    showPreview
+                      ? "bg-primary-500 text-white"
+                      : "bg-surface-600 text-gray-300 hover:bg-surface-500"
+                  }`}
+                >
+                  Preview
+                </button>
+              </div>
+              {textColorMutation.isError && (
+                <p className="text-danger-500 text-sm mt-2">Failed to save color</p>
+              )}
+            </div>
+          )}
+        </div>
         </div>
       </aside>
       <div className="flex-1 bg-surface-700 flex items-center justify-center relative">
         {wallpaperLoading ? (
           <p className="text-gray-400 text-lg">Loading wallpaper...</p>
         ) : wallpaperUrl ? (
-          <img
-            src={wallpaperUrl}
-            alt="Contest wallpaper"
-            className="max-w-full max-h-full object-contain"
-          />
+          <div className="relative max-w-full max-h-full">
+            <img
+              src={wallpaperUrl}
+              alt="Contest wallpaper"
+              className="max-w-full max-h-full object-contain"
+            />
+            {showPreview && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span
+                  className="text-4xl font-bold drop-shadow-lg"
+                  style={{ color: textColor }}
+                >
+                  Team Name
+                </span>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="text-center">
             <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-surface-600 flex items-center justify-center">

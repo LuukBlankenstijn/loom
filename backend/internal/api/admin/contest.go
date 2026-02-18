@@ -19,15 +19,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var supportedFormats = map[string]bool{
-	"jpeg": true,
-	"png":  true,
-	"gif":  true,
-	"webp": true,
-	"tiff": true,
-	"bmp":  true,
-}
-
 // Gets the contest that is currently active, or the contest that will start next
 func (a *adminHandler) GetNextContest(
 	ctx context.Context,
@@ -62,15 +53,26 @@ func (a *adminHandler) SetWallpaper(
 	request *adminv1.UploadWallpaperRequest,
 ) (*emptypb.Empty, error) {
 	if len(request.ImageData) > 0 {
-		if err := validateImageFormat(request.ImageData); err != nil {
+		mimeType, err := validateImageFormat(request.ImageData)
+		if err != nil {
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
 		}
-		if err := a.wallpaperRepo.SetWallpaper(ctx, request.ContestId, &request.ImageData); err != nil {
+		if err := a.wallpaperRepo.SetWallpaperData(ctx, request.ContestId, request.ImageData, mimeType); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
 		return &emptypb.Empty{}, nil
 	}
-	if err := a.wallpaperRepo.SetWallpaper(ctx, request.ContestId, nil); err != nil {
+	if err := a.wallpaperRepo.DeleteWallpaper(ctx, request.ContestId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (a *adminHandler) SetWallpaperTextColor(
+	ctx context.Context,
+	request *adminv1.SetWallpaperTextColorRequest,
+) (*emptypb.Empty, error) {
+	if err := a.wallpaperRepo.SetWallpaperTextColor(ctx, request.ContestId, request.Color); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	return &emptypb.Empty{}, nil
@@ -80,14 +82,28 @@ func (a *adminHandler) GetWallpaper(
 	ctx context.Context,
 	request *adminv1.GetWallpaperRequest,
 ) (*adminv1.WallpaperResponse, error) {
-	image, err := a.wallpaperService.GetWallpaper(ctx, request.ContestId)
+	// if id is nil, try to get the first active contest
+	if request.ContestId == nil {
+		contest, err := a.contestRepo.GetNextContest(ctx)
+		if err != nil {
+			return nil, connect.NewError(
+				connect.CodeInternal,
+				fmt.Errorf("failed to get next context to get wallpaper for"),
+			)
+		}
+		if contest == nil {
+			return &adminv1.WallpaperResponse{ImageData: []byte{}}, nil
+		}
+		request.ContestId = &contest.Id
+	}
+	wallpaper, err := a.wallpaperRepo.GetWallpaper(ctx, *request.ContestId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	if image == nil {
+	if wallpaper == nil {
 		return &adminv1.WallpaperResponse{ImageData: []byte{}}, nil
 	}
-	return &adminv1.WallpaperResponse{ImageData: *image}, nil
+	return &adminv1.WallpaperResponse{ImageData: wallpaper.Data, Color: &wallpaper.TextColor}, nil
 }
 
 // Sets the map for some contest, does not error when either does not exist
@@ -102,29 +118,33 @@ func (a *adminHandler) SetMap(
 	return &emptypb.Empty{}, nil
 }
 
-func validateImageFormat(data []byte) error {
-	if len(data) == 0 {
-		return fmt.Errorf("empty image data")
-	}
+var formatToMIME = map[string]string{
+	"jpeg": "image/jpeg",
+	"png":  "image/png",
+	"gif":  "image/gif",
+	"webp": "image/webp",
+	"tiff": "image/tiff",
+	"bmp":  "image/bmp",
+}
 
-	// Check max file size (e.g., 10MB)
+func validateImageFormat(data []byte) (string, error) {
+	if len(data) == 0 {
+		return "", fmt.Errorf("empty image data")
+	}
 	const maxSize = 10 * 1024 * 1024
 	if len(data) > maxSize {
-		return fmt.Errorf("image too large: %d bytes (max %d bytes)", len(data), maxSize)
+		return "", fmt.Errorf("image too large: %d bytes (max %d bytes)", len(data), maxSize)
 	}
-
 	config, format, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
-		return fmt.Errorf("invalid or corrupted image: %w", err)
+		return "", fmt.Errorf("invalid or corrupted image: %w", err)
 	}
-
-	if !supportedFormats[format] {
-		return fmt.Errorf("unsupported image format: %s", format)
+	mimeType, ok := formatToMIME[format]
+	if !ok {
+		return "", fmt.Errorf("unsupported image format: %s", format)
 	}
-
 	if config.Width < 1 || config.Height < 1 {
-		return fmt.Errorf("invalid image dimensions: %dx%d", config.Width, config.Height)
+		return "", fmt.Errorf("invalid image dimensions: %dx%d", config.Width, config.Height)
 	}
-
-	return nil
+	return mimeType, nil
 }

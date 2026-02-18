@@ -198,6 +198,31 @@ pub mod admin_service_client {
                 .insert(GrpcMethod::new("admin.v1.AdminService", "SetWallpaper"));
             self.inner.unary(req, path, codec).await
         }
+        /** Sets the color of the text displayed on a wallpaper
+*/
+        pub async fn set_wallpaper_text_color(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SetWallpaperTextColorRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.AdminService/SetWallpaperTextColor",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("admin.v1.AdminService", "SetWallpaperTextColor"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
         /** Gets the wallpaper for some contest or the active contest if not set
 */
         pub async fn get_wallpaper(

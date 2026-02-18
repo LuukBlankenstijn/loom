@@ -48,6 +48,9 @@ const (
 	// AdminServiceSetWallpaperProcedure is the fully-qualified name of the AdminService's SetWallpaper
 	// RPC.
 	AdminServiceSetWallpaperProcedure = "/admin.v1.AdminService/SetWallpaper"
+	// AdminServiceSetWallpaperTextColorProcedure is the fully-qualified name of the AdminService's
+	// SetWallpaperTextColor RPC.
+	AdminServiceSetWallpaperTextColorProcedure = "/admin.v1.AdminService/SetWallpaperTextColor"
 	// AdminServiceGetWallpaperProcedure is the fully-qualified name of the AdminService's GetWallpaper
 	// RPC.
 	AdminServiceGetWallpaperProcedure = "/admin.v1.AdminService/GetWallpaper"
@@ -75,6 +78,8 @@ type AdminServiceClient interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error)
+	// Sets the color of the text displayed on a wallpaper
+	SetWallpaperTextColor(context.Context, *v1.SetWallpaperTextColorRequest) (*emptypb.Empty, error)
 	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 	// Gets all maps in the system
@@ -130,6 +135,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("SetWallpaper")),
 			connect.WithClientOptions(opts...),
 		),
+		setWallpaperTextColor: connect.NewClient[v1.SetWallpaperTextColorRequest, emptypb.Empty](
+			httpClient,
+			baseURL+AdminServiceSetWallpaperTextColorProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("SetWallpaperTextColor")),
+			connect.WithClientOptions(opts...),
+		),
 		getWallpaper: connect.NewClient[v1.GetWallpaperRequest, v1.WallpaperResponse](
 			httpClient,
 			baseURL+AdminServiceGetWallpaperProcedure,
@@ -171,17 +182,18 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // adminServiceClient implements AdminServiceClient.
 type adminServiceClient struct {
-	getNextContest *connect.Client[emptypb.Empty, v1.Contest]
-	getActiveTeams *connect.Client[emptypb.Empty, v1.TeamsResponse]
-	getStations    *connect.Client[emptypb.Empty, v1.StationsResponse]
-	setIp          *connect.Client[v1.SetIpRequest, emptypb.Empty]
-	setWallpaper   *connect.Client[v1.UploadWallpaperRequest, emptypb.Empty]
-	getWallpaper   *connect.Client[v1.GetWallpaperRequest, v1.WallpaperResponse]
-	getAllMaps     *connect.Client[emptypb.Empty, v1.GetAllMapsResponse]
-	setMap         *connect.Client[v1.SetMapRequest, emptypb.Empty]
-	createMap      *connect.Client[v1.CreateMapRequest, v1.MapResponse]
-	getMap         *connect.Client[v1.GetMapRequest, v1.MapResponse]
-	updateMap      *connect.Client[v1.UpdateMapRequest, emptypb.Empty]
+	getNextContest        *connect.Client[emptypb.Empty, v1.Contest]
+	getActiveTeams        *connect.Client[emptypb.Empty, v1.TeamsResponse]
+	getStations           *connect.Client[emptypb.Empty, v1.StationsResponse]
+	setIp                 *connect.Client[v1.SetIpRequest, emptypb.Empty]
+	setWallpaper          *connect.Client[v1.UploadWallpaperRequest, emptypb.Empty]
+	setWallpaperTextColor *connect.Client[v1.SetWallpaperTextColorRequest, emptypb.Empty]
+	getWallpaper          *connect.Client[v1.GetWallpaperRequest, v1.WallpaperResponse]
+	getAllMaps            *connect.Client[emptypb.Empty, v1.GetAllMapsResponse]
+	setMap                *connect.Client[v1.SetMapRequest, emptypb.Empty]
+	createMap             *connect.Client[v1.CreateMapRequest, v1.MapResponse]
+	getMap                *connect.Client[v1.GetMapRequest, v1.MapResponse]
+	updateMap             *connect.Client[v1.UpdateMapRequest, emptypb.Empty]
 }
 
 // GetNextContest calls admin.v1.AdminService.GetNextContest.
@@ -223,6 +235,15 @@ func (c *adminServiceClient) SetIp(ctx context.Context, req *v1.SetIpRequest) (*
 // SetWallpaper calls admin.v1.AdminService.SetWallpaper.
 func (c *adminServiceClient) SetWallpaper(ctx context.Context, req *v1.UploadWallpaperRequest) (*emptypb.Empty, error) {
 	response, err := c.setWallpaper.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// SetWallpaperTextColor calls admin.v1.AdminService.SetWallpaperTextColor.
+func (c *adminServiceClient) SetWallpaperTextColor(ctx context.Context, req *v1.SetWallpaperTextColorRequest) (*emptypb.Empty, error) {
+	response, err := c.setWallpaperTextColor.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -295,6 +316,8 @@ type AdminServiceHandler interface {
 	SetIp(context.Context, *v1.SetIpRequest) (*emptypb.Empty, error)
 	// Sets the wallpaper for some contest
 	SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error)
+	// Sets the color of the text displayed on a wallpaper
+	SetWallpaperTextColor(context.Context, *v1.SetWallpaperTextColorRequest) (*emptypb.Empty, error)
 	// Gets the wallpaper for some contest or the active contest if not set
 	GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error)
 	// Gets all maps in the system
@@ -346,6 +369,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("SetWallpaper")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceSetWallpaperTextColorHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceSetWallpaperTextColorProcedure,
+		svc.SetWallpaperTextColor,
+		connect.WithSchema(adminServiceMethods.ByName("SetWallpaperTextColor")),
+		connect.WithHandlerOptions(opts...),
+	)
 	adminServiceGetWallpaperHandler := connect.NewUnaryHandlerSimple(
 		AdminServiceGetWallpaperProcedure,
 		svc.GetWallpaper,
@@ -394,6 +423,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSetIpHandler.ServeHTTP(w, r)
 		case AdminServiceSetWallpaperProcedure:
 			adminServiceSetWallpaperHandler.ServeHTTP(w, r)
+		case AdminServiceSetWallpaperTextColorProcedure:
+			adminServiceSetWallpaperTextColorHandler.ServeHTTP(w, r)
 		case AdminServiceGetWallpaperProcedure:
 			adminServiceGetWallpaperHandler.ServeHTTP(w, r)
 		case AdminServiceGetAllMapsProcedure:
@@ -433,6 +464,10 @@ func (UnimplementedAdminServiceHandler) SetIp(context.Context, *v1.SetIpRequest)
 
 func (UnimplementedAdminServiceHandler) SetWallpaper(context.Context, *v1.UploadWallpaperRequest) (*emptypb.Empty, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetWallpaper is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) SetWallpaperTextColor(context.Context, *v1.SetWallpaperTextColorRequest) (*emptypb.Empty, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admin.v1.AdminService.SetWallpaperTextColor is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) GetWallpaper(context.Context, *v1.GetWallpaperRequest) (*v1.WallpaperResponse, error) {

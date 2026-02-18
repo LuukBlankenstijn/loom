@@ -16,7 +16,7 @@ func (s *stationsServer) Subscribe(
 	connectRequest *stationsv1.RegisterRequest,
 	serverStream *connect.ServerStream[stationsv1.ConfigUpdatedResponse],
 ) error {
-	err := s.repo.Upsert(ctx, connectRequest.Ip)
+	err := s.stationsRepo.Upsert(ctx, connectRequest.Ip)
 	if err != nil {
 		slog.Error("failed to upsert station", "ip", connectRequest.Ip, "err", err)
 		return connect.NewError(connect.CodeInternal, errors.New("failed to connect"))
@@ -37,7 +37,7 @@ func (s *stationsServer) Subscribe(
 		cleanup()
 
 		// Use context.Background because ctx is cancelled here
-		_ = s.repo.UpdateDisconnectedAt(context.Background(), connectRequest.Ip)
+		_ = s.stationsRepo.UpdateDisconnectedAt(context.Background(), connectRequest.Ip)
 	}()
 	for {
 		select {

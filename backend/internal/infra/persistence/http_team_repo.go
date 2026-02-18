@@ -164,6 +164,70 @@ func (r *HttpTeamRepository) SetIp(ctx context.Context, teamId string, ip *strin
 	return g.Wait()
 }
 
+func (r *HttpTeamRepository) GetByIp(ctx context.Context, ip string) (*domain.Team, error) {
+	var allUsers []apiUser
+	if err := r.getUsers(ctx, &allUsers, nil); err != nil {
+		return nil, err
+	}
+
+	var teamId string
+	for _, u := range allUsers {
+		if u.IP == ip {
+			teamId = u.TeamID
+			break
+		}
+	}
+
+	if teamId == "" {
+		return nil, nil
+	}
+
+	// The API doesn't support getting a team by ID directly, so we need to
+	// fetch all contests and search through their teams
+	team, err := r.findTeamById(ctx, teamId)
+	if err != nil {
+		return nil, err
+	}
+
+	if team == nil {
+		// Team not found in any contest, return with empty name
+		return &domain.Team{Id: teamId, Name: "", Ip: &ip}, nil
+	}
+
+	return &domain.Team{Id: team.ID, Name: team.Name, Ip: &ip}, nil
+}
+
+// findTeamById searches all contests to find a team by its ID
+func (r *HttpTeamRepository) findTeamById(ctx context.Context, teamId string) (*apiTeam, error) {
+	// Fetch all contests
+	contestsURL := fmt.Sprintf("%s/api/v4/contests", r.baseURL)
+	var contests []struct {
+		ID string `json:"id"`
+	}
+	if err := r.get(ctx, contestsURL, &contests); err != nil {
+		return nil, err
+	}
+
+	// Search through each contest's teams
+	for _, contest := range contests {
+		teamsURL := fmt.Sprintf("%s/api/v4/contests/%s/teams", r.baseURL, contest.ID)
+		var teams []apiTeam
+		if err := r.get(ctx, teamsURL, &teams); err != nil {
+			// Log and continue to next contest
+			slog.Warn("failed to fetch teams for contest", "contestId", contest.ID, "error", err)
+			continue
+		}
+
+		for _, t := range teams {
+			if t.ID == teamId {
+				return &t, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
 // get all users, optionally filtering by team
 func (r *HttpTeamRepository) getUsers(
 	ctx context.Context,

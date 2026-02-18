@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file admin/v1/admin.proto.
  */
 export const file_admin_v1_admin: GenFile = /*@__PURE__*/
-  fileDesc("ChRhZG1pbi92MS9hZG1pbi5wcm90bxIIYWRtaW4udjEitgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAESEwoGbWFwX2lkGAUgASgFSACIAQFCCQoHX21hcF9pZCJBCgRUZWFtEgoKAmlkGAEgASgJEhgKAmlwGAIgASgJQge6SARyAnABSACIAQESDAoEbmFtZRgDIAEoCUIFCgNfaXAisAEKB1N0YXRpb24SCgoCaWQYASABKAUSEwoCaXAYAiABKAlCB7pIBHICcAESOAoMY29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjcKDmRpY29ubmVjdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAiAEBQhEKD19kaWNvbm5lY3RlZF9hdCIuCg1UZWFtc1Jlc3BvbnNlEh0KBXRlYW1zGAEgAygLMg4uYWRtaW4udjEuVGVhbSI3ChBTdGF0aW9uc1Jlc3BvbnNlEiMKCHN0YXRpb25zGAEgAygLMhEuYWRtaW4udjEuU3RhdGlvbiI3CgxTZXRJcFJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgJpcBgCIAEoCUgAiAEBQgUKA19pcCJUChZVcGxvYWRXYWxscGFwZXJSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIjsKEVdhbGxwYXBlclJlc3BvbnNlEhcKCmltYWdlX2RhdGEYASABKAxIAIgBAUINCgtfaW1hZ2VfZGF0YTLwBQoMQWRtaW5TZXJ2aWNlEj0KDkdldE5leHRDb250ZXN0EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhEuYWRtaW4udjEuQ29udGVzdCIAEkMKDkdldEFjdGl2ZVRlYW1zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuYWRtaW4udjEuVGVhbXNSZXNwb25zZSIAEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEjkKBVNldElwEhYuYWRtaW4udjEuU2V0SXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASSgoMU2V0V2FsbHBhcGVyEiAuYWRtaW4udjEuVXBsb2FkV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkwKDEdldFdhbGxwYXBlchIdLmFkbWluLnYxLkdldFdhbGxwYXBlclJlcXVlc3QaGy5hZG1pbi52MS5XYWxscGFwZXJSZXNwb25zZSIAEkQKCkdldEFsbE1hcHMSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaHC5hZG1pbi52MS5HZXRBbGxNYXBzUmVzcG9uc2UiABI7CgZTZXRNYXASFy5hZG1pbi52MS5TZXRNYXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASQAoJQ3JlYXRlTWFwEhouYWRtaW4udjEuQ3JlYXRlTWFwUmVxdWVzdBoVLmFkbWluLnYxLk1hcFJlc3BvbnNlIgASOgoGR2V0TWFwEhcuYWRtaW4udjEuR2V0TWFwUmVxdWVzdBoVLmFkbWluLnYxLk1hcFJlc3BvbnNlIgASQQoJVXBkYXRlTWFwEhouYWRtaW4udjEuVXBkYXRlTWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpUBCgxjb20uYWRtaW4udjFCCkFkbWluUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL2FkbWluL3YxO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_admin_v1_map, file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("ChRhZG1pbi92MS9hZG1pbi5wcm90bxIIYWRtaW4udjEitgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAESEwoGbWFwX2lkGAUgASgFSACIAQFCCQoHX21hcF9pZCJBCgRUZWFtEgoKAmlkGAEgASgJEhgKAmlwGAIgASgJQge6SARyAnABSACIAQESDAoEbmFtZRgDIAEoCUIFCgNfaXAisAEKB1N0YXRpb24SCgoCaWQYASABKAUSEwoCaXAYAiABKAlCB7pIBHICcAESOAoMY29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjcKDmRpY29ubmVjdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAiAEBQhEKD19kaWNvbm5lY3RlZF9hdCIuCg1UZWFtc1Jlc3BvbnNlEh0KBXRlYW1zGAEgAygLMg4uYWRtaW4udjEuVGVhbSI3ChBTdGF0aW9uc1Jlc3BvbnNlEiMKCHN0YXRpb25zGAEgAygLMhEuYWRtaW4udjEuU3RhdGlvbiI3CgxTZXRJcFJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgJpcBgCIAEoCUgAiAEBQgUKA19pcCJUChZVcGxvYWRXYWxscGFwZXJSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIm0KHFNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QSEgoKY29udGVzdF9pZBgBIAEoCRI5CgVjb2xvchgCIAEoCUIqukgnciUyI14jPyhbQS1GYS1mMC05XXszfXxbQS1GYS1mMC05XXs2fSkkIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIoUBChFXYWxscGFwZXJSZXNwb25zZRIXCgppbWFnZV9kYXRhGAEgASgMSACIAQESPgoFY29sb3IYAiABKAlCKrpIJ3IlMiNeIz8oW0EtRmEtZjAtOV17M318W0EtRmEtZjAtOV17Nn0pJEgBiAEBQg0KC19pbWFnZV9kYXRhQggKBl9jb2xvcjLLBgoMQWRtaW5TZXJ2aWNlEj0KDkdldE5leHRDb250ZXN0EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhEuYWRtaW4udjEuQ29udGVzdCIAEkMKDkdldEFjdGl2ZVRlYW1zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuYWRtaW4udjEuVGVhbXNSZXNwb25zZSIAEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEjkKBVNldElwEhYuYWRtaW4udjEuU2V0SXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASSgoMU2V0V2FsbHBhcGVyEiAuYWRtaW4udjEuVXBsb2FkV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAElkKFVNldFdhbGxwYXBlclRleHRDb2xvchImLmFkbWluLnYxLlNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJMCgxHZXRXYWxscGFwZXISHS5hZG1pbi52MS5HZXRXYWxscGFwZXJSZXF1ZXN0GhsuYWRtaW4udjEuV2FsbHBhcGVyUmVzcG9uc2UiABJECgpHZXRBbGxNYXBzEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhwuYWRtaW4udjEuR2V0QWxsTWFwc1Jlc3BvbnNlIgASOwoGU2V0TWFwEhcuYWRtaW4udjEuU2V0TWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkAKCUNyZWF0ZU1hcBIaLmFkbWluLnYxLkNyZWF0ZU1hcFJlcXVlc3QaFS5hZG1pbi52MS5NYXBSZXNwb25zZSIAEjoKBkdldE1hcBIXLmFkbWluLnYxLkdldE1hcFJlcXVlc3QaFS5hZG1pbi52MS5NYXBSZXNwb25zZSIAEkEKCVVwZGF0ZU1hcBIaLmFkbWluLnYxLlVwZGF0ZU1hcFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiAEKVAQoMY29tLmFkbWluLnYxQgpBZG1pblByb3RvUAFaOGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby9hZG1pbi92MTthZG1pbnYxogIDQVhYqgIIQWRtaW4uVjHKAghBZG1pblxWMeICFEFkbWluXFYxXEdQQk1ldGFkYXRh6gIJQWRtaW46OlYxYgZwcm90bzM", [file_admin_v1_map, file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
 
 /**
  * @generated from message admin.v1.Contest
@@ -192,6 +192,28 @@ export const UploadWallpaperRequestSchema: GenMessage<UploadWallpaperRequest> = 
   messageDesc(file_admin_v1_admin, 6);
 
 /**
+ * @generated from message admin.v1.SetWallpaperTextColorRequest
+ */
+export type SetWallpaperTextColorRequest = Message<"admin.v1.SetWallpaperTextColorRequest"> & {
+  /**
+   * @generated from field: string contest_id = 1;
+   */
+  contestId: string;
+
+  /**
+   * @generated from field: string color = 2;
+   */
+  color: string;
+};
+
+/**
+ * Describes the message admin.v1.SetWallpaperTextColorRequest.
+ * Use `create(SetWallpaperTextColorRequestSchema)` to create a new message.
+ */
+export const SetWallpaperTextColorRequestSchema: GenMessage<SetWallpaperTextColorRequest> = /*@__PURE__*/
+  messageDesc(file_admin_v1_admin, 7);
+
+/**
  * @generated from message admin.v1.GetWallpaperRequest
  */
 export type GetWallpaperRequest = Message<"admin.v1.GetWallpaperRequest"> & {
@@ -206,7 +228,7 @@ export type GetWallpaperRequest = Message<"admin.v1.GetWallpaperRequest"> & {
  * Use `create(GetWallpaperRequestSchema)` to create a new message.
  */
 export const GetWallpaperRequestSchema: GenMessage<GetWallpaperRequest> = /*@__PURE__*/
-  messageDesc(file_admin_v1_admin, 7);
+  messageDesc(file_admin_v1_admin, 8);
 
 /**
  * @generated from message admin.v1.WallpaperResponse
@@ -216,6 +238,11 @@ export type WallpaperResponse = Message<"admin.v1.WallpaperResponse"> & {
    * @generated from field: optional bytes image_data = 1;
    */
   imageData?: Uint8Array;
+
+  /**
+   * @generated from field: optional string color = 2;
+   */
+  color?: string;
 };
 
 /**
@@ -223,7 +250,7 @@ export type WallpaperResponse = Message<"admin.v1.WallpaperResponse"> & {
  * Use `create(WallpaperResponseSchema)` to create a new message.
  */
 export const WallpaperResponseSchema: GenMessage<WallpaperResponse> = /*@__PURE__*/
-  messageDesc(file_admin_v1_admin, 8);
+  messageDesc(file_admin_v1_admin, 9);
 
 /**
  * @generated from service admin.v1.AdminService
@@ -277,6 +304,16 @@ export const AdminService: GenService<{
   setWallpaper: {
     methodKind: "unary";
     input: typeof UploadWallpaperRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * Sets the color of the text displayed on a wallpaper
+   *
+   * @generated from rpc admin.v1.AdminService.SetWallpaperTextColor
+   */
+  setWallpaperTextColor: {
+    methodKind: "unary";
+    input: typeof SetWallpaperTextColorRequestSchema;
     output: typeof EmptySchema;
   },
   /**
