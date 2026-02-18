@@ -1,5 +1,6 @@
+use image::GenericImageView;
 use log::error;
-use std::{io::Cursor, path::Path};
+use std::path::Path;
 
 use iced::{
     Color, ContentFit, Element, Length, Task,
@@ -148,18 +149,19 @@ fn fetch_remote_image(source: &str) -> Option<Vec<u8>> {
 }
 
 fn create_handle(bytes: Vec<u8>) -> Option<iced::widget::image::Handle> {
-    let reader = match image::ImageReader::new(Cursor::new(&bytes)).with_guessed_format() {
-        Ok(r) => r,
-        Err(e) => {
-            error!("Failed to guess image format: {}", e);
-            return None;
-        }
-    };
+    let img = image::load_from_memory(&bytes)
+        .map_err(|e| {
+            error!("Failed to decode image: {}", e);
+            e
+        })
+        .ok()?;
 
-    if reader.format().is_none() {
-        error!("Unrecognized image format");
-        return None;
-    }
+    let resized = img.thumbnail(1920, 1080);
+    let (width, height) = resized.dimensions();
 
-    Some(iced::widget::image::Handle::from_bytes(bytes))
+    let rgba_bytes = resized.to_rgba8().into_raw();
+
+    Some(iced::widget::image::Handle::from_rgba(
+        width, height, rgba_bytes,
+    ))
 }

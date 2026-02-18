@@ -1,2 +1,2 @@
-background_source = "/home/luuk/Downloads/image"
+background_source = "http://localhost:8080/wallpaper"
 log_level = "debug"
