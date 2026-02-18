@@ -68,6 +68,8 @@ impl GreeterClient {
                 Ok(result) => {
                     if let LoginResult::Failure(msg) = result {
                         return Task::done(GreeterClientMessage::LoginError(msg));
+                    } else {
+                        return iced::exit();
                     }
                 }
                 Err(e) => {
