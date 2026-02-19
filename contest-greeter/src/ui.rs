@@ -3,7 +3,10 @@ pub mod countdown;
 pub mod form;
 
 use anyhow::Result;
-use iced::{Element, Subscription, Task, Theme, widget::stack};
+use iced::{
+    Element, Subscription, Task, Theme,
+    widget::{space, stack},
+};
 
 use crate::{
     conf::Conf,
@@ -47,7 +50,11 @@ pub enum Message {
 
 impl Greeter {
     pub fn new(config: Conf) -> (Self, Task<Message>) {
-        let (background, background_task) = Background::new(config.background_source.clone());
+        let (background, background_task) = Background::new(
+            config.background_source.clone(),
+            config.background_label.clone(),
+            config.background_label_color.clone(),
+        );
         let form = Form::new();
         let countdown = Countdown::default();
 
@@ -74,9 +81,17 @@ impl Greeter {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
+        let (background, background_label) = self.background.view();
+
+        let countdown_overlay = self.countdown.view().map(|c| c.map(Message::Countdown));
+
+        let overlay = countdown_overlay
+            .or_else(|| background_label.map(|b| b.map(Message::Background)))
+            .unwrap_or_else(|| space().into());
+
         stack![
-            self.background.view().map(Message::Background),
-            self.countdown.view().map(Message::Countdown),
+            background.map(Message::Background),
+            overlay,
             self.form.view().map(Message::Form)
         ]
         .into()

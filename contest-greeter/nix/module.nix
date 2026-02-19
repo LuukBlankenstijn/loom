@@ -22,6 +22,8 @@ let
     enable_dbus = cfg.enableDbus;
     chain = cfg.chain;
     background_source = cfg.backgroundSource;
+    background_label = cfg.backgroundLabel;
+    background_label_color = cfg.backgroundLabelColor;
     session = cfg.session;
     username = cfg.username;
     password = cfg.password;
@@ -79,6 +81,20 @@ in
       default = null;
       description = "File path or URL for the background image.";
       example = "/etc/greetd/background.png";
+    };
+
+    backgroundLabel = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Label to display on the background";
+      example = "team 1";
+    };
+
+    backgroundLabelColor = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Hex code of the color of the background label";
+      example = "#ffffff";
     };
 
     session = mkOption {

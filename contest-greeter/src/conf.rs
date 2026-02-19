@@ -22,6 +22,12 @@ pub struct Conf {
     /// File path or URL for the background image.
     pub(crate) background_source: Option<String>,
 
+    // Label to display over the background
+    pub(crate) background_label: Option<String>,
+
+    // Hex code of the color to use for the background label
+    pub(crate) background_label_color: Option<String>,
+
     /// Session to start (defaults to LightDM's default when unset).
     pub(crate) session: Option<String>,
 

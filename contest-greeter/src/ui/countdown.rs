@@ -2,7 +2,9 @@ use std::time::Duration;
 
 use chrono::{DateTime, Local, Timelike, Utc};
 use iced::{
-    Color, Element, Length, Subscription, Task, futures,
+    Color, Element, Font, Length, Subscription, Task,
+    font::Weight,
+    futures,
     widget::{container, text},
 };
 
@@ -26,21 +28,30 @@ impl From<CountdownMessage> for Message {
 }
 
 impl Countdown {
-    pub fn view(&self) -> Element<'_, CountdownMessage> {
-        let label = if let Some(start_time) = self.start_time {
-            let seconds = start_time - Local::now();
-            if seconds.num_seconds() <= 10 {
-                seconds.num_seconds().to_string()
-            } else {
-                "".to_string()
-            }
-        } else {
-            "".to_string()
-        };
+    pub fn view(&self) -> Option<Element<'_, CountdownMessage>> {
+        let start_time = self.start_time?;
+        let seconds = (start_time - Local::now()).num_seconds();
 
-        container(text(label).size(40).color(Color::WHITE))
-            .center(Length::Fill)
-            .into()
+        if (1..=10).contains(&seconds) {
+            Some(
+                container(
+                    text(seconds.to_string())
+                        .size(80)
+                        .font(Font {
+                            weight: Weight::Bold,
+                            ..Default::default()
+                        })
+                        .color(Color::WHITE),
+                )
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x(Length::Fill)
+                .center_y(Length::Fill)
+                .into(),
+            )
+        } else {
+            None
+        }
     }
 
     pub fn update(&mut self, msg: CountdownMessage) -> Task<CountdownMessage> {
