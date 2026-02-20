@@ -26,4 +26,5 @@ schemars = { version = "0.8", features = ["chrono"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.9.11"
 rust-ini = "0.21.3"
+local-ip-address = "0.6.10"
 

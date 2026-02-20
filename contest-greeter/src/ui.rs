@@ -1,6 +1,7 @@
 pub mod background;
 pub mod countdown;
 pub mod form;
+pub mod ip_label;
 
 use anyhow::Result;
 use iced::{Element, Subscription, Task, Theme, widget::Stack};
@@ -17,6 +18,7 @@ use crate::{
         background::{Background, BackgroundMessage},
         countdown::{Countdown, CountdownMessage},
         form::{Form, FormMessage},
+        ip_label::{IpLabel, IpLabelMessage},
     },
 };
 
@@ -25,6 +27,7 @@ pub struct Greeter {
     background: Background,
     form: Form,
     countdown: Countdown,
+    ip_label: IpLabel,
 
     // subscriptions
     key_listener: KeyListener,
@@ -38,6 +41,7 @@ pub struct Greeter {
 pub enum Message {
     Background(BackgroundMessage),
     Form(FormMessage),
+    IpLabel(IpLabelMessage),
     KeyListener(KeyListenerMessage),
     GreeterClient(GreeterClientMessage),
     ApiPoller(ApiPollerMessage),
@@ -54,6 +58,7 @@ impl Greeter {
         );
         let form = Form::new();
         let countdown = Countdown::default();
+        let (ip_label, ip_label_task) = IpLabel::new();
 
         let key_listener = KeyListener::new(config.chain.clone());
         let (api_poller, api_poller_task) = ApiPoller::new(config.url.clone());
@@ -63,11 +68,13 @@ impl Greeter {
             config.username.clone(),
             config.password.clone(),
         );
+
         (
             Self {
                 background,
                 form,
                 countdown,
+                ip_label,
                 key_listener,
                 api_poller,
                 greeter_client,
@@ -76,6 +83,7 @@ impl Greeter {
             Task::batch(vec![
                 background_task.map(Message::Background),
                 api_poller_task.map(Message::ApiPoller),
+                ip_label_task.map(Message::IpLabel),
             ]),
         )
     }
@@ -84,6 +92,7 @@ impl Greeter {
         let (background, background_label) = self.background.view();
         let (countdown_label, countdown_indicator_fn) = self.countdown.view();
         let form_element = self.form.view();
+        let ip_label = self.ip_label.view();
 
         let mut layers = vec![background.map(Message::Background)];
 
@@ -102,6 +111,7 @@ impl Greeter {
 
         if let Some(f) = form_element {
             layers.push(f.map(Message::Form));
+            layers.push(ip_label.map(Message::IpLabel));
         }
 
         Stack::with_children(layers).into()
@@ -158,6 +168,9 @@ impl Greeter {
                     Task::done(ApiPollerMessage::SetUrl(Some(url)).into())
                 }
             },
+            Message::IpLabel(ip_label_message) => {
+                self.ip_label.update(ip_label_message).map(Message::IpLabel)
+            }
         }
     }
 
