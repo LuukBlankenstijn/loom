@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use chrono::{DateTime, FixedOffset, Local};
 use iced::{Subscription, Task, time};
-use log::error;
+use log::{debug, error};
 use serde::Deserialize;
 
 use crate::ui::Message;
@@ -28,8 +28,8 @@ impl From<ApiPollerMessage> for Message {
 }
 
 impl ApiPoller {
-    pub fn new(url: Option<String>) -> Self {
-        Self { url }
+    pub fn new(url: Option<String>) -> (Self, Task<ApiPollerMessage>) {
+        (Self { url }, Task::done(ApiPollerMessage::FetchStartTime))
     }
 
     pub fn update(&mut self, msg: ApiPollerMessage) -> Task<ApiPollerMessage> {
@@ -70,6 +70,7 @@ struct ContestApiResponse {
 }
 
 fn fetch_start_time(url: &str) -> Result<DateTime<Local>> {
+    debug!("fetch start time from {url}");
     let mut response = ureq::get(url)
         .call()
         .context(format!("sending request to {url}"))?;

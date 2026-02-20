@@ -3,10 +3,7 @@ pub mod countdown;
 pub mod form;
 
 use anyhow::Result;
-use iced::{
-    Element, Subscription, Task, Theme,
-    widget::{space, stack},
-};
+use iced::{Element, Subscription, Task, Theme, widget::Stack};
 
 use crate::{
     conf::Conf,
@@ -59,7 +56,7 @@ impl Greeter {
         let countdown = Countdown::default();
 
         let key_listener = KeyListener::new(config.chain.clone());
-        let api_poller = ApiPoller::new(config.url.clone());
+        let (api_poller, api_poller_task) = ApiPoller::new(config.url.clone());
 
         let greeter_client = GreeterClient::new(
             config.session.clone(),
@@ -76,25 +73,38 @@ impl Greeter {
                 greeter_client,
                 config,
             },
-            background_task.map(Message::Background),
+            Task::batch(vec![
+                background_task.map(Message::Background),
+                api_poller_task.map(Message::ApiPoller),
+            ]),
         )
     }
 
     pub fn view(&self) -> Element<'_, Message> {
         let (background, background_label) = self.background.view();
+        let (countdown_label, countdown_indicator_fn) = self.countdown.view();
+        let form_element = self.form.view();
 
-        let countdown_overlay = self.countdown.view().map(|c| c.map(Message::Countdown));
+        let mut layers = vec![background.map(Message::Background)];
 
-        let overlay = countdown_overlay
-            .or_else(|| background_label.map(|b| b.map(Message::Background)))
-            .unwrap_or_else(|| space().into());
+        // Add the central label (Countdown takes priority over Background Label)
+        if let Some(c_label) = countdown_label {
+            layers.push(c_label.map(Message::Countdown));
+        } else if let Some(b_label) = background_label {
+            layers.push(b_label.map(Message::Background));
+        }
 
-        stack![
-            background.map(Message::Background),
-            overlay,
-            self.form.view().map(Message::Form)
-        ]
-        .into()
+        // if there is a generator for the countdown label, add it
+        // whether or not the form label is visible decides if the starttime is shown
+        if let Some(countdown_indicator_fn) = countdown_indicator_fn {
+            layers.push(countdown_indicator_fn(form_element.is_some()).map(Message::Countdown));
+        }
+
+        if let Some(f) = form_element {
+            layers.push(f.map(Message::Form));
+        }
+
+        Stack::with_children(layers).into()
     }
 
     pub fn update(&mut self, msg: Message) -> Task<Message> {

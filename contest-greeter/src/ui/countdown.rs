@@ -1,17 +1,17 @@
-use std::time::Duration;
-
-use chrono::{DateTime, Local, Timelike, Utc};
+use chrono::{DateTime, Local};
 use iced::{
     Color, Element, Font, Length, Subscription, Task,
+    alignment::{Horizontal, Vertical},
     font::Weight,
-    futures,
-    widget::{container, text},
+    widget::{container, text, tooltip},
+    window,
 };
 
 use crate::ui::Message;
 #[derive(Debug, Default)]
 pub struct Countdown {
     start_time: Option<DateTime<Local>>,
+    now: DateTime<Local>,
 }
 
 #[derive(Debug, Clone)]
@@ -27,45 +27,92 @@ impl From<CountdownMessage> for Message {
     }
 }
 
-impl Countdown {
-    pub fn view(&self) -> Option<Element<'_, CountdownMessage>> {
-        let start_time = self.start_time?;
-        let seconds = (start_time - Local::now()).num_seconds();
+pub type IndicatorBuilder<'a, Message> = Box<dyn Fn(bool) -> Element<'a, Message> + 'a>;
 
-        if (1..=10).contains(&seconds) {
+impl Countdown {
+    pub fn view<'a>(
+        &'a self,
+    ) -> (
+        Option<Element<'a, CountdownMessage>>,
+        Option<IndicatorBuilder<'a, CountdownMessage>>,
+    ) {
+        let Some(start_time) = self.start_time else {
+            return (None, None);
+        };
+
+        let remaining = start_time - self.now;
+        let ms_total = remaining.num_milliseconds();
+
+        let main_label = if ms_total > 0 && ms_total <= 10000 {
+            let pulse = (ms_total as f32 * std::f32::consts::PI / 1000.0)
+                .sin()
+                .abs();
+            let dynamic_size = 80.0 + (pulse * 20.0);
+
+            // We calculate display seconds as floor(ms / 1000)
+            // but for a countdown, showing "0.x" is usually preferred at the end.
+            let display_secs = ms_total / 1000;
+            let display_ms = (ms_total % 1000) / 10;
+            let display_text = format!("{}.{:02}", display_secs, display_ms);
+
             Some(
                 container(
-                    text(seconds.to_string())
-                        .size(80)
+                    text(display_text)
+                        .size(dynamic_size)
                         .font(Font {
                             weight: Weight::Bold,
                             ..Default::default()
                         })
                         .color(Color::WHITE),
                 )
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .center_x(Length::Fill)
-                .center_y(Length::Fill)
+                .center(Length::Fill)
                 .into(),
             )
         } else {
             None
-        }
+        };
+
+        let time_format = if start_time.date_naive() == self.now.date_naive() {
+            "%H:%M:%S"
+        } else {
+            "%d/%m/%Y %H:%M:%S"
+        };
+
+        let indicator_fn = move |show_tooltip: bool| {
+            let mut element: Element<'a, _, _, _> =
+                container(text("●").color(Color::from_rgb(0.0, 1.0, 0.0)))
+                    .padding(10)
+                    .into();
+
+            if show_tooltip {
+                element = tooltip(
+                    element,
+                    text(format!("Starts at: {}", start_time.format(time_format))),
+                    tooltip::Position::Bottom,
+                )
+                .into()
+            }
+
+            container(element)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .align_x(Horizontal::Right)
+                .align_y(Vertical::Top)
+                .into()
+        };
+
+        (main_label, Some(Box::new(indicator_fn)))
     }
 
     pub fn update(&mut self, msg: CountdownMessage) -> Task<CountdownMessage> {
         match msg {
             CountdownMessage::SetStartTime(date_time) => self.start_time = Some(date_time),
             CountdownMessage::Tick => {
-                let now = Local::now();
+                self.now = Local::now();
                 if let Some(start_time) = self.start_time
-                    && now >= start_time
-                    && now
-                        .checked_add_signed(chrono::Duration::seconds(1))
-                        .expect("Now +1 minute is out of range")
-                        < start_time
+                    && self.now >= start_time
                 {
+                    self.start_time = None;
                     return Task::done(CountdownMessage::Start);
                 }
             }
@@ -75,37 +122,10 @@ impl Countdown {
     }
 
     pub fn subscription(&self) -> Subscription<CountdownMessage> {
-        if let Some(start_time) = self.start_time {
-            every_second_until(start_time.to_utc()).map(|_| CountdownMessage::Tick)
+        if self.start_time.is_some() {
+            window::frames().map(|_| CountdownMessage::Tick)
         } else {
             Subscription::none()
         }
     }
-}
-
-pub fn every_second_until(target: DateTime<Utc>) -> Subscription<()> {
-    Subscription::run_with(target, |target| {
-        let target = *target;
-        futures::stream::unfold((), move |_| async move {
-            let now = Utc::now();
-
-            if now >= target {
-                return None;
-            }
-
-            let next_second = now
-                .with_nanosecond(0)
-                .unwrap()
-                .checked_add_signed(chrono::Duration::seconds(1))
-                .unwrap();
-
-            let duration_until_next = (next_second - now)
-                .to_std()
-                .unwrap_or(Duration::from_millis(1));
-
-            tokio::time::sleep(duration_until_next).await;
-
-            Some(((), ()))
-        })
-    })
 }

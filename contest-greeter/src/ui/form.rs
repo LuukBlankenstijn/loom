@@ -6,7 +6,7 @@ use iced::widget::{Id, button, column, container, text, text_input};
 use iced::{
     Background, Border, Color, Event, Shadow, Subscription, Task, Theme, Vector, event, keyboard,
 };
-use iced::{Element, Length, widget::space};
+use iced::{Element, Length};
 
 use crate::ui::Message;
 
@@ -55,9 +55,9 @@ impl Form {
         }
     }
 
-    pub fn view(&self) -> Element<'_, FormMessage> {
+    pub fn view(&self) -> Option<Element<'_, FormMessage>> {
         if !self.visible {
-            return space().into();
+            return None;
         }
         let mut content = column![
             text("Username"),
@@ -89,14 +89,16 @@ impl Form {
             content = content.push(text(error).color(Color::from_rgb(1.0, 0.4, 0.4)));
         }
 
-        container(
-            container(content)
-                .center_x(400)
-                .center_y(Length::Shrink)
-                .style(container_style),
+        Some(
+            container(
+                container(content)
+                    .center_x(400)
+                    .center_y(Length::Shrink)
+                    .style(container_style),
+            )
+            .center(Length::Fill)
+            .into(),
         )
-        .center(Length::Fill)
-        .into()
     }
 
     pub fn update(&mut self, msg: FormMessage) -> Task<FormMessage> {

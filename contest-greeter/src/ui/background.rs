@@ -5,7 +5,7 @@ use std::{path::Path, str::FromStr};
 use iced::{
     Color, ContentFit, Element, Font, Length, Task,
     font::Weight,
-    widget::{container, space, text},
+    widget::{container, text},
 };
 
 use crate::ui::Message;
@@ -35,7 +35,7 @@ pub struct Background {
 #[derive(Debug, Clone)]
 pub enum BackgroundMessage {
     SetSource(Option<String>),
-    SetData(Option<(iced::widget::image::Handle, Option<Label>)>),
+    SetData((Option<iced::widget::image::Handle>, Option<Label>)),
 }
 
 impl From<BackgroundMessage> for Message {
@@ -75,34 +75,48 @@ impl Background {
         Element<'_, BackgroundMessage>,
         Option<Element<'_, BackgroundMessage>>,
     ) {
-        let image_element = match self.image_status {
-            ImageStatus::Loading => no_background_container("Loading...".to_string()),
-            ImageStatus::Empty => no_background_container("No background configured".to_string()),
-            ImageStatus::Ready => {
-                if let Some(handle) = self.handle.clone() {
-                    container(
-                        iced::widget::image(handle)
-                            .width(Length::Fill)
-                            .height(Length::Fill)
-                            .content_fit(ContentFit::Contain),
-                    )
-                    .into()
-                } else {
-                    container(space()).into()
-                }
+        let (image_element, is_wallpaper_valid) = match &self.image_status {
+            ImageStatus::Ready if self.handle.is_some() => {
+                let handle = self.handle.clone().unwrap();
+                let img = container(
+                    iced::widget::image(handle)
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .content_fit(ContentFit::Contain),
+                )
+                .into();
+                (img, true)
             }
-            ImageStatus::Invalid => no_background_container("Invalid background...".to_string()),
+            ImageStatus::Loading => (no_background_container("Loading...".to_string()), false),
+            ImageStatus::Empty => (
+                no_background_container("No background configured".to_string()),
+                false,
+            ),
+            ImageStatus::Invalid => (
+                no_background_container("Invalid background...".to_string()),
+                false,
+            ),
+            _ => (
+                no_background_container("Invalid image handle".to_string()),
+                false,
+            ),
         };
-        let label_element = self.label.clone().map(|label| {
-            container(text(label.text).color(label.color).size(40).font(Font {
-                weight: Weight::Bold,
-                ..Default::default()
-            }))
-            .center(Length::Fill)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
-        });
+
+        let label_element = if is_wallpaper_valid {
+            self.label.as_ref().map(|label| {
+                container(text(&label.text).color(label.color).size(40).font(Font {
+                    weight: Weight::Bold,
+                    ..Default::default()
+                }))
+                .center(Length::Fill)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .into()
+            })
+        } else {
+            None
+        };
+
         (image_element, label_element)
     }
 
@@ -113,12 +127,19 @@ impl Background {
                     self.image_status = ImageStatus::Loading;
                     if is_http_url(&source) {
                         return Task::perform(
-                            async move { fetch_remote_image(&source).and_then(create_handle) },
+                            async move {
+                                let (bytes, label) = fetch_remote_image(&source);
+                                let handle = bytes.and_then(create_handle);
+                                (handle, label)
+                            },
                             BackgroundMessage::SetData,
                         );
                     } else {
                         return Task::perform(
-                            async move { fetch_local_image(&source).and_then(create_handle) },
+                            async move {
+                                let handle = fetch_local_image(&source).and_then(create_handle);
+                                (handle, None)
+                            },
                             BackgroundMessage::SetData,
                         );
                     }
@@ -126,17 +147,21 @@ impl Background {
                     self.image_status = ImageStatus::Empty;
                 }
             }
-            BackgroundMessage::SetData(result) => match result {
-                Some((handle, label)) => {
-                    self.handle = Some(handle);
-                    self.label = label;
-                    self.image_status = ImageStatus::Ready
+            BackgroundMessage::SetData((handle, label)) => {
+                match handle {
+                    Some(handle) => {
+                        self.handle = Some(handle);
+                        self.image_status = ImageStatus::Ready;
+                    }
+                    None => {
+                        self.handle = None;
+                        self.image_status = ImageStatus::Invalid;
+                    }
+                };
+                if let Some(label) = label {
+                    self.label = Some(label)
                 }
-                None => {
-                    self.handle = None;
-                    self.image_status = ImageStatus::Invalid;
-                }
-            },
+            }
         }
         Task::none()
     }
@@ -153,14 +178,14 @@ fn is_http_url(source: &str) -> bool {
     source.starts_with("http://") || source.starts_with("https://")
 }
 
-fn fetch_local_image(path: &str) -> Option<(Vec<u8>, Option<Label>)> {
+fn fetch_local_image(path: &str) -> Option<Vec<u8>> {
     if !Path::new(path).exists() {
         error!("Path does not exist: {}", path);
         return None;
     }
 
     match std::fs::read(path) {
-        Ok(bytes) => Some((bytes, None)),
+        Ok(bytes) => Some(bytes),
         Err(e) => {
             error!("Failed to read file {}: {}", path, e);
             None
@@ -168,17 +193,17 @@ fn fetch_local_image(path: &str) -> Option<(Vec<u8>, Option<Label>)> {
     }
 }
 
-fn fetch_remote_image(source: &str) -> Option<(Vec<u8>, Option<Label>)> {
+fn fetch_remote_image(source: &str) -> (Option<Vec<u8>>, Option<Label>) {
     if !is_http_url(source) {
         error!("Invalid URL format: {}", source);
-        return None;
+        return (None, None);
     }
 
     let response = match ureq::get(source).call() {
         Ok(resp) => resp,
         Err(e) => {
             error!("Failed to fetch {}: {}", source, e);
-            return None;
+            return (None, None);
         }
     };
 
@@ -197,17 +222,15 @@ fn fetch_remote_image(source: &str) -> Option<(Vec<u8>, Option<Label>)> {
     });
 
     match response.into_body().read_to_vec() {
-        Ok(bytes) => Some((bytes, label)),
+        Ok(bytes) => (Some(bytes), label),
         Err(e) => {
             error!("Failed to read bytes from {}: {}", source, e);
-            None
+            (None, None)
         }
     }
 }
 
-fn create_handle(
-    (bytes, label): (Vec<u8>, Option<Label>),
-) -> Option<(iced::widget::image::Handle, Option<Label>)> {
+fn create_handle(bytes: Vec<u8>) -> Option<iced::widget::image::Handle> {
     let img = image::load_from_memory(&bytes)
         .map_err(|e| {
             error!("Failed to decode image: {}", e);
@@ -220,8 +243,7 @@ fn create_handle(
 
     let rgba_bytes = resized.to_rgba8().into_raw();
 
-    Some((
-        iced::widget::image::Handle::from_rgba(width, height, rgba_bytes),
-        label,
+    Some(iced::widget::image::Handle::from_rgba(
+        width, height, rgba_bytes,
     ))
 }
