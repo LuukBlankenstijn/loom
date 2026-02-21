@@ -9,7 +9,7 @@
 }:
 
 rustPlatform.buildRustPackage {
-  pname = "contest-greeter";
+  pname = "loom-greeter";
   version = "1.1.2";
 
   src = lib.cleanSource ./..;

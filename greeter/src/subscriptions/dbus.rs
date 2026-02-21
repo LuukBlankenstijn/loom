@@ -1,4 +1,4 @@
-use contest_greeter_dbus::{GreeterService, GreeterServiceBackend};
+use greeter_dbus::{GreeterService, GreeterServiceBackend};
 use iced::Subscription;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{self, SinkExt};

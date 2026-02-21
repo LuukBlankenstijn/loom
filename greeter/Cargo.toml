@@ -1,5 +1,5 @@
 [package]
-name = "contest-greeter"
+name = "loom-greeter"
 version = "1.1.2"
 edition = "2024"
 
@@ -10,7 +10,7 @@ ureq = { version = "3.2.0", features = ["json"] }
 zbus = { version = "5", default-features = false, features = ["tokio"] }
 
 greetd_ipc = { version = "0.10.3", features = ["sync-codec"] } 
-contest-greeter-dbus = { path = "./contest-greeter-dbus" }
+greeter-dbus = { path = "../shared/greeter-dbus" }
 
 log = "0.4"
 env_logger = "0.11.8"

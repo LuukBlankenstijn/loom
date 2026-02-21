@@ -1,5 +1,5 @@
 [package]
-name = "contest-greeter-dbus"
+name = "greeter-dbus"
 version = "0.1.0"
 edition = "2024"
 
