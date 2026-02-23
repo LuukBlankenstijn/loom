@@ -180,6 +180,7 @@ impl Greeter {
             self.form.subscription().map(Message::Form),
             self.api_poller.subscription().map(Message::ApiPoller),
             self.countdown.subscription().map(Message::Countdown),
+            self.ip_label.subscription().map(Message::IpLabel),
         ];
         if self.config.enable_dbus {
             subscriptions.push(dbus_service_subscription().map(Message::Dbus));

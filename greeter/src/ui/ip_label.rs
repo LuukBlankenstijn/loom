@@ -1,5 +1,7 @@
+use std::time::Duration;
+
 use iced::{
-    Alignment, Color, Element, Length, Task,
+    Alignment, Color, Element, Length, Subscription, Task, time,
     widget::{container, text},
 };
 use local_ip_address::local_ip;
@@ -13,6 +15,7 @@ pub struct IpLabel {
 #[derive(Debug, Clone)]
 pub enum IpLabelMessage {
     SetIp(String),
+    GetIp,
 }
 
 impl IpLabel {
@@ -21,7 +24,7 @@ impl IpLabel {
             Self {
                 ip_label: "Loading ip".to_string(),
             },
-            Task::perform(get_ip_async(), IpLabelMessage::SetIp),
+            Task::done(IpLabelMessage::GetIp),
         )
     }
 
@@ -38,8 +41,13 @@ impl IpLabel {
     pub fn update(&mut self, msg: IpLabelMessage) -> Task<IpLabelMessage> {
         match msg {
             IpLabelMessage::SetIp(ip_label) => self.ip_label = ip_label,
+            IpLabelMessage::GetIp => return Task::perform(get_ip_async(), IpLabelMessage::SetIp),
         };
         Task::none()
+    }
+
+    pub fn subscription(&self) -> Subscription<IpLabelMessage> {
+        time::every(Duration::from_secs(5)).map(|_| IpLabelMessage::GetIp)
     }
 }
 
