@@ -1,5 +1,6 @@
 pub mod background;
 pub mod countdown;
+pub mod danger_label;
 pub mod form;
 pub mod ip_label;
 
@@ -17,6 +18,7 @@ use crate::{
     ui::{
         background::{Background, BackgroundMessage},
         countdown::{Countdown, CountdownMessage},
+        danger_label::{DangerLabel, DangerLabelMessage},
         form::{Form, FormMessage},
         ip_label::{IpLabel, IpLabelMessage},
     },
@@ -28,6 +30,7 @@ pub struct Greeter {
     form: Form,
     countdown: Countdown,
     ip_label: IpLabel,
+    danger_label: DangerLabel,
 
     // subscriptions
     key_listener: KeyListener,
@@ -47,6 +50,7 @@ pub enum Message {
     ApiPoller(ApiPollerMessage),
     Countdown(CountdownMessage),
     Dbus(DbusMessage),
+    DangerLabel(DangerLabelMessage),
 }
 
 impl Greeter {
@@ -62,6 +66,7 @@ impl Greeter {
 
         let key_listener = KeyListener::new(config.chain.clone());
         let (api_poller, api_poller_task) = ApiPoller::new(config.url.clone());
+        let danger_label = DangerLabel::default();
 
         let greeter_client = GreeterClient::new(
             config.session.clone(),
@@ -79,6 +84,7 @@ impl Greeter {
                 api_poller,
                 greeter_client,
                 config,
+                danger_label,
             },
             Task::batch(vec![
                 background_task.map(Message::Background),
@@ -93,6 +99,7 @@ impl Greeter {
         let (countdown_label, countdown_indicator_fn) = self.countdown.view();
         let form_element = self.form.view();
         let ip_label = self.ip_label.view();
+        let danger_label = self.danger_label.view();
 
         let mut layers = vec![background.map(Message::Background)];
 
@@ -107,6 +114,10 @@ impl Greeter {
         // whether or not the form label is visible decides if the starttime is shown
         if let Some(countdown_indicator_fn) = countdown_indicator_fn {
             layers.push(countdown_indicator_fn(form_element.is_some()).map(Message::Countdown));
+        }
+
+        if let Some(danger_label) = danger_label {
+            layers.push(danger_label.map(Message::DangerLabel));
         }
 
         if let Some(f) = form_element {
@@ -171,6 +182,10 @@ impl Greeter {
             Message::IpLabel(ip_label_message) => {
                 self.ip_label.update(ip_label_message).map(Message::IpLabel)
             }
+            Message::DangerLabel(danger_label_message) => self
+                .danger_label
+                .update(danger_label_message)
+                .map(Message::DangerLabel),
         }
     }
 
@@ -181,6 +196,7 @@ impl Greeter {
             self.api_poller.subscription().map(Message::ApiPoller),
             self.countdown.subscription().map(Message::Countdown),
             self.ip_label.subscription().map(Message::IpLabel),
+            self.danger_label.subscribe().map(Message::DangerLabel),
         ];
         if self.config.enable_dbus {
             subscriptions.push(dbus_service_subscription().map(Message::Dbus));
