@@ -12,7 +12,7 @@ fn main() {
     let config_path = args
         .get(1)
         .map(|s| s.as_str())
-        .unwrap_or("/etc/greetd/contest-greeter.toml");
+        .unwrap_or("/etc/loom/greeter.toml");
 
     let config = match get_conf(config_path) {
         Ok(config) => config,
@@ -26,7 +26,7 @@ fn main() {
     };
 
     env_logger::Builder::from_env(
-        Env::default().default_filter_or(format!("contest_greeter={}", config.log_level)),
+        Env::default().default_filter_or(format!("loom_greeter={}", config.log_level)),
     )
     .init();
 
