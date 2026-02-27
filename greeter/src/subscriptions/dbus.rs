@@ -9,6 +9,7 @@ use zbus::conn::Builder;
 pub enum DbusMessage {
     SetWallpaper(String),
     Login,
+    LoginWithCredentials(String, String),
     SetApiUrl(String),
 }
 
@@ -71,6 +72,15 @@ impl GreeterServiceBackend for GreeterDbusBackend {
         let mut sender = self.sender.clone();
         tokio::spawn(async move {
             let _ = sender.send(DbusMessage::Login).await;
+        });
+    }
+
+    fn login_with_credentials(&self, username: String, password: String) {
+        let mut sender = self.sender.clone();
+        tokio::spawn(async move {
+            let _ = sender
+                .send(DbusMessage::LoginWithCredentials(username, password))
+                .await;
         });
     }
 }

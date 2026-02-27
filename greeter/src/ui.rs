@@ -175,6 +175,9 @@ impl Greeter {
                     Task::done(BackgroundMessage::SetSource(Some(source)).into())
                 }
                 DbusMessage::Login => Task::done(GreeterClientMessage::Login.into()),
+                DbusMessage::LoginWithCredentials(username, password) => Task::done(
+                    GreeterClientMessage::LoginWithCredentials(username, password).into(),
+                ),
                 DbusMessage::SetApiUrl(url) => {
                     Task::done(ApiPollerMessage::SetUrl(Some(url)).into())
                 }

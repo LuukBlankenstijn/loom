@@ -93,7 +93,12 @@ impl DbusClient {
                 debug!("logging in");
                 self.proxy.login().await?;
             }
-            DbusCommand::LoginWithCredentials(_, _) => todo!(),
+            DbusCommand::LoginWithCredentials(username, password) => {
+                debug!("logging in with username: {}", username);
+                self.proxy
+                    .login_with_credentials(username, password)
+                    .await?;
+            }
             DbusCommand::GetLoginStatus => {
                 let message = if self.service_up().await {
                     DbusEvent::LoggedIn
