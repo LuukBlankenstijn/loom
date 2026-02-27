@@ -119,10 +119,9 @@ func (m *adminHandler) UpdateMap(
 	ctx context.Context,
 	request *adminv1.UpdateMapRequest,
 ) (*emptypb.Empty, error) {
-	println(fmt.Sprintf("%+v", request))
 	deletedIds := []uuid.UUID{}
 	for _, d := range request.Deleted {
-		if id, err := uuid.Parse(d); err != nil {
+		if id, err := uuid.Parse(d); err == nil {
 			deletedIds = append(deletedIds, id)
 		}
 	}
@@ -161,7 +160,6 @@ func (m *adminHandler) UpdateMap(
 			}
 		}
 	}
-	println(fmt.Sprintf("%+v, %+v, %+v", walls, doors, tables))
 	err = m.mapRepo.UpsertElements(ctx, int(request.Id), walls, doors, tables)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)

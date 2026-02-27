@@ -1,6 +1,6 @@
 use iced::Point;
 use loom_map::{Door, MapElement, Rotation, Station, Wall};
-use loom_rpc::admin::v1::{
+use loom_rpc::map::v1::{
     Door as ProtoDoor, Element as ProtoElement, Location as ProtoLocation,
     Rotation as ProtoRotation, Table as ProtoTable, Wall as ProtoWall,
     element::Element as InnerElement,
@@ -124,9 +124,9 @@ impl ToProto<ProtoRotation> for Rotation {
 impl FromProto<ProtoElement> for Option<MapElement> {
     fn from_proto(val: ProtoElement) -> Self {
         val.element.and_then(|e| match e {
-            loom_rpc::admin::v1::element::Element::Wall(wall) => FromProto::from_proto(wall),
-            loom_rpc::admin::v1::element::Element::Door(door) => FromProto::from_proto(door),
-            loom_rpc::admin::v1::element::Element::Table(table) => FromProto::from_proto(table),
+            InnerElement::Wall(wall) => FromProto::from_proto(wall),
+            InnerElement::Door(door) => FromProto::from_proto(door),
+            InnerElement::Table(table) => FromProto::from_proto(table),
         })
     }
 }

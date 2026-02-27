@@ -45,24 +45,29 @@ impl Map {
     }
 
     pub fn get_changes(&self) -> (Vec<Uuid>, Vec<MapElement>) {
-        let start = self.start_elements.clone();
-        let current = self.elements.clone();
-        let deleted: Vec<_> = start
+        let deleted: Vec<Uuid> = self
+            .start_elements
             .keys()
-            .filter(|key| !current.contains_key(*key))
+            .filter(|key| !self.elements.contains_key(*key))
             .cloned()
             .collect();
 
-        let new_or_changed: Vec<_> = current
+        let new_or_changed: Vec<MapElement> = self
+            .elements
             .iter()
-            .filter(|(key, value)| start.get(*key) != Some(*value))
+            .filter(|(key, current_val)| match self.start_elements.get(*key) {
+                Some(start_val) => *start_val != **current_val,
+                None => true,
+            })
             .map(|(_, value)| value.clone())
             .collect();
+
         (deleted, new_or_changed)
     }
 
     pub fn update_elements(&mut self, elements: Vec<MapElement>) {
         self.elements = elements.into_iter().map(|e| (e.get_id(), e)).collect();
+        self.start_elements = self.elements.clone();
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
