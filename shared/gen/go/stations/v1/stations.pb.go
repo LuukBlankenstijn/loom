@@ -10,6 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,27 +23,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type RegisterRequest struct {
+type LoginWithCredentialsMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ip            string                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RegisterRequest) Reset() {
-	*x = RegisterRequest{}
+func (x *LoginWithCredentialsMessage) Reset() {
+	*x = LoginWithCredentialsMessage{}
 	mi := &file_stations_v1_stations_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RegisterRequest) String() string {
+func (x *LoginWithCredentialsMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterRequest) ProtoMessage() {}
+func (*LoginWithCredentialsMessage) ProtoMessage() {}
 
-func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
+func (x *LoginWithCredentialsMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_stations_v1_stations_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,17 +56,372 @@ func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
-func (*RegisterRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoginWithCredentialsMessage.ProtoReflect.Descriptor instead.
+func (*LoginWithCredentialsMessage) Descriptor() ([]byte, []int) {
 	return file_stations_v1_stations_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *RegisterRequest) GetIp() string {
+func (x *LoginWithCredentialsMessage) GetUsername() string {
 	if x != nil {
-		return x.Ip
+		return x.Username
 	}
 	return ""
 }
+
+func (x *LoginWithCredentialsMessage) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type CustomCommandMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Command       string                 `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CustomCommandMessage) Reset() {
+	*x = CustomCommandMessage{}
+	mi := &file_stations_v1_stations_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CustomCommandMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CustomCommandMessage) ProtoMessage() {}
+
+func (x *CustomCommandMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_stations_v1_stations_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CustomCommandMessage.ProtoReflect.Descriptor instead.
+func (*CustomCommandMessage) Descriptor() ([]byte, []int) {
+	return file_stations_v1_stations_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CustomCommandMessage) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CustomCommandMessage) GetCommand() string {
+	if x != nil {
+		return x.Command
+	}
+	return ""
+}
+
+type ServerMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Message:
+	//
+	//	*ServerMessage_SetWallpaperSource
+	//	*ServerMessage_SetContestUrl
+	//	*ServerMessage_Login
+	//	*ServerMessage_Logout
+	//	*ServerMessage_LoginWithCredentials
+	//	*ServerMessage_CustomCommand
+	Message       isServerMessage_Message `protobuf_oneof:"message"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ServerMessage) Reset() {
+	*x = ServerMessage{}
+	mi := &file_stations_v1_stations_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ServerMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServerMessage) ProtoMessage() {}
+
+func (x *ServerMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_stations_v1_stations_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServerMessage.ProtoReflect.Descriptor instead.
+func (*ServerMessage) Descriptor() ([]byte, []int) {
+	return file_stations_v1_stations_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ServerMessage) GetMessage() isServerMessage_Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
+}
+
+func (x *ServerMessage) GetSetWallpaperSource() string {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_SetWallpaperSource); ok {
+			return x.SetWallpaperSource
+		}
+	}
+	return ""
+}
+
+func (x *ServerMessage) GetSetContestUrl() string {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_SetContestUrl); ok {
+			return x.SetContestUrl
+		}
+	}
+	return ""
+}
+
+func (x *ServerMessage) GetLogin() *emptypb.Empty {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_Login); ok {
+			return x.Login
+		}
+	}
+	return nil
+}
+
+func (x *ServerMessage) GetLogout() *emptypb.Empty {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_Logout); ok {
+			return x.Logout
+		}
+	}
+	return nil
+}
+
+func (x *ServerMessage) GetLoginWithCredentials() *LoginWithCredentialsMessage {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_LoginWithCredentials); ok {
+			return x.LoginWithCredentials
+		}
+	}
+	return nil
+}
+
+func (x *ServerMessage) GetCustomCommand() *CustomCommandMessage {
+	if x != nil {
+		if x, ok := x.Message.(*ServerMessage_CustomCommand); ok {
+			return x.CustomCommand
+		}
+	}
+	return nil
+}
+
+type isServerMessage_Message interface {
+	isServerMessage_Message()
+}
+
+type ServerMessage_SetWallpaperSource struct {
+	SetWallpaperSource string `protobuf:"bytes,1,opt,name=set_wallpaper_source,json=setWallpaperSource,proto3,oneof"`
+}
+
+type ServerMessage_SetContestUrl struct {
+	SetContestUrl string `protobuf:"bytes,2,opt,name=set_contest_url,json=setContestUrl,proto3,oneof"`
+}
+
+type ServerMessage_Login struct {
+	Login *emptypb.Empty `protobuf:"bytes,3,opt,name=login,proto3,oneof"`
+}
+
+type ServerMessage_Logout struct {
+	Logout *emptypb.Empty `protobuf:"bytes,4,opt,name=logout,proto3,oneof"`
+}
+
+type ServerMessage_LoginWithCredentials struct {
+	LoginWithCredentials *LoginWithCredentialsMessage `protobuf:"bytes,5,opt,name=login_with_credentials,json=loginWithCredentials,proto3,oneof"`
+}
+
+type ServerMessage_CustomCommand struct {
+	CustomCommand *CustomCommandMessage `protobuf:"bytes,6,opt,name=custom_command,json=customCommand,proto3,oneof"`
+}
+
+func (*ServerMessage_SetWallpaperSource) isServerMessage_Message() {}
+
+func (*ServerMessage_SetContestUrl) isServerMessage_Message() {}
+
+func (*ServerMessage_Login) isServerMessage_Message() {}
+
+func (*ServerMessage_Logout) isServerMessage_Message() {}
+
+func (*ServerMessage_LoginWithCredentials) isServerMessage_Message() {}
+
+func (*ServerMessage_CustomCommand) isServerMessage_Message() {}
+
+type CustomCommandOutputMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Output        string                 `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CustomCommandOutputMessage) Reset() {
+	*x = CustomCommandOutputMessage{}
+	mi := &file_stations_v1_stations_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CustomCommandOutputMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CustomCommandOutputMessage) ProtoMessage() {}
+
+func (x *CustomCommandOutputMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_stations_v1_stations_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CustomCommandOutputMessage.ProtoReflect.Descriptor instead.
+func (*CustomCommandOutputMessage) Descriptor() ([]byte, []int) {
+	return file_stations_v1_stations_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CustomCommandOutputMessage) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CustomCommandOutputMessage) GetOutput() string {
+	if x != nil {
+		return x.Output
+	}
+	return ""
+}
+
+type ClientMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Message:
+	//
+	//	*ClientMessage_LoggedOut
+	//	*ClientMessage_LoggedIn
+	//	*ClientMessage_CommandOutput
+	Message       isClientMessage_Message `protobuf_oneof:"message"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClientMessage) Reset() {
+	*x = ClientMessage{}
+	mi := &file_stations_v1_stations_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClientMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClientMessage) ProtoMessage() {}
+
+func (x *ClientMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_stations_v1_stations_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClientMessage.ProtoReflect.Descriptor instead.
+func (*ClientMessage) Descriptor() ([]byte, []int) {
+	return file_stations_v1_stations_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ClientMessage) GetMessage() isClientMessage_Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
+}
+
+func (x *ClientMessage) GetLoggedOut() *emptypb.Empty {
+	if x != nil {
+		if x, ok := x.Message.(*ClientMessage_LoggedOut); ok {
+			return x.LoggedOut
+		}
+	}
+	return nil
+}
+
+func (x *ClientMessage) GetLoggedIn() *emptypb.Empty {
+	if x != nil {
+		if x, ok := x.Message.(*ClientMessage_LoggedIn); ok {
+			return x.LoggedIn
+		}
+	}
+	return nil
+}
+
+func (x *ClientMessage) GetCommandOutput() *CustomCommandOutputMessage {
+	if x != nil {
+		if x, ok := x.Message.(*ClientMessage_CommandOutput); ok {
+			return x.CommandOutput
+		}
+	}
+	return nil
+}
+
+type isClientMessage_Message interface {
+	isClientMessage_Message()
+}
+
+type ClientMessage_LoggedOut struct {
+	LoggedOut *emptypb.Empty `protobuf:"bytes,1,opt,name=logged_out,json=loggedOut,proto3,oneof"`
+}
+
+type ClientMessage_LoggedIn struct {
+	LoggedIn *emptypb.Empty `protobuf:"bytes,2,opt,name=logged_in,json=loggedIn,proto3,oneof"`
+}
+
+type ClientMessage_CommandOutput struct {
+	CommandOutput *CustomCommandOutputMessage `protobuf:"bytes,3,opt,name=command_output,json=commandOutput,proto3,oneof"`
+}
+
+func (*ClientMessage_LoggedOut) isClientMessage_Message() {}
+
+func (*ClientMessage_LoggedIn) isClientMessage_Message() {}
+
+func (*ClientMessage_CommandOutput) isClientMessage_Message() {}
 
 type ConfigUpdatedResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -74,7 +431,7 @@ type ConfigUpdatedResponse struct {
 
 func (x *ConfigUpdatedResponse) Reset() {
 	*x = ConfigUpdatedResponse{}
-	mi := &file_stations_v1_stations_proto_msgTypes[1]
+	mi := &file_stations_v1_stations_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -86,7 +443,7 @@ func (x *ConfigUpdatedResponse) String() string {
 func (*ConfigUpdatedResponse) ProtoMessage() {}
 
 func (x *ConfigUpdatedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_stations_v1_stations_proto_msgTypes[1]
+	mi := &file_stations_v1_stations_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -99,19 +456,40 @@ func (x *ConfigUpdatedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigUpdatedResponse.ProtoReflect.Descriptor instead.
 func (*ConfigUpdatedResponse) Descriptor() ([]byte, []int) {
-	return file_stations_v1_stations_proto_rawDescGZIP(), []int{1}
+	return file_stations_v1_stations_proto_rawDescGZIP(), []int{5}
 }
 
 var File_stations_v1_stations_proto protoreflect.FileDescriptor
 
 const file_stations_v1_stations_proto_rawDesc = "" +
 	"\n" +
-	"\x1astations/v1/stations.proto\x12\vstations.v1\x1a\x1bbuf/validate/validate.proto\"*\n" +
-	"\x0fRegisterRequest\x12\x17\n" +
-	"\x02ip\x18\x01 \x01(\tB\a\xbaH\x04r\x02p\x01R\x02ip\"\x17\n" +
-	"\x15ConfigUpdatedResponse2c\n" +
-	"\x0eStationService\x12Q\n" +
-	"\tSubscribe\x12\x1c.stations.v1.RegisterRequest\x1a\".stations.v1.ConfigUpdatedResponse\"\x000\x01B\xad\x01\n" +
+	"\x1astations/v1/stations.proto\x12\vstations.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1bgoogle/protobuf/empty.proto\"U\n" +
+	"\x1bLoginWithCredentialsMessage\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"J\n" +
+	"\x14CustomCommandMessage\x12\x18\n" +
+	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x18\n" +
+	"\acommand\x18\x02 \x01(\tR\acommand\"\x9c\x03\n" +
+	"\rServerMessage\x12<\n" +
+	"\x14set_wallpaper_source\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x90\x01\x01H\x00R\x12setWallpaperSource\x122\n" +
+	"\x0fset_contest_url\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x88\x01\x01H\x00R\rsetContestUrl\x12.\n" +
+	"\x05login\x18\x03 \x01(\v2\x16.google.protobuf.EmptyH\x00R\x05login\x120\n" +
+	"\x06logout\x18\x04 \x01(\v2\x16.google.protobuf.EmptyH\x00R\x06logout\x12`\n" +
+	"\x16login_with_credentials\x18\x05 \x01(\v2(.stations.v1.LoginWithCredentialsMessageH\x00R\x14loginWithCredentials\x12J\n" +
+	"\x0ecustom_command\x18\x06 \x01(\v2!.stations.v1.CustomCommandMessageH\x00R\rcustomCommandB\t\n" +
+	"\amessage\"N\n" +
+	"\x1aCustomCommandOutputMessage\x12\x18\n" +
+	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x16\n" +
+	"\x06output\x18\x02 \x01(\tR\x06output\"\xdc\x01\n" +
+	"\rClientMessage\x127\n" +
+	"\n" +
+	"logged_out\x18\x01 \x01(\v2\x16.google.protobuf.EmptyH\x00R\tloggedOut\x125\n" +
+	"\tlogged_in\x18\x02 \x01(\v2\x16.google.protobuf.EmptyH\x00R\bloggedIn\x12P\n" +
+	"\x0ecommand_output\x18\x03 \x01(\v2'.stations.v1.CustomCommandOutputMessageH\x00R\rcommandOutputB\t\n" +
+	"\amessage\"\x17\n" +
+	"\x15ConfigUpdatedResponse2[\n" +
+	"\x0eStationService\x12I\n" +
+	"\tSubscribe\x12\x1a.stations.v1.ClientMessage\x1a\x1a.stations.v1.ServerMessage\"\x00(\x010\x01B\xad\x01\n" +
 	"\x0fcom.stations.v1B\rStationsProtoP\x01Z>github.com/LuukBlankenstijn/loom/gen/go/stations/v1;stationsv1\xa2\x02\x03SXX\xaa\x02\vStations.V1\xca\x02\vStations\\V1\xe2\x02\x17Stations\\V1\\GPBMetadata\xea\x02\fStations::V1b\x06proto3"
 
 var (
@@ -126,19 +504,31 @@ func file_stations_v1_stations_proto_rawDescGZIP() []byte {
 	return file_stations_v1_stations_proto_rawDescData
 }
 
-var file_stations_v1_stations_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_stations_v1_stations_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_stations_v1_stations_proto_goTypes = []any{
-	(*RegisterRequest)(nil),       // 0: stations.v1.RegisterRequest
-	(*ConfigUpdatedResponse)(nil), // 1: stations.v1.ConfigUpdatedResponse
+	(*LoginWithCredentialsMessage)(nil), // 0: stations.v1.LoginWithCredentialsMessage
+	(*CustomCommandMessage)(nil),        // 1: stations.v1.CustomCommandMessage
+	(*ServerMessage)(nil),               // 2: stations.v1.ServerMessage
+	(*CustomCommandOutputMessage)(nil),  // 3: stations.v1.CustomCommandOutputMessage
+	(*ClientMessage)(nil),               // 4: stations.v1.ClientMessage
+	(*ConfigUpdatedResponse)(nil),       // 5: stations.v1.ConfigUpdatedResponse
+	(*emptypb.Empty)(nil),               // 6: google.protobuf.Empty
 }
 var file_stations_v1_stations_proto_depIdxs = []int32{
-	0, // 0: stations.v1.StationService.Subscribe:input_type -> stations.v1.RegisterRequest
-	1, // 1: stations.v1.StationService.Subscribe:output_type -> stations.v1.ConfigUpdatedResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: stations.v1.ServerMessage.login:type_name -> google.protobuf.Empty
+	6, // 1: stations.v1.ServerMessage.logout:type_name -> google.protobuf.Empty
+	0, // 2: stations.v1.ServerMessage.login_with_credentials:type_name -> stations.v1.LoginWithCredentialsMessage
+	1, // 3: stations.v1.ServerMessage.custom_command:type_name -> stations.v1.CustomCommandMessage
+	6, // 4: stations.v1.ClientMessage.logged_out:type_name -> google.protobuf.Empty
+	6, // 5: stations.v1.ClientMessage.logged_in:type_name -> google.protobuf.Empty
+	3, // 6: stations.v1.ClientMessage.command_output:type_name -> stations.v1.CustomCommandOutputMessage
+	4, // 7: stations.v1.StationService.Subscribe:input_type -> stations.v1.ClientMessage
+	2, // 8: stations.v1.StationService.Subscribe:output_type -> stations.v1.ServerMessage
+	8, // [8:9] is the sub-list for method output_type
+	7, // [7:8] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_stations_v1_stations_proto_init() }
@@ -146,13 +536,26 @@ func file_stations_v1_stations_proto_init() {
 	if File_stations_v1_stations_proto != nil {
 		return
 	}
+	file_stations_v1_stations_proto_msgTypes[2].OneofWrappers = []any{
+		(*ServerMessage_SetWallpaperSource)(nil),
+		(*ServerMessage_SetContestUrl)(nil),
+		(*ServerMessage_Login)(nil),
+		(*ServerMessage_Logout)(nil),
+		(*ServerMessage_LoginWithCredentials)(nil),
+		(*ServerMessage_CustomCommand)(nil),
+	}
+	file_stations_v1_stations_proto_msgTypes[4].OneofWrappers = []any{
+		(*ClientMessage_LoggedOut)(nil),
+		(*ClientMessage_LoggedIn)(nil),
+		(*ClientMessage_CommandOutput)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stations_v1_stations_proto_rawDesc), len(file_stations_v1_stations_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

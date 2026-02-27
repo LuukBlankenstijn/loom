@@ -13,6 +13,7 @@ plugins:
     opt:
       - compile_well_known_types
       - extern_path=.google.protobuf.Timestamp=::prost_types::Timestamp
+      - extern_path=.google.protobuf.Empty=()
   - local: protoc-gen-tonic
     out: shared/gen/rs/src
     opt:

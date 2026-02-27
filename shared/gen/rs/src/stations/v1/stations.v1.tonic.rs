@@ -83,9 +83,9 @@ pub mod station_service_client {
         ///
         pub async fn subscribe(
             &mut self,
-            request: impl tonic::IntoRequest<super::RegisterRequest>,
+            request: impl tonic::IntoStreamingRequest<Message = super::ClientMessage>,
         ) -> std::result::Result<
-            tonic::Response<tonic::codec::Streaming<super::ConfigUpdatedResponse>>,
+            tonic::Response<tonic::codec::Streaming<super::ServerMessage>>,
             tonic::Status,
         > {
             self.inner
@@ -100,10 +100,10 @@ pub mod station_service_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/stations.v1.StationService/Subscribe",
             );
-            let mut req = request.into_request();
+            let mut req = request.into_streaming_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("stations.v1.StationService", "Subscribe"));
-            self.inner.server_streaming(req, path, codec).await
+            self.inner.streaming(req, path, codec).await
         }
     }
 }

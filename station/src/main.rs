@@ -1,8 +1,21 @@
-use std::net::UdpSocket;
-
 use clap::Parser;
-use loom_rpc::stations::v1::RegisterRequest;
-use loom_rpc::stations::v1::station_service_client::StationServiceClient;
+use tracing::Level;
+use tracing::debug;
+use tracing::error;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+
+use crate::command::CommandRunner;
+use crate::dbus::DbusClient;
+use crate::messages::CommandRunnerCommand;
+use crate::messages::DbusCommand;
+use crate::messages::RpcCommand;
+use crate::rpc::RpcClient;
+
+mod command;
+mod dbus;
+mod messages;
+mod rpc;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -14,40 +27,104 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    setup_logging();
     let args = Args::parse();
-
-    println!("server: {}", args.server);
-
-    let mut client = StationServiceClient::connect(args.server.clone()).await?;
-
-    let request = tonic::Request::new(RegisterRequest {
-        ip: get_local_ip(&args.server),
+    let (dbus_client, dbus_sender, mut dbus_receiver) = DbusClient::new().await?;
+    tokio::spawn(async move {
+        if let Err(e) = dbus_client.run().await {
+            error!("Dbus client error: {}", e);
+        }
     });
 
-    let mut stream = client.subscribe(request).await?.into_inner();
+    let (rpc_client, rpc_sender, mut rpc_receiver) = RpcClient::new(args.server).await;
+    tokio::spawn(async move {
+        if let Err(e) = rpc_client.run().await {
+            error!("Rpc client error: {}", e);
+        }
+    });
 
-    while let Some(response) = stream.message().await? {
-        println!("Received {:?}", response);
+    let (command_runner, command_sender, mut command_output_receiver) = CommandRunner::new().await;
+    tokio::spawn(async move {
+        if let Err(e) = command_runner.run().await {
+            error!("Command runner error: {}", e);
+        }
+    });
+
+    loop {
+        tokio::select! {
+            Some(event) = dbus_receiver.recv() => {
+                let result = match event {
+                    messages::DbusEvent::LoggedIn => rpc_sender.send(RpcCommand::LoggedIn).await,
+                    messages::DbusEvent::LoggedOut => rpc_sender.send(RpcCommand::LoggedOut).await,
+                };
+                if let Err(e) = result {
+                    debug!("Failed to handle dbus event: {}", e);
+                }
+
+            }
+            Some(event) = rpc_receiver.recv() => {
+                let result: anyhow::Result<()> = match event {
+                    messages::RpcEvent::SetWallpaper(source) => dbus_sender
+                        .send(DbusCommand::SetWallpaper(source))
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::SetContestUrl(url) => dbus_sender
+                        .send(DbusCommand::SetContestUrl(url))
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::Login => dbus_sender
+                        .send(DbusCommand::Login)
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::Logout => command_sender
+                        .send(CommandRunnerCommand::Run {
+                            id: None,
+                            command: "systemctl restart greetd".to_string(),
+                        })
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::LoginWithCredentials(username, password) => dbus_sender
+                        .send(DbusCommand::LoginWithCredentials(username, password))
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::CustomCommand(id, command) => command_sender
+                        .send(CommandRunnerCommand::Run {
+                            id: Some(id),
+                            command,
+                        })
+                        .await
+                        .map_err(Into::into),
+                    messages::RpcEvent::RequestLoginStatus => dbus_sender
+                        .send(DbusCommand::GetLoginStatus)
+                        .await
+                        .map_err(Into::into),
+                };
+
+                if let Err(e) = result {
+                    debug!("Failed to handle rpc event: {}", e);
+                }
+            }
+            Some(event) = command_output_receiver.recv() => {
+                let messages::CommandRunnerEvent::Result { id, output } = event;
+                if let Some(id) = id && let Err(e) = rpc_sender.send(RpcCommand::CustomCommandOutput(id, output)).await {
+                    debug!("Failed to send custom command output: {}", e);
+                }
+
+            }
+        }
     }
-
-    Ok(())
 }
 
-fn get_local_ip(target: &str) -> String {
-    let host = target
-        .trim_start_matches("http://")
-        .trim_start_matches("https://")
-        .split('/')
-        .next()
-        .unwrap_or(target);
-
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("Could not bind local socket");
-
-    match socket.connect(format!("{}:80", host)) {
-        Ok(_) => socket
-            .local_addr()
-            .map(|addr| addr.ip().to_string())
-            .unwrap_or_else(|_| "127.0.0.1".to_string()),
-        Err(_) => "127.0.0.1".to_string(),
+fn setup_logging() {
+    let filter = tracing_subscriber::filter::Targets::new()
+        .with_target("loom_station", Level::TRACE)
+        .with_default(Level::WARN);
+    let registry = tracing_subscriber::registry().with(filter);
+    if std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        registry.with(tracing_subscriber::fmt::layer()).init();
+    } else {
+        registry
+            .with(tracing_journald::layer().expect("Failed to connect to journald"))
+            .init();
     }
 }

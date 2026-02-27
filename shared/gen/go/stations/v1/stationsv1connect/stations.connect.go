@@ -40,7 +40,7 @@ const (
 
 // StationServiceClient is a client for the stations.v1.StationService service.
 type StationServiceClient interface {
-	Subscribe(context.Context, *v1.RegisterRequest) (*connect.ServerStreamForClient[v1.ConfigUpdatedResponse], error)
+	Subscribe(context.Context) (*connect.BidiStreamForClientSimple[v1.ClientMessage, v1.ServerMessage], error)
 }
 
 // NewStationServiceClient constructs a client for the stations.v1.StationService service. By
@@ -54,7 +54,7 @@ func NewStationServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	stationServiceMethods := v1.File_stations_v1_stations_proto.Services().ByName("StationService").Methods()
 	return &stationServiceClient{
-		subscribe: connect.NewClient[v1.RegisterRequest, v1.ConfigUpdatedResponse](
+		subscribe: connect.NewClient[v1.ClientMessage, v1.ServerMessage](
 			httpClient,
 			baseURL+StationServiceSubscribeProcedure,
 			connect.WithSchema(stationServiceMethods.ByName("Subscribe")),
@@ -65,17 +65,17 @@ func NewStationServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // stationServiceClient implements StationServiceClient.
 type stationServiceClient struct {
-	subscribe *connect.Client[v1.RegisterRequest, v1.ConfigUpdatedResponse]
+	subscribe *connect.Client[v1.ClientMessage, v1.ServerMessage]
 }
 
 // Subscribe calls stations.v1.StationService.Subscribe.
-func (c *stationServiceClient) Subscribe(ctx context.Context, req *v1.RegisterRequest) (*connect.ServerStreamForClient[v1.ConfigUpdatedResponse], error) {
-	return c.subscribe.CallServerStream(ctx, connect.NewRequest(req))
+func (c *stationServiceClient) Subscribe(ctx context.Context) (*connect.BidiStreamForClientSimple[v1.ClientMessage, v1.ServerMessage], error) {
+	return c.subscribe.CallBidiStreamSimple(ctx)
 }
 
 // StationServiceHandler is an implementation of the stations.v1.StationService service.
 type StationServiceHandler interface {
-	Subscribe(context.Context, *v1.RegisterRequest, *connect.ServerStream[v1.ConfigUpdatedResponse]) error
+	Subscribe(context.Context, *connect.BidiStream[v1.ClientMessage, v1.ServerMessage]) error
 }
 
 // NewStationServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -85,7 +85,7 @@ type StationServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewStationServiceHandler(svc StationServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	stationServiceMethods := v1.File_stations_v1_stations_proto.Services().ByName("StationService").Methods()
-	stationServiceSubscribeHandler := connect.NewServerStreamHandlerSimple(
+	stationServiceSubscribeHandler := connect.NewBidiStreamHandler(
 		StationServiceSubscribeProcedure,
 		svc.Subscribe,
 		connect.WithSchema(stationServiceMethods.ByName("Subscribe")),
@@ -104,6 +104,6 @@ func NewStationServiceHandler(svc StationServiceHandler, opts ...connect.Handler
 // UnimplementedStationServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedStationServiceHandler struct{}
 
-func (UnimplementedStationServiceHandler) Subscribe(context.Context, *v1.RegisterRequest, *connect.ServerStream[v1.ConfigUpdatedResponse]) error {
+func (UnimplementedStationServiceHandler) Subscribe(context.Context, *connect.BidiStream[v1.ClientMessage, v1.ServerMessage]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("stations.v1.StationService.Subscribe is not implemented"))
 }

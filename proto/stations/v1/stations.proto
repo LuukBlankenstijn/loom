@@ -3,13 +3,44 @@ syntax = "proto3";
 package stations.v1;
 
 import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
 
-message RegisterRequest {
-  string ip = 1 [(buf.validate.field).string.ip = true];
+message LoginWithCredentialsMessage {
+  string username = 1;
+  string password = 2;
+}
+
+message CustomCommandMessage {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string command = 2;
+}
+
+message ServerMessage {
+  oneof message {
+    string set_wallpaper_source = 1 [(buf.validate.field).string.uri_ref = true];
+    string set_contest_url = 2 [(buf.validate.field).string.uri = true];
+    google.protobuf.Empty login = 3;
+    google.protobuf.Empty logout = 4;
+    LoginWithCredentialsMessage login_with_credentials = 5;
+    CustomCommandMessage custom_command = 6;
+  }
+}
+
+message CustomCommandOutputMessage {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string output = 2;
+}
+
+message ClientMessage {
+  oneof message {
+    google.protobuf.Empty logged_out = 1;
+    google.protobuf.Empty logged_in = 2;
+    CustomCommandOutputMessage command_output = 3;
+  }
 }
 
 message ConfigUpdatedResponse {}
 
 service StationService {
-  rpc Subscribe(RegisterRequest) returns (stream ConfigUpdatedResponse) {}
+  rpc Subscribe(stream ClientMessage) returns (stream ServerMessage) {}
 }

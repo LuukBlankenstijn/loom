@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 
 	"connectrpc.com/connect"
 	stationsv1 "github.com/LuukBlankenstijn/loom/gen/go/stations/v1"
@@ -13,18 +14,25 @@ import (
 
 func (s *stationsServer) Subscribe(
 	ctx context.Context,
-	connectRequest *stationsv1.RegisterRequest,
-	serverStream *connect.ServerStream[stationsv1.ConfigUpdatedResponse],
+	serverStream *connect.BidiStream[stationsv1.ClientMessage, stationsv1.ServerMessage],
 ) error {
-	err := s.stationsRepo.Upsert(ctx, connectRequest.Ip)
+	ip, _, err := net.SplitHostPort(serverStream.Peer().Addr)
 	if err != nil {
-		slog.Error("failed to upsert station", "ip", connectRequest.Ip, "err", err)
+		slog.Error("failed to parse ip address", err)
+		return connect.NewError(
+			connect.CodeInvalidArgument,
+			errors.New("could not get client ip from stream"),
+		)
+	}
+	err = s.stationsRepo.Upsert(ctx, ip)
+	if err != nil {
+		slog.Error("failed to upsert station", "ip", ip, "err", err)
 		return connect.NewError(connect.CodeInternal, errors.New("failed to connect"))
 	}
-	channel, cleanup, err := s.stationsHub.Register(connectRequest.Ip)
+	channel, cleanup, err := s.stationsHub.Register(ip)
 	if err != nil {
 		if errors.Is(err, domain.ErrAlreadyRegistered) {
-			slog.Warn("Station registered while it was already connected", "ip", connectRequest.Ip)
+			slog.Warn("Station registered while it was already connected", "ip", ip)
 			return connect.NewError(
 				connect.CodeFailedPrecondition,
 				errors.New("station already connected"),
@@ -37,7 +45,7 @@ func (s *stationsServer) Subscribe(
 		cleanup()
 
 		// Use context.Background because ctx is cancelled here
-		_ = s.stationsRepo.UpdateDisconnectedAt(context.Background(), connectRequest.Ip)
+		_ = s.stationsRepo.UpdateDisconnectedAt(context.Background(), ip)
 	}()
 	for {
 		select {
@@ -47,7 +55,11 @@ func (s *stationsServer) Subscribe(
 			if !ok {
 				return nil
 			}
-			err := serverStream.Send(&stationsv1.ConfigUpdatedResponse{})
+			err := serverStream.Send(&stationsv1.ServerMessage{
+				Message: &stationsv1.ServerMessage_SetWallpaperSource{
+					SetWallpaperSource: "Some address",
+				},
+			})
 			if err != nil {
 				// If we can't send, the connection is dead.
 				return err
