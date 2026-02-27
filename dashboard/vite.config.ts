@@ -92,7 +92,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), serveMapEditor()],
   resolve: {
     alias: {
-      "@client": path.resolve(__dirname, "./src/gen"),
+      "@client": path.resolve(__dirname, "../gen/ts"),
     },
   },
   server: {

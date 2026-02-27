@@ -13,7 +13,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.33
 )
 
-replace github.com/LuukBlankenstijn/loom/gen/go => ../shared/gen/go
+replace github.com/LuukBlankenstijn/loom/gen/go => ../gen/go
 
 require (
 	ariga.io/atlas v0.32.1-0.20250325101103-175b25e1c1b9 // indirect

@@ -11,7 +11,7 @@ import (
 	_ "image/png"
 
 	"connectrpc.com/connect"
-	adminv1 "github.com/LuukBlankenstijn/loom/gen/go/admin/v1"
+	adminv1 "github.com/LuukBlankenstijn/loom/gen/go/v1/admin"
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"

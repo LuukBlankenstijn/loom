@@ -1,9 +1,12 @@
 use std::time::Duration;
 
 use anyhow::Result;
-use loom_rpc::stations::v1::{
-    ClientMessage, CustomCommandOutputMessage, ServerMessage, client_message, server_message,
-    station_service_client::StationServiceClient,
+use loom_rpc::{
+    command::v1::CustomCommandOutput,
+    stations::v1::{
+        ClientMessage, ServerMessage, client_message, server_message,
+        station_service_client::StationServiceClient,
+    },
 };
 use tokio::sync::mpsc::{Receiver, Sender, channel};
 use tokio_stream::StreamExt;
@@ -18,7 +21,7 @@ impl From<RpcCommand> for ClientMessage {
             RpcCommand::LoggedIn => client_message::Message::LoggedIn(()),
             RpcCommand::LoggedOut => client_message::Message::LoggedOut(()),
             RpcCommand::CustomCommandOutput(id, output) => {
-                client_message::Message::CommandOutput(CustomCommandOutputMessage { id, output })
+                client_message::Message::CommandOutput(CustomCommandOutput { id, output })
             }
         };
         Self {

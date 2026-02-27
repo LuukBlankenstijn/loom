@@ -7,7 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
-	"github.com/LuukBlankenstijn/loom/gen/go/admin/v1/adminv1connect"
+	"github.com/LuukBlankenstijn/loom/gen/go/v1/admin/adminv1connect"
 
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 	"github.com/LuukBlankenstijn/loom/backend/internal/envutil"

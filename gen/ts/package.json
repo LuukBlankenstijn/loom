@@ -1,0 +1,9 @@
+{
+  "name": "@loom/gen",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.11.0"
+  }
+}

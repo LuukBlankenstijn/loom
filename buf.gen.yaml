@@ -1,31 +1,31 @@
 version: v2
 plugins:
   - local: protoc-gen-go
-    out: shared/gen/go
+    out: gen/go
     opt: paths=source_relative
   - local: protoc-gen-connect-go
-    out: shared/gen/go
+    out: gen/go
     opt:
       - paths=source_relative
       - simple
   - local: protoc-gen-prost
-    out: shared/gen/rs/src
+    out: gen/rs/src
     opt:
       - compile_well_known_types
       - extern_path=.google.protobuf.Timestamp=::prost_types::Timestamp
       - extern_path=.google.protobuf.Empty=()
   - local: protoc-gen-tonic
-    out: shared/gen/rs/src
+    out: gen/rs/src
     opt:
       - no_server
       - no_transport
   - local: protoc-gen-prost-crate
-    out: shared/gen/rs
+    out: gen/rs
     strategy: all
     opt:
-      - gen_crate=shared/gen/rs/Cargo.toml.tpl
+      - gen_crate=gen/rs/Cargo.toml.tpl
   - local: protoc-gen-es
-    out: dashboard/src/gen
+    out: gen/ts
     opt:
       - target=ts
     include_imports: true

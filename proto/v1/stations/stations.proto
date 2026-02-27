@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package stations.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "v1/command/command.proto";
+
+message LoginWithCredentialsMessage {
+  string username = 1;
+  string password = 2;
+}
+
+message CustomCommandMessage {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string command = 2;
+}
+
+message ServerMessage {
+  oneof message {
+    string set_wallpaper_source = 1 [(buf.validate.field).string.uri_ref = true];
+    string set_contest_url = 2 [(buf.validate.field).string.uri = true];
+    command.v1.LoginCommand login = 3;
+    command.v1.LogoutCommand logout = 4;
+    command.v1.LoginWithCredentialsCommand login_with_credentials = 5;
+    command.v1.CustomCommand custom_command = 6;
+  }
+}
+
+message ClientMessage {
+  oneof message {
+    google.protobuf.Empty logged_out = 1;
+    google.protobuf.Empty logged_in = 2;
+    command.v1.CustomCommandOutput command_output = 3;
+  }
+}
+
+service StationService {
+  rpc Subscribe(stream ClientMessage) returns (stream ServerMessage) {}
+}

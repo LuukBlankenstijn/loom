@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
-	adminv1 "github.com/LuukBlankenstijn/loom/gen/go/admin/v1"
+	adminv1 "github.com/LuukBlankenstijn/loom/gen/go/v1/admin"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

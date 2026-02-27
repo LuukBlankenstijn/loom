@@ -7,7 +7,7 @@ import (
 	"net"
 
 	"connectrpc.com/connect"
-	stationsv1 "github.com/LuukBlankenstijn/loom/gen/go/stations/v1"
+	stationsv1 "github.com/LuukBlankenstijn/loom/gen/go/v1/stations"
 
 	"github.com/LuukBlankenstijn/loom/backend/internal/domain"
 )

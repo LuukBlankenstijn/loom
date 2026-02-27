@@ -12,6 +12,9 @@ pkgs.mkShell {
     protoc-gen-es
     protoc-gen-prost-crate
 
+    nodejs
+    pnpm
+
     rustc
     cargo
     rustfmt
