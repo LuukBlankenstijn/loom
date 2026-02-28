@@ -1,15 +1,14 @@
+use anyhow::Result;
 use clap::Parser;
+use tokio::sync::broadcast;
 use tracing::Level;
-use tracing::debug;
 use tracing::error;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
 use crate::command::CommandRunner;
 use crate::dbus::DbusClient;
-use crate::messages::CommandRunnerCommand;
-use crate::messages::DbusCommand;
-use crate::messages::RpcCommand;
+use crate::messages::Message;
 use crate::rpc::RpcClient;
 
 mod command;
@@ -26,93 +25,35 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     setup_logging();
     let args = Args::parse();
-    let (dbus_client, dbus_sender, mut dbus_receiver) = DbusClient::new().await?;
+
+    let (tx, _) = broadcast::channel::<Message>(32);
+
+    let dbus_client = DbusClient::new(tx.clone()).await?;
     tokio::spawn(async move {
         if let Err(e) = dbus_client.run().await {
             error!("Dbus client error: {}", e);
         }
     });
 
-    let (rpc_client, rpc_sender, mut rpc_receiver) = RpcClient::new(args.server).await;
+    let rpc_client = RpcClient::new(args.server, tx.clone());
     tokio::spawn(async move {
         if let Err(e) = rpc_client.run().await {
             error!("Rpc client error: {}", e);
         }
     });
 
-    let (command_runner, command_sender, mut command_output_receiver) = CommandRunner::new().await;
+    let command_runner = CommandRunner::new(tx);
     tokio::spawn(async move {
         if let Err(e) = command_runner.run().await {
             error!("Command runner error: {}", e);
         }
     });
 
-    loop {
-        tokio::select! {
-            Some(event) = dbus_receiver.recv() => {
-                let result = match event {
-                    messages::DbusEvent::LoggedIn => rpc_sender.send(RpcCommand::LoggedIn).await,
-                    messages::DbusEvent::LoggedOut => rpc_sender.send(RpcCommand::LoggedOut).await,
-                };
-                if let Err(e) = result {
-                    debug!("Failed to handle dbus event: {}", e);
-                }
-
-            }
-            Some(event) = rpc_receiver.recv() => {
-                let result: anyhow::Result<()> = match event {
-                    messages::RpcEvent::SetWallpaper(source) => dbus_sender
-                        .send(DbusCommand::SetWallpaper(source))
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::SetContestUrl(url) => dbus_sender
-                        .send(DbusCommand::SetContestUrl(url))
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::Login => dbus_sender
-                        .send(DbusCommand::Login)
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::Logout => command_sender
-                        .send(CommandRunnerCommand::Run {
-                            id: None,
-                            command: "systemctl restart greetd".to_string(),
-                        })
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::LoginWithCredentials(username, password) => dbus_sender
-                        .send(DbusCommand::LoginWithCredentials(username, password))
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::CustomCommand(id, command) => command_sender
-                        .send(CommandRunnerCommand::Run {
-                            id: Some(id),
-                            command,
-                        })
-                        .await
-                        .map_err(Into::into),
-                    messages::RpcEvent::RequestLoginStatus => dbus_sender
-                        .send(DbusCommand::GetLoginStatus)
-                        .await
-                        .map_err(Into::into),
-                };
-
-                if let Err(e) = result {
-                    debug!("Failed to handle rpc event: {}", e);
-                }
-            }
-            Some(event) = command_output_receiver.recv() => {
-                let messages::CommandRunnerEvent::Result { id, output } = event;
-                if let Some(id) = id && let Err(e) = rpc_sender.send(RpcCommand::CustomCommandOutput(id, output)).await {
-                    debug!("Failed to send custom command output: {}", e);
-                }
-
-            }
-        }
-    }
+    std::future::pending::<()>().await;
+    Ok(())
 }
 
 fn setup_logging() {

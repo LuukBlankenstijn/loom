@@ -1,23 +1,22 @@
 use anyhow::{Context, Result};
 use greeter_dbus::GreeterServiceProxy;
-use tokio::sync::mpsc::{Receiver, Sender, channel};
+use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
-use tracing::{debug, trace};
+use tracing::debug;
 use zbus::{Connection, fdo::DBusProxy, names::UniqueName};
 
-use crate::messages::{DbusCommand, DbusEvent};
+use crate::messages::Message;
 
 pub struct DbusClient {
     proxy: GreeterServiceProxy<'static>,
     dbus_proxy: DBusProxy<'static>,
-    receiver: Receiver<DbusCommand>,
-    sender: Sender<DbusEvent>,
+    sender: broadcast::Sender<Message>,
+    receiver: broadcast::Receiver<Message>,
 }
 
 impl DbusClient {
-    pub async fn new() -> Result<(Self, Sender<DbusCommand>, Receiver<DbusEvent>)> {
-        let (cmd_tx, cmd_rx) = channel::<DbusCommand>(32);
-        let (event_tx, event_rx) = channel::<DbusEvent>(32);
+    pub async fn new(sender: broadcast::Sender<Message>) -> Result<Self> {
+        let receiver = sender.subscribe();
 
         let connection = Connection::system()
             .await
@@ -26,14 +25,12 @@ impl DbusClient {
         let proxy = GreeterServiceProxy::new(&connection).await?;
         let dbus_proxy = zbus::fdo::DBusProxy::new(&connection).await?;
 
-        let client = Self {
+        Ok(Self {
             proxy,
             dbus_proxy,
-            receiver: cmd_rx,
-            sender: event_tx,
-        };
-
-        Ok((client, cmd_tx, event_rx))
+            sender,
+            receiver,
+        })
     }
 
     pub async fn run(mut self) -> Result<()> {
@@ -53,15 +50,27 @@ impl DbusClient {
                 }
 
                 msg = self.receiver.recv() => {
-                    let cmd = msg.ok_or_else(|| anyhow::anyhow!("command receiver closed"))?;
+                    let msg = match msg {
+                        Ok(msg) => msg,
+                        Err(broadcast::error::RecvError::Closed) => anyhow::bail!("broadcast channel closed"),
+                        Err(_) => continue,
+                    };
+
+                    if matches!(msg, Message::RequestLoginStatus) {
+                        let message = if self.service_up().await {
+                            Message::LoggedIn
+                        } else {
+                            Message::LoggedOut
+                        };
+                        let _ = self.sender.send(message);
+                        continue;
+                    }
 
                     // Check if service exists before calling
-                    if self.service_up().await {
-                        if let Err(e) = self.handle_command(cmd).await {
-                            debug!("Command handing failed: {}", e);
-                        }
-                    } else {
-                        trace!("Dropped command {:#?}: service {} not online", cmd, self.proxy.inner().destination());
+                    if self.service_up().await
+                        && let Err(e) = self.handle_message(msg).await
+                    {
+                        debug!("Command handing failed: {}", e);
                     }
                 }
             }
@@ -79,34 +88,27 @@ impl DbusClient {
         }
     }
 
-    async fn handle_command(&self, cmd: DbusCommand) -> Result<()> {
-        match cmd {
-            DbusCommand::SetWallpaper(source) => {
+    async fn handle_message(&self, msg: Message) -> Result<()> {
+        match msg {
+            Message::SetWallpaper(source) => {
                 debug!("setting wallpaper source to {}", source);
                 self.proxy.set_wallpaper_source(source).await?;
             }
-            DbusCommand::SetContestUrl(url) => {
+            Message::SetContestUrl(url) => {
                 debug!("setting contest url to {}", url);
                 self.proxy.set_api_poller_url(url).await?;
             }
-            DbusCommand::Login => {
+            Message::Login => {
                 debug!("logging in");
                 self.proxy.login().await?;
             }
-            DbusCommand::LoginWithCredentials(username, password) => {
+            Message::LoginWithCredentials(username, password) => {
                 debug!("logging in with username: {}", username);
                 self.proxy
                     .login_with_credentials(username, password)
                     .await?;
             }
-            DbusCommand::GetLoginStatus => {
-                let message = if self.service_up().await {
-                    DbusEvent::LoggedIn
-                } else {
-                    DbusEvent::LoggedOut
-                };
-                self.sender.send(message).await?;
-            }
+            _ => {}
         }
         Ok(())
     }
@@ -114,10 +116,10 @@ impl DbusClient {
     async fn handle_owner_change(&self, owner: Option<UniqueName<'_>>) -> Result<()> {
         if owner.is_some() {
             debug!("greeter interface available");
-            self.sender.send(DbusEvent::LoggedOut).await?;
+            let _ = self.sender.send(Message::LoggedOut);
         } else {
             debug!("greeter interface unavailable");
-            self.sender.send(DbusEvent::LoggedIn).await?;
+            let _ = self.sender.send(Message::LoggedIn);
         }
         Ok(())
     }

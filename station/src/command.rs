@@ -1,62 +1,54 @@
 use std::time::Duration;
 
 use anyhow::Result;
-use tokio::{
-    process::Command,
-    sync::mpsc::{Receiver, Sender, channel},
-    time::timeout,
-};
-use tracing::debug;
+use tokio::{process::Command, sync::broadcast, time::timeout};
 
-use crate::messages::{CommandRunnerCommand, CommandRunnerEvent};
+use crate::messages::Message;
 
 pub struct CommandRunner {
-    receiver: Receiver<CommandRunnerCommand>,
-    sender: Sender<CommandRunnerEvent>,
+    sender: broadcast::Sender<Message>,
+    receiver: broadcast::Receiver<Message>,
 }
 
 impl CommandRunner {
-    pub async fn new() -> (
-        Self,
-        Sender<CommandRunnerCommand>,
-        Receiver<CommandRunnerEvent>,
-    ) {
-        let (cmd_tx, cmd_rx) = channel(32);
-        let (out_tx, out_rx) = channel(32);
-
-        let runner = Self {
-            receiver: cmd_rx,
-            sender: out_tx,
-        };
-
-        (runner, cmd_tx, out_rx)
+    pub fn new(sender: broadcast::Sender<Message>) -> Self {
+        let receiver = sender.subscribe();
+        Self { sender, receiver }
     }
 
     pub async fn run(mut self) -> Result<()> {
-        while let Some(cmd) = self.receiver.recv().await {
-            let CommandRunnerCommand::Run { id, command } = cmd;
-            let tx = self.sender.clone();
-
-            let future = execute_system_command(command);
-            let msg = match timeout(Duration::from_secs(10), future).await {
-                Ok(output) => CommandRunnerEvent::Result { id, output },
-                Err(_) => CommandRunnerEvent::Result {
-                    id,
-                    output: "Command timed out".to_string(),
-                },
+        loop {
+            let msg = match self.receiver.recv().await {
+                Ok(msg) => msg,
+                Err(broadcast::error::RecvError::Closed) => anyhow::bail!("broadcast channel closed"),
+                Err(_) => continue,
             };
-            if let Err(e) = tx.send(msg).await {
-                debug!("failed to send command output: {}", e);
+
+            match msg {
+                Message::RunCommand { id, command } => {
+                    let output = run_with_timeout(&command).await;
+                    let _ = self.sender.send(Message::CommandOutput { id, output });
+                }
+                Message::Logout => {
+                    run_with_timeout("systemctl restart greetd").await;
+                }
+                _ => {}
             }
         }
-        Ok(())
     }
 }
 
-async fn execute_system_command(command_str: String) -> String {
+async fn run_with_timeout(command: &str) -> String {
+    match timeout(Duration::from_secs(10), execute_system_command(command)).await {
+        Ok(output) => output,
+        Err(_) => "Command timed out".to_string(),
+    }
+}
+
+async fn execute_system_command(command_str: &str) -> String {
     let result = Command::new("sh")
         .arg("-c")
-        .arg(&command_str)
+        .arg(command_str)
         .output()
         .await;
 
@@ -66,7 +58,6 @@ async fn execute_system_command(command_str: String) -> String {
             let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
 
             if output.status.success() {
-                // If stdout is empty, but command succeeded, show that
                 if stdout.is_empty() {
                     "Command executed successfully (no output)".to_string()
                 } else {
