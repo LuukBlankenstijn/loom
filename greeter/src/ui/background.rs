@@ -82,7 +82,7 @@ impl Background {
                     iced::widget::image(handle)
                         .width(Length::Fill)
                         .height(Length::Fill)
-                        .content_fit(ContentFit::Contain),
+                        .content_fit(ContentFit::Cover),
                 )
                 .into();
                 (img, true)

@@ -7,7 +7,7 @@ flake:
 }:
 
 let
-  cfg = config.services.greetd.contest-greeter;
+  cfg = config.services.greetd.loom-greeter;
   inherit (lib)
     mkEnableOption
     mkOption
@@ -33,18 +33,18 @@ let
   # Filter out null values
   filteredConfig = lib.filterAttrs (_: v: v != null) greeterConfig;
 
-  configFile = tomlFormat.generate "contest-greeter.toml" filteredConfig;
+  configFile = tomlFormat.generate "loom-greeter.toml" filteredConfig;
 
-  greeterPackage = flake.packages.${pkgs.system}.default;
+  greeterPackage = flake.packages.${pkgs.system}.loom-greeter;
 in
 {
-  options.services.greetd.contest-greeter = {
-    enable = mkEnableOption "contest-greeter, a greetd greeter for icpc contests";
+  options.services.greetd.loom-greeter = {
+    enable = mkEnableOption "loom-greeter, a greetd greeter for icpc contests with the loom system";
 
     package = mkOption {
       type = types.package;
       default = greeterPackage;
-      description = "The contest-greeter package to use.";
+      description = "The loom-greeter package to use.";
     };
 
     cagePackage = mkOption {
@@ -130,7 +130,7 @@ in
         services.greetd = {
           enable = true;
           settings.default_session = {
-            command = "${cfg.cagePackage}/bin/cage -s -- ${pkgs.systemd}/bin/systemd-cat -t contest-greeter ${cfg.package}/bin/contest-greeter ${configFile}";
+            command = "${cfg.cagePackage}/bin/cage -s -- ${pkgs.systemd}/bin/systemd-cat -t loom-greeter ${cfg.package}/bin/loom-greeter ${configFile}";
             user = "greeter";
           };
         };
@@ -138,15 +138,15 @@ in
       # Only add D-Bus if enabled
       (mkIf cfg.enableDbus {
         services.dbus.packages = [
-          (pkgs.writeTextDir "share/dbus-1/system.d/nl.luukblankenstijn.ContestGreeterService.conf" ''
+          (pkgs.writeTextDir "share/dbus-1/system.d/nl.luukblankenstijn.loom.GreeterService.conf" ''
             <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
              "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
             <busconfig>
               <policy user="greeter">
-                <allow own="nl.luukblankenstijn.ContestGreeterService"/>
+                <allow own="nl.luukblankenstijn.loom.GreeterService"/>
               </policy>
               <policy context="default">
-                <allow send_destination="nl.luukblankenstijn.ContestGreeterService"/>
+                <allow send_destination="nl.luukblankenstijn.loom.GreeterService"/>
               </policy>
             </busconfig>
           '')

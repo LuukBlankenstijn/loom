@@ -1,3 +1,5 @@
+#![warn(unused_crate_dependencies)]
+
 use crate::conf::{Conf, get_conf};
 use env_logger::Env;
 use log::warn;

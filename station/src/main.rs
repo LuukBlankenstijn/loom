@@ -117,7 +117,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn setup_logging() {
     let filter = tracing_subscriber::filter::Targets::new()
-        .with_target("loom_station", Level::TRACE)
+        .with_target("loomd", Level::TRACE)
         .with_default(Level::WARN);
     let registry = tracing_subscriber::registry().with(filter);
     if std::io::IsTerminal::is_terminal(&std::io::stdout()) {

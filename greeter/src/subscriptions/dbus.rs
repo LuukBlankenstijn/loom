@@ -1,10 +1,11 @@
-use greeter_dbus::{GreeterService, GreeterServiceBackend};
+use greeter_dbus::{GreeterService, GreeterServiceBackend, GreeterServiceProxy};
 use iced::Subscription;
 use iced::futures::channel::mpsc::Sender;
 use iced::futures::{self, SinkExt};
 use iced::stream;
 use log::{error, info};
 use zbus::conn::Builder;
+use zbus::proxy::Defaults;
 #[derive(Clone, Debug)]
 pub enum DbusMessage {
     SetWallpaper(String),
@@ -20,30 +21,39 @@ pub fn dbus_service_subscription() -> Subscription<DbusMessage> {
                 sender: output.clone(),
             });
 
-            let result = Builder::system()
-                .and_then(|b| b.name("nl.luukblankenstijn.ContestGreeterService"))
+            let name = match GreeterServiceProxy::DESTINATION.as_ref() {
+                Some(name) => name.as_str(),
+                None => {
+                    error!("[DBus-Service] Missing destination name in proxy definition");
+                    return;
+                }
+            };
+
+            let path = match GreeterServiceProxy::PATH.as_ref() {
+                Some(path) => path,
+                None => {
+                    error!("[DBus-Service] Missing path in proxy definition");
+                    return;
+                }
+            };
+
+            let connection_result = Builder::system()
+                .map_err(|e| format!("System bus connection failed: {}", e))
+                .and_then(|b| b.name(name).map_err(|e| format!("Invalid name: {}", e)))
                 .and_then(|b| {
-                    b.serve_at(
-                        "/nl/luukblankenstijn/ContestGreeterService",
-                        greeter_service,
-                    )
+                    b.serve_at(path, greeter_service)
+                        .map_err(|e| format!("Path error: {}", e))
                 });
 
-            match result {
+            match connection_result {
                 Ok(builder) => match builder.build().await {
                     Ok(_connection) => {
-                        info!(
-                            "[DBus-Service] Service started: nl.luukblankenstijn.ContestGreeterService"
-                        );
+                        info!("[DBus-Service] Service started: {}", name);
                         std::future::pending::<()>().await;
                     }
-                    Err(e) => {
-                        error!("[DBus-Service] Failed to build D-Bus connection: {}", e);
-                    }
+                    Err(e) => error!("[DBus-Service] Failed to build D-Bus connection: {}", e),
                 },
-                Err(e) => {
-                    error!("[DBus-Service] configuration failed: {}", e);
-                }
+                Err(e) => error!("[DBus-Service] Configuration failed: {}", e),
             }
         })
     })

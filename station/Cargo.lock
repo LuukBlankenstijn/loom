@@ -694,7 +694,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-station"
+name = "loomd"
 version = "0.1.0"
 dependencies = [
  "anyhow",

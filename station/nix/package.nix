@@ -4,31 +4,34 @@
   src,
   cargoLock,
   pkg-config,
-  wayland,
-  libxkbcommon,
-  vulkan-loader,
   openssl,
+  dbus,
+  systemd,
+  protobuf,
 }:
 let
   commonArgs = {
     inherit src;
-    pname = "loom-greeter";
-    version = "1.1.2";
+    pname = "loomd";
+    version = "0.1.0";
 
-    cargoRoot = "greeter";
+    cargoRoot = "station";
     inherit cargoLock;
 
     postUnpack = ''
-      cd $sourceRoot/greeter
+      cd $sourceRoot/station
       sourceRoot=.
     '';
 
-    nativeBuildInputs = [ pkg-config ];
+    nativeBuildInputs = [
+      pkg-config
+      protobuf
+    ];
     buildInputs = [
-      wayland
-      libxkbcommon
-      vulkan-loader
       openssl
+      dbus
+      systemd
+      protobuf
     ];
   };
 
@@ -42,18 +45,19 @@ craneLib.buildPackage (
     postFixup = ''
       patchelf --add-rpath ${
         lib.makeLibraryPath [
-          wayland
-          libxkbcommon
-          vulkan-loader
+          openssl
+          dbus
+          systemd
+          protobuf
         ]
-      } $out/bin/loom-greeter
+      } $out/bin/loomd
     '';
 
     meta = with lib; {
-      description = "A greetd greeter for contests with countdown support";
+      description = "A service to control the greeter and other parts of the loom system.";
       license = licenses.mit;
       platforms = platforms.linux;
-      mainProgram = "loom-greeter";
+      mainProgram = "loomd";
     };
   }
 )
