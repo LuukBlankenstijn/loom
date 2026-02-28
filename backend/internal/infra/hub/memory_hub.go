@@ -9,16 +9,21 @@ import (
 
 type memoryHub struct {
 	mu       sync.RWMutex
-	stations map[string]chan domain.ConfigUpdatedEvent
+	stations map[string]stationState
+}
+
+type stationState struct {
+	channel  chan domain.StationHubEvent
+	loggedIn bool
 }
 
 func New() domain.Hub {
 	return &memoryHub{
-		stations: make(map[string]chan domain.ConfigUpdatedEvent),
+		stations: make(map[string]stationState),
 	}
 }
 
-func (m *memoryHub) Register(ip string) (<-chan domain.ConfigUpdatedEvent, func(), error) {
+func (m *memoryHub) Register(ip string) (<-chan domain.StationHubEvent, func(), error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if _, exists := m.stations[ip]; exists {
@@ -26,8 +31,11 @@ func (m *memoryHub) Register(ip string) (<-chan domain.ConfigUpdatedEvent, func(
 	}
 	slog.Debug("[HUB]: registered client", "ip", ip)
 
-	ch := make(chan domain.ConfigUpdatedEvent, 16)
-	m.stations[ip] = ch
+	ch := make(chan domain.StationHubEvent, 16)
+	m.stations[ip] = stationState{
+		channel:  ch,
+		loggedIn: false,
+	}
 
 	cleanup := func() {
 		m.mu.Lock()
@@ -40,27 +48,39 @@ func (m *memoryHub) Register(ip string) (<-chan domain.ConfigUpdatedEvent, func(
 	return ch, cleanup, nil
 }
 
-func (m *memoryHub) Notify(event domain.ConfigUpdatedEvent, ips ...string) {
+func (m *memoryHub) Send(event domain.StationHubEvent, ips ...string) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	if len(ips) == 0 {
-		for _, ch := range m.stations {
-			m.trySend(ch, event)
+		for _, state := range m.stations {
+			m.trySend(state.channel, event)
 		}
 		return
 	}
 
 	for _, ip := range ips {
-		if ch, ok := m.stations[ip]; ok {
-			m.trySend(ch, event)
+		if state, ok := m.stations[ip]; ok {
+			m.trySend(state.channel, event)
 		}
 	}
 }
 
-func (m *memoryHub) trySend(ch chan domain.ConfigUpdatedEvent, event domain.ConfigUpdatedEvent) {
+func (m *memoryHub) trySend(ch chan domain.StationHubEvent, event domain.StationHubEvent) {
 	select {
 	case ch <- event:
 	default:
 	}
+}
+
+func (m *memoryHub) SetLoginStatus(stationIp string, loggedIn bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	state, exists := m.stations[stationIp]
+	if !exists {
+		return
+	}
+	state.loggedIn = loggedIn
+	m.stations[stationIp] = state
 }

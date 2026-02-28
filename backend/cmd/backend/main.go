@@ -6,7 +6,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -56,7 +55,7 @@ func main() {
 		repoContainer.team,
 		repoContainer.wallpaper,
 	)
-	adminHandler := admin.NewAdminHandler(
+	adminServer := admin.NewAdminHandler(
 		repoContainer.station,
 		repoContainer.team,
 		repoContainer.contest,
@@ -65,15 +64,7 @@ func main() {
 	)
 
 	go func() {
-		ticker := time.NewTicker(2 * time.Second)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			hub.Notify(domain.ConfigUpdatedEvent{})
-		}
-	}()
-	go func() {
-		if err := adminHandler.Run(); err != nil {
+		if err := adminServer.Run(); err != nil {
 			slog.Error("failed to run admin server", slog.Any("error", err))
 		}
 	}()
