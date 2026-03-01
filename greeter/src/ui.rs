@@ -172,7 +172,7 @@ impl Greeter {
             }
             Message::Dbus(dbus_message) => match dbus_message {
                 DbusMessage::SetWallpaper(source) => {
-                    Task::done(BackgroundMessage::SetSource(Some(source)).into())
+                    Task::done(BackgroundMessage::Source(Some(source)).into())
                 }
                 DbusMessage::Login => Task::done(GreeterClientMessage::Login.into()),
                 DbusMessage::LoginWithCredentials(username, password) => Task::done(

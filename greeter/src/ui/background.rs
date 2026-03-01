@@ -34,8 +34,10 @@ pub struct Background {
 
 #[derive(Debug, Clone)]
 pub enum BackgroundMessage {
-    SetSource(Option<String>),
-    SetData((Option<iced::widget::image::Handle>, Option<Label>)),
+    Source(Option<String>),
+    Data((Option<iced::widget::image::Handle>, Option<Label>)),
+    Handle(Option<iced::widget::image::Handle>),
+    Label(Option<Label>),
 }
 
 impl From<BackgroundMessage> for Message {
@@ -50,7 +52,7 @@ impl Background {
         label: Option<String>,
         color: Option<String>,
     ) -> (Self, Task<BackgroundMessage>) {
-        let task = Task::done(BackgroundMessage::SetSource(source));
+        let task = Task::done(BackgroundMessage::Source(source));
 
         let label = label.map(|t| {
             let color = color
@@ -122,7 +124,7 @@ impl Background {
 
     pub fn update(&mut self, msg: BackgroundMessage) -> Task<BackgroundMessage> {
         match msg {
-            BackgroundMessage::SetSource(source) => {
+            BackgroundMessage::Source(source) => {
                 if let Some(source) = source {
                     self.image_status = ImageStatus::Loading;
                     if is_http_url(&source) {
@@ -132,22 +134,19 @@ impl Background {
                                 let handle = bytes.and_then(create_handle);
                                 (handle, label)
                             },
-                            BackgroundMessage::SetData,
+                            BackgroundMessage::Data,
                         );
                     } else {
                         return Task::perform(
-                            async move {
-                                let handle = fetch_local_image(&source).and_then(create_handle);
-                                (handle, None)
-                            },
-                            BackgroundMessage::SetData,
+                            async move { fetch_local_image(&source).and_then(create_handle) },
+                            BackgroundMessage::Handle,
                         );
                     }
                 } else {
                     self.image_status = ImageStatus::Empty;
                 }
             }
-            BackgroundMessage::SetData((handle, label)) => {
+            BackgroundMessage::Handle(handle) => {
                 match handle {
                     Some(handle) => {
                         self.handle = Some(handle);
@@ -158,9 +157,13 @@ impl Background {
                         self.image_status = ImageStatus::Invalid;
                     }
                 };
-                if let Some(label) = label {
-                    self.label = Some(label)
-                }
+            }
+            BackgroundMessage::Label(label) => self.label = label,
+            BackgroundMessage::Data((handle, label)) => {
+                return Task::batch(vec![
+                    Task::done(BackgroundMessage::Handle(handle)),
+                    Task::done(BackgroundMessage::Label(label)),
+                ]);
             }
         }
         Task::none()
