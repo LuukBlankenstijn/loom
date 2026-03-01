@@ -1,5 +1,5 @@
 import { createClient } from "@connectrpc/connect";
-import { createConnectTransport } from "@connectrpc/connect-web";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { AdminService } from "@client/v1/admin/admin_pb";
 import type {
   Contest,
@@ -15,7 +15,7 @@ import { SetMapRequestSchema } from "@client/v1/admin/admin_pb";
 import { create } from "@bufbuild/protobuf";
 import { EmptySchema } from "@bufbuild/protobuf/wkt";
 
-const transport = createConnectTransport({
+const transport = createGrpcWebTransport({
   baseUrl: "/api",
 });
 

@@ -13,7 +13,7 @@ export function Layout() {
       <header className="bg-surface-800 border-b border-surface-600 shrink-0">
         <nav className="max-w-7xl mx-auto px-6">
           <div className="flex items-center h-16 gap-8">
-            <span className="text-xl font-semibold bg-gradient-to-r from-primary-400 to-emerald-400 bg-clip-text text-transparent">
+            <span className="text-xl font-semibold bg-linear-to-r from-primary-400 to-emerald-400 bg-clip-text text-transparent">
               Loom
             </span>
             <div className="flex gap-1">

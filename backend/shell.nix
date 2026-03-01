@@ -4,8 +4,10 @@
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
-    go
-    gnumake
-    grpcui
+    rustc
+    cargo
+    rustfmt
+    clippy
+    rust-analyzer
   ];
 }

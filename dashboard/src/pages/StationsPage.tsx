@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
-import type { Station } from "@client/admin/v1/admin_pb";
+import type { Station } from "@client/v1/admin/admin_pb";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 
 export function StationsPage() {
@@ -23,9 +23,7 @@ export function StationsPage() {
   const stations = stationsData?.stations ?? [];
   const teams = teamsData?.teams ?? [];
 
-  const ipToTeam = new Map(
-    teams.filter((t) => t.ip).map((t) => [t.ip!, t])
-  );
+  const ipToTeam = new Map(teams.filter((t) => t.ip).map((t) => [t.ip!, t]));
 
   const unassignMutation = useMutation({
     mutationFn: (teamId: string) => adminClient.setIp(teamId, undefined),
@@ -38,7 +36,9 @@ export function StationsPage() {
   const isConnected = (station: Station) => {
     if (!station.diconnectedAt) return true;
     if (!station.connectedAt) return false;
-    return timestampDate(station.connectedAt) > timestampDate(station.diconnectedAt);
+    return (
+      timestampDate(station.connectedAt) > timestampDate(station.diconnectedAt)
+    );
   };
 
   const openAssignModal = (station: Station) => {
@@ -51,7 +51,7 @@ export function StationsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-2 h-8 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-full" />
+        <div className="w-2 h-8 bg-linear-to-b from-emerald-400 to-emerald-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Stations</h1>
         <div className="ml-auto flex gap-2">
           <span className="px-3 py-1 bg-success-500/20 text-success-500 rounded-full text-sm">
@@ -104,7 +104,7 @@ export function StationsPage() {
                     <td className="px-6 py-4">
                       {team ? (
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-200 bg-purple-500/10 text-purple-400 px-2 py-1 rounded">
+                          <span className="text-gray-200 bg-purple-500/10 px-2 py-1 rounded">
                             {team.name}
                           </span>
                           <button
@@ -146,7 +146,9 @@ export function StationsPage() {
                               : "bg-danger-500"
                           }`}
                         />
-                        <span className={`text-sm ${connected ? "text-success-500" : "text-gray-500"}`}>
+                        <span
+                          className={`text-sm ${connected ? "text-success-500" : "text-gray-500"}`}
+                        >
                           {connected ? "Online" : "Offline"}
                         </span>
                       </div>

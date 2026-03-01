@@ -17,7 +17,6 @@ plugins:
   - local: protoc-gen-tonic
     out: gen/rs/src
     opt:
-      - no_server
       - no_transport
   - local: protoc-gen-prost-crate
     out: gen/rs

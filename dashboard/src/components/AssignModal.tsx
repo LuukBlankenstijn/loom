@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminClient } from "../lib/client";
-import type { Station, Team } from "@client/admin/v1/admin_pb";
+import type { Station, Team } from "@client/v1/admin/admin_pb";
 
 type AssignModalProps = {
   mode: "team" | "station";
@@ -77,9 +77,7 @@ export function AssignModal({
                 ))}
           </select>
           {mode === "team" && availableStations.length === 0 && (
-            <p className="text-sm text-gray-500 mt-2">
-              No available stations
-            </p>
+            <p className="text-sm text-gray-500 mt-2">No available stations</p>
           )}
           {mode === "station" && unassignedTeams.length === 0 && (
             <p className="text-sm text-gray-500 mt-2">

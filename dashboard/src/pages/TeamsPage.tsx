@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
-import type { Team } from "@client/admin/v1/admin_pb";
+import type { Team } from "@client/v1/admin/admin_pb";
 
 export function TeamsPage() {
   const queryClient = useQueryClient();
@@ -37,7 +37,7 @@ export function TeamsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-2 h-8 bg-gradient-to-b from-primary-400 to-primary-600 rounded-full" />
+        <div className="w-2 h-8 bg-linear-to-b from-primary-400 to-primary-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Teams</h1>
         <span className="ml-auto px-3 py-1 bg-primary-500/20 text-primary-400 rounded-full text-sm">
           {teams.length} total

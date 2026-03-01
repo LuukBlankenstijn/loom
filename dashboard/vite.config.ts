@@ -7,12 +7,14 @@ import fs from "fs";
 
 // Rewrite map-editor HTML to use /editor/ base path
 function rewriteEditorHtml(html: string): string {
-  return html
-    .replace('<base href="/" />', '<base href="/editor/" />')
-    // Only replace hrefs that aren't already /editor/
-    .replace(/href="\/(?!editor\/)/g, 'href="/editor/')
-    .replace(/from '\/(?!editor\/)/g, "from '/editor/")
-    .replace(/module_or_path: '\/(?!editor\/)/g, "module_or_path: '/editor/");
+  return (
+    html
+      .replace('<base href="/" />', '<base href="/editor/" />')
+      // Only replace hrefs that aren't already /editor/
+      .replace(/href="\/(?!editor\/)/g, 'href="/editor/')
+      .replace(/from '\/(?!editor\/)/g, "from '/editor/")
+      .replace(/module_or_path: '\/(?!editor\/)/g, "module_or_path: '/editor/")
+  );
 }
 
 // Plugin to serve map-editor WASM files (dev) and copy them (build)
@@ -73,7 +75,10 @@ function serveMapEditor(): Plugin {
               ".css": "text/css",
             };
 
-            res.setHeader("Content-Type", contentTypes[ext] || "application/octet-stream");
+            res.setHeader(
+              "Content-Type",
+              contentTypes[ext] || "application/octet-stream",
+            );
             // WASM needs these headers for SharedArrayBuffer (if used)
             res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
             res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
@@ -98,7 +103,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8081",
+        target: "http://localhost:8080",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
