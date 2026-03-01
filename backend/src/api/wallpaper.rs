@@ -1,6 +1,7 @@
+use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::extract::State;
+use axum::extract::{ConnectInfo, State};
 use axum::http::{HeaderMap, StatusCode, header};
 use axum::response::IntoResponse;
 use chrono::{DateTime, Utc};
@@ -89,15 +90,17 @@ impl WallpaperState {
 }
 
 pub async fn wallpaper_handler(
-    State(state): State<Arc<WallpaperState>>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
+    State(state): State<Arc<WallpaperState>>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let ip = headers
         .get("x-real-ip")
         .or_else(|| headers.get("x-forwarded-for"))
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_string();
+        .and_then(|v| v.split(',').next())
+        .map(|v| v.trim().to_string())
+        .unwrap_or_else(|| addr.ip().to_string());
 
     let (contest, team) = tokio::join!(state.contest_repo.get_next_contest(), async {
         if ip.is_empty() {
@@ -131,10 +134,10 @@ pub async fn wallpaper_handler(
 
     if let Some(team) = team {
         if let Ok(v) = team.name.parse() {
-            response_headers.insert("x-wallpaper-text", v);
+            response_headers.insert("X-Wallpaper-Text", v);
         }
         if let Ok(v) = cached.text_color.parse() {
-            response_headers.insert("x-wallpaper-text-color", v);
+            response_headers.insert("X-Wallpaper-Text-Color", v);
         }
     }
 

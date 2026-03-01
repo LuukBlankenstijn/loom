@@ -4,6 +4,15 @@ use std::sync::{Arc, RwLock};
 use chrono::{DateTime, Utc};
 use tokio::sync::{broadcast, mpsc};
 
+/// A command for the handler
+#[derive(Debug, Clone)]
+pub enum StationHandlerCommand {
+    /// pass on the contained station comand
+    Station(StationCommand),
+    /// Sync the client state
+    Sync,
+}
+
 /// A command sent TO a specific station client.
 #[derive(Debug, Clone)]
 pub enum StationCommand {
@@ -13,6 +22,12 @@ pub enum StationCommand {
     Logout,
     LoginWithCredentials { username: String, password: String },
     CustomCommand { id: String, command: String },
+}
+
+impl From<StationCommand> for StationHandlerCommand {
+    fn from(value: StationCommand) -> Self {
+        Self::Station(value)
+    }
 }
 
 /// A snapshot of one connected station's state.
@@ -28,7 +43,7 @@ pub type HubStateEvent = Vec<ConnectedStation>;
 
 struct StationEntry {
     state: ConnectedStation,
-    command_tx: mpsc::Sender<StationCommand>,
+    command_tx: mpsc::Sender<StationHandlerCommand>,
 }
 
 /// In-memory station state + pub/sub.
@@ -43,7 +58,7 @@ pub struct StationsHub {
 
 /// Returned from [`StationsHub::register`]. Dropping deregisters the station.
 pub struct StationRegistration {
-    pub commands: mpsc::Receiver<StationCommand>,
+    pub commands: mpsc::Receiver<StationHandlerCommand>,
     cleanup: Option<Box<dyn FnOnce() + Send>>,
 }
 
@@ -128,18 +143,33 @@ impl StationsHub {
         })
     }
 
+    pub fn sync_stations(&self, ips: &[&str]) {
+        let stations = self.stations.read().unwrap();
+        if ips.is_empty() {
+            for entry in stations.values() {
+                let _ = entry.command_tx.try_send(StationHandlerCommand::Sync);
+            }
+        } else {
+            for ip in ips {
+                if let Some(entry) = stations.get(*ip) {
+                    let _ = entry.command_tx.try_send(StationHandlerCommand::Sync);
+                }
+            }
+        }
+    }
+
     /// Send a command to specific stations, or all if `ips` is empty.
     /// Non-blocking: silently drops if a station's channel is full.
     pub fn send_command(&self, command: StationCommand, ips: &[&str]) {
         let stations = self.stations.read().unwrap();
         if ips.is_empty() {
             for entry in stations.values() {
-                let _ = entry.command_tx.try_send(command.clone());
+                let _ = entry.command_tx.try_send(command.clone().into());
             }
         } else {
             for ip in ips {
                 if let Some(entry) = stations.get(*ip) {
-                    let _ = entry.command_tx.try_send(command.clone());
+                    let _ = entry.command_tx.try_send(command.clone().into());
                 }
             }
         }

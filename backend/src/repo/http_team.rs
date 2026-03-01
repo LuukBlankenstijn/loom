@@ -82,10 +82,11 @@ impl TeamRepository for HttpTeamRepo {
 
         let mut ip_map = std::collections::HashMap::new();
         for u in &users {
-            if let (Some(tid), Some(ip)) = (&u.team_id, &u.ip) {
-                if !tid.is_empty() && !ip.is_empty() {
-                    ip_map.insert(tid.clone(), ip.clone());
-                }
+            if let (Some(tid), Some(ip)) = (&u.team_id, &u.ip)
+                && !tid.is_empty()
+                && !ip.is_empty()
+            {
+                ip_map.insert(tid.clone(), ip.clone());
             }
         }
 
@@ -102,9 +103,14 @@ impl TeamRepository for HttpTeamRepo {
             .collect())
     }
 
-    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<(), AppError> {
+    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError> {
         let users = self.get_users().await?;
         let new_ip = ip.unwrap_or("");
+
+        let old_ip = users
+            .iter()
+            .find(|u| u.team_id.as_deref() == Some(team_id))
+            .and_then(|u| u.ip.clone());
 
         if !new_ip.is_empty() {
             for u in &users {
@@ -120,6 +126,7 @@ impl TeamRepository for HttpTeamRepo {
             .iter()
             .filter(|u| u.team_id.as_deref() == Some(team_id))
             .collect();
+
         let mut handles = Vec::new();
 
         for user in team_users {
@@ -127,6 +134,7 @@ impl TeamRepository for HttpTeamRepo {
             let url = format!("{}/api/v4/users/{}", self.config.base_url, user.id);
             let username = self.config.username.clone();
             let password = self.config.password.clone();
+
             let mut form: Vec<(String, String)> = vec![
                 ("id".into(), user.id.clone()),
                 ("name".into(), user.name.clone()),
@@ -138,6 +146,7 @@ impl TeamRepository for HttpTeamRepo {
                     if user.enabled { "1" } else { "0" }.into(),
                 ),
             ];
+
             for role in &user.roles {
                 form.push(("roles[]".into(), role.clone()));
             }
@@ -150,6 +159,7 @@ impl TeamRepository for HttpTeamRepo {
                     .send()
                     .await
                     .map_err(AppError::from)?;
+
                 if !resp.status().is_success() {
                     return Err(AppError::Internal(format!(
                         "contest API error: status {}",
@@ -163,7 +173,12 @@ impl TeamRepository for HttpTeamRepo {
         for h in handles {
             h.await.map_err(|e| AppError::Internal(e.to_string()))??;
         }
-        Ok(())
+
+        if ip.is_some() {
+            Ok(Some(new_ip.to_string()))
+        } else {
+            Ok(old_ip)
+        }
     }
 
     async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {

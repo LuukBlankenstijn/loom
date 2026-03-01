@@ -1,3 +1,3 @@
 mod meta;
 
-pub use meta::{ClientMeta, RequestExt, client_meta_interceptor};
+pub use meta::{RequestExt, client_meta_interceptor};

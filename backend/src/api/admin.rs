@@ -6,7 +6,7 @@ use loom_rpc::map::v1 as map_pb;
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
-use crate::domain::*;
+use crate::{domain::*, hub::StationsHub};
 
 pub struct AdminHandler {
     contest_repo: Arc<dyn ContestRepository>,
@@ -14,6 +14,7 @@ pub struct AdminHandler {
     station_repo: Arc<dyn StationRepository>,
     wallpaper_repo: Arc<dyn WallpaperRepository>,
     map_repo: Arc<dyn MapRepository>,
+    hub: Arc<StationsHub>,
 }
 
 impl AdminHandler {
@@ -23,6 +24,7 @@ impl AdminHandler {
         station_repo: Arc<dyn StationRepository>,
         wallpaper_repo: Arc<dyn WallpaperRepository>,
         map_repo: Arc<dyn MapRepository>,
+        hub: Arc<StationsHub>,
     ) -> Self {
         Self {
             contest_repo,
@@ -30,6 +32,7 @@ impl AdminHandler {
             station_repo,
             wallpaper_repo,
             map_repo,
+            hub,
         }
     }
 }
@@ -84,9 +87,13 @@ impl AdminService for AdminHandler {
 
     async fn set_ip(&self, request: Request<pb::SetIpRequest>) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        self.team_repo
+        let maybe_ip = self
+            .team_repo
             .set_ip(&req.team_id, req.ip.as_deref())
             .await?;
+        if let Some(ip) = maybe_ip {
+            self.hub.sync_stations(&[&ip]);
+        }
         Ok(Response::new(()))
     }
 
@@ -108,6 +115,8 @@ impl AdminService for AdminHandler {
                     .await?;
             }
         }
+        // update stations
+        self.hub.sync_stations(&[]);
         Ok(Response::new(()))
     }
 
@@ -119,6 +128,8 @@ impl AdminService for AdminHandler {
         self.wallpaper_repo
             .set_wallpaper_text_color(&req.contest_id, &req.color)
             .await?;
+        // update stations
+        self.hub.sync_stations(&[]);
         Ok(Response::new(()))
     }
 

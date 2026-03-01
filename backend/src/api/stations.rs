@@ -9,15 +9,15 @@ use tonic::{Request, Response, Status, Streaming};
 use crate::api::middleware::RequestExt;
 use crate::convert::ClientAction;
 use crate::domain::{ContestRepository, StationRepository};
-use crate::hub::{StationCommand, StationsHub};
+use crate::hub::{StationCommand, StationHandlerCommand, StationsHub};
 
+#[derive(Clone)]
 pub struct StationsHandler {
     hub: Arc<StationsHub>,
     contest_repo: Arc<dyn ContestRepository>,
     station_repo: Arc<dyn StationRepository>,
     contest_api_base_url: Option<String>,
 }
-
 impl StationsHandler {
     pub fn new(
         hub: Arc<StationsHub>,
@@ -30,6 +30,23 @@ impl StationsHandler {
             contest_repo,
             station_repo,
             contest_api_base_url,
+        }
+    }
+}
+
+impl StationsHandler {
+    /// Helper to push the latest configuration to a specific station
+    async fn sync_station(&self, ip: &str, host: &str) {
+        let wallpaper_url = format!("http://{host}/wallpaper");
+        self.hub
+            .send_command(StationCommand::SetWallpaperSource(wallpaper_url), &[ip]);
+
+        if let Some(base_url) = &self.contest_api_base_url
+            && let Ok(Some(contest)) = self.contest_repo.get_next_contest().await
+        {
+            let contest_url = format!("{base_url}/api/v4/contests/{}", contest.id);
+            self.hub
+                .send_command(StationCommand::SetContestUrl(contest_url), &[ip]);
         }
     }
 }
@@ -76,6 +93,8 @@ impl StationService for StationsHandler {
         let hub = self.hub.clone();
         let station_repo = self.station_repo.clone();
         let ip_clone = ip.clone();
+        let host_clone = host.clone();
+        let handler = self.clone();
 
         tokio::spawn(async move {
             let mut registration = registration;
@@ -84,9 +103,16 @@ impl StationService for StationsHandler {
             loop {
                 tokio::select! {
                     Some(cmd) = registration.commands.recv() => {
-                        let msg: pb::ServerMessage = cmd.into();
-                        if tx.send(Ok(msg)).await.is_err() {
-                            break;
+                        match cmd {
+                            StationHandlerCommand::Station(station_command) => {
+                                let msg: pb::ServerMessage = station_command.into();
+                                if tx.send(Ok(msg)).await.is_err() {
+                                    break;
+                                }
+                            },
+                            StationHandlerCommand::Sync => {
+                                handler.sync_station(&ip_clone, &host_clone).await;
+                            },
                         }
                     }
                     msg = client_stream.message() => {
@@ -99,6 +125,7 @@ impl StationService for StationsHandler {
                                         }
                                         ClientAction::LoggedOut => {
                                             hub.set_login_status(&ip_clone, false);
+                                            hub.sync_stations(&[ip_clone.as_str()]);
                                         }
                                         ClientAction::CommandOutput { .. } => {
                                             // TODO: forward command output to admin
@@ -115,6 +142,8 @@ impl StationService for StationsHandler {
             // Station disconnected — registration is dropped here (deregisters from hub)
             let _ = station_repo.update_disconnected_at(&ip_clone).await;
         });
+
+        self.hub.sync_stations(&[ip.as_str()]);
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }

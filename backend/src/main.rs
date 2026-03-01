@@ -74,6 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         station_repo.clone(),
         wallpaper_repo.clone(),
         map_repo.clone(),
+        hub.clone(),
     );
 
     let stations = api::stations::StationsHandler::new(

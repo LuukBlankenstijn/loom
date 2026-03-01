@@ -31,12 +31,21 @@ impl From<TeamRow> for Team {
 
 #[async_trait]
 impl TeamRepository for PgTeamRepo {
-    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<(), AppError> {
+    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError> {
+        let old_ip: Option<(String,)> = sqlx::query_as(
+            "SELECT s.ip FROM teams t 
+         JOIN stations s ON t.team_station = s.id 
+         WHERE t.id = $1",
+        )
+        .bind(team_id)
+        .fetch_optional(&self.0)
+        .await?;
+
         if let Some(ip) = ip {
             let conflict: Option<(String,)> = sqlx::query_as(
                 "SELECT t.id FROM teams t
-                 JOIN stations s ON t.team_station = s.id
-                 WHERE s.ip = $1 AND t.id != $2",
+             JOIN stations s ON t.team_station = s.id
+             WHERE s.ip = $1 AND t.id != $2",
             )
             .bind(ip)
             .bind(team_id)
@@ -50,19 +59,22 @@ impl TeamRepository for PgTeamRepo {
             }
 
             sqlx::query(
-                "UPDATE teams SET team_station = (SELECT id FROM stations WHERE ip = $1) WHERE id = $2",
-            )
-            .bind(ip)
-            .bind(team_id)
-            .execute(&self.0)
-            .await?;
+            "UPDATE teams SET team_station = (SELECT id FROM stations WHERE ip = $1) WHERE id = $2",
+        )
+        .bind(ip)
+        .bind(team_id)
+        .execute(&self.0)
+        .await?;
+
+            Ok(Some(ip.to_string()))
         } else {
             sqlx::query("UPDATE teams SET team_station = NULL WHERE id = $1")
                 .bind(team_id)
                 .execute(&self.0)
                 .await?;
+
+            Ok(old_ip.map(|(s,)| s))
         }
-        Ok(())
     }
 
     async fn get_all(&self, contest_id: &str) -> Result<Vec<Team>, AppError> {
