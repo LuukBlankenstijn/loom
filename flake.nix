@@ -19,20 +19,50 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         craneLib = crane.mkLib pkgs;
-
-        src = pkgs.lib.cleanSourceWith {
-          src = ./.;
-          filter = craneLib.filterCargoSources;
-        };
       in
       {
         packages = {
           loom-greeter = pkgs.callPackage ./greeter/nix/package.nix {
-            inherit craneLib src;
+            inherit craneLib;
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset =
+                pkgs.lib.fileset.intersection
+                  (pkgs.lib.fileset.fromSource (
+                    pkgs.lib.cleanSourceWith {
+                      src = ./.;
+                      filter = craneLib.filterCargoSources;
+                    }
+                  ))
+                  (
+                    pkgs.lib.fileset.unions [
+                      ./greeter
+                      ./shared/greeter-dbus
+                    ]
+                  );
+            };
             cargoLock = ./greeter/Cargo.lock;
           };
           loomd = pkgs.callPackage ./station/nix/package.nix {
-            inherit craneLib src;
+            inherit craneLib;
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset =
+                pkgs.lib.fileset.intersection
+                  (pkgs.lib.fileset.fromSource (
+                    pkgs.lib.cleanSourceWith {
+                      src = ./.;
+                      filter = craneLib.filterCargoSources;
+                    }
+                  ))
+                  (
+                    pkgs.lib.fileset.unions [
+                      ./station
+                      ./shared/greeter-dbus
+                      ./gen/rs
+                    ]
+                  );
+            };
             cargoLock = ./station/Cargo.lock;
           };
         };
