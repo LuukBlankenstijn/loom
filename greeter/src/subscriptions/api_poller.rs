@@ -49,7 +49,10 @@ impl ApiPoller {
                 }
                 return Task::none();
             }
-            ApiPollerMessage::SetUrl(url) => self.url = url,
+            ApiPollerMessage::SetUrl(url) => {
+                self.url = url;
+                return Task::done(ApiPollerMessage::FetchStartTime);
+            }
             ApiPollerMessage::StartTimeFetched(result) => match result {
                 Ok(datetime) => return Task::done(ApiPollerMessage::SetStartime(datetime)),
                 Err(error) => error!("failed getting starttime from api:{error}"),
