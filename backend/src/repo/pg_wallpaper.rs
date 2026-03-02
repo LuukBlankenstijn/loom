@@ -61,7 +61,7 @@ impl WallpaperRepository for PgWallpaperRepo {
         contest_id: &str,
         color: &str,
     ) -> Result<(), AppError> {
-        sqlx::query("UPDATE wallpapers SET color = $1 WHERE contest_id = $2")
+        sqlx::query("UPDATE wallpapers SET color = $1, updated_at = NOW() WHERE contest_id = $2")
             .bind(color)
             .bind(contest_id)
             .execute(&self.0)
