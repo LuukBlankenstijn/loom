@@ -2,6 +2,7 @@ import { Code, ConnectError, createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { AdminService } from "@client/v1/admin/admin_pb";
 import type {
+  ClientCommand,
   Contest,
   StationsResponse,
   SubscribtionMessage,
@@ -12,7 +13,10 @@ import type {
   GetAllMapsResponse,
   MapResponse,
 } from "@client/v1/admin/admin_pb";
-import { SetMapRequestSchema } from "@client/v1/admin/admin_pb";
+import {
+  ClientCommandSchema,
+  SetMapRequestSchema,
+} from "@client/v1/admin/admin_pb";
 import { create } from "@bufbuild/protobuf";
 import { EmptySchema } from "@bufbuild/protobuf/wkt";
 
@@ -58,6 +62,14 @@ export const adminClient = {
   },
   setMap: async (contestId: string, mapId: number): Promise<void> => {
     await client.setMap(create(SetMapRequestSchema, { contestId, mapId }));
+  },
+  sendCommand: async (
+    ips: string[],
+    command: ClientCommand["command"],
+  ): Promise<void> => {
+    await client.sendCommand(
+      create(ClientCommandSchema, { ips, command }),
+    );
   },
   subscribe: async function* (
     signal?: AbortSignal,

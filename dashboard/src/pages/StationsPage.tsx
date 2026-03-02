@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
+import { CommandModal } from "../components/CommandModal";
+import { StationTerminal } from "../components/StationTerminal";
 import type { Station } from "@client/v1/admin/admin_pb";
 import { useStationState } from "../context/station";
 
@@ -9,6 +11,11 @@ export function StationsPage() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [commandTargetIps, setCommandTargetIps] = useState<string[] | null>(
+    null,
+  );
+  const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set());
+  const [expandedIps, setExpandedIps] = useState<Set<string>>(new Set());
   const { getState: getStationsState, connectedCount } = useStationState();
 
   const { data: stationsData, isLoading } = useQuery({
@@ -26,6 +33,30 @@ export function StationsPage() {
 
   const ipToTeam = new Map(teams.filter((t) => t.ip).map((t) => [t.ip!, t]));
 
+  const allSelected =
+    stations.length > 0 && selectedIps.size === stations.length;
+  const someSelected = selectedIps.size > 0 && !allSelected;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIps(new Set());
+    } else {
+      setSelectedIps(new Set(stations.map((s) => s.ip)));
+    }
+  };
+
+  const toggleOne = (ip: string) => {
+    setSelectedIps((prev) => {
+      const next = new Set(prev);
+      if (next.has(ip)) {
+        next.delete(ip);
+      } else {
+        next.add(ip);
+      }
+      return next;
+    });
+  };
+
   const unassignMutation = useMutation({
     mutationFn: (teamId: string) => adminClient.setIp(teamId, undefined),
     onSuccess: () => {
@@ -33,6 +64,18 @@ export function StationsPage() {
       queryClient.invalidateQueries({ queryKey: ["stations"] });
     },
   });
+
+  const toggleTerminal = (ip: string) => {
+    setExpandedIps((prev) => {
+      const next = new Set(prev);
+      if (next.has(ip)) {
+        next.delete(ip);
+      } else {
+        next.add(ip);
+      }
+      return next;
+    });
+  };
 
   const openAssignModal = (station: Station) => {
     setSelectedStation(station);
@@ -45,6 +88,13 @@ export function StationsPage() {
         <div className="w-2 h-8 bg-linear-to-b from-emerald-400 to-emerald-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Stations</h1>
         <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => setCommandTargetIps(Array.from(selectedIps))}
+            disabled={selectedIps.size === 0}
+            className="px-3 py-1 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-600 disabled:text-gray-500 text-white text-sm rounded-full transition-colors"
+          >
+            Actions ({selectedIps.size})
+          </button>
           <span className="px-3 py-1 bg-success-500/20 text-success-500 rounded-full text-sm">
             {connectedCount} online
           </span>
@@ -62,8 +112,39 @@ export function StationsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-surface-600 bg-surface-800/50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-24">
-                  ID
+                <th className="px-6 py-4 w-12">
+                  <button
+                    onClick={toggleAll}
+                    className={`p-1.5 rounded-md transition-all border active:scale-90 ${
+                      allSelected
+                        ? "bg-primary-500/10 text-primary-500 border-primary-500/20 hover:bg-primary-500/20"
+                        : someSelected
+                          ? "bg-gray-500/10 text-gray-400 border-gray-500/20 hover:bg-gray-500/20"
+                          : "bg-gray-500/10 text-transparent border-gray-500/20 hover:bg-gray-500/20 hover:text-gray-500"
+                    }`}
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      {someSelected ? (
+                        <path
+                          strokeLinecap="round"
+                          strokeWidth={2}
+                          d="M6 12h12"
+                        />
+                      ) : (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      )}
+                    </svg>
+                  </button>
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-44">
                   IP Address
@@ -77,6 +158,9 @@ export function StationsPage() {
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-36">
                   Status
                 </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-32">
+                  Commands
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-700">
@@ -85,12 +169,33 @@ export function StationsPage() {
                 const connectionState = getStationsState(station.ip);
 
                 return (
+                  <Fragment key={station.id}>
                   <tr
-                    key={station.id}
                     className="hover:bg-surface-700/50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-gray-400 font-mono text-sm">
-                      {station.id}
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => toggleOne(station.ip)}
+                        className={`p-1.5 rounded-md transition-all border active:scale-90 ${
+                          selectedIps.has(station.ip)
+                            ? "bg-primary-500/10 text-primary-500 border-primary-500/20 hover:bg-primary-500/20"
+                            : "bg-gray-500/10 text-transparent border-gray-500/20 hover:bg-gray-500/20 hover:text-gray-500"
+                        }`}
+                      >
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </button>
                     </td>
                     <td className="px-6 py-4 font-mono text-gray-200">
                       {station.ip}
@@ -137,7 +242,7 @@ export function StationsPage() {
                           className={`w-2.5 h-2.5 rounded-full ${
                             connectionState.loggedIn
                               ? "bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
-                              : "bg-gray-500"
+                              : "bg-danger-500"
                           }`}
                         />
                         <span
@@ -163,7 +268,44 @@ export function StationsPage() {
                         </span>
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex">
+                        <button
+                          onClick={() => setCommandTargetIps([station.ip])}
+                          className="px-3 py-1.5 bg-surface-600 hover:bg-surface-500 text-gray-300 text-sm rounded-l-lg transition-colors"
+                        >
+                          Commands
+                        </button>
+                        <button
+                          onClick={() => toggleTerminal(station.ip)}
+                          disabled={!connectionState.connected}
+                          title={!connectionState.connected ? "Terminal requires the station to be online" : undefined}
+                          className={`px-1.5 py-1.5 text-sm rounded-r-lg border-l border-surface-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                            expandedIps.has(station.ip)
+                              ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                              : "bg-surface-600 hover:bg-surface-500 text-gray-400"
+                          }`}
+                        >
+                          <svg
+                            className={`w-3.5 h-3.5 transition-transform ${expandedIps.has(station.ip) ? "rotate-180" : ""}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
+                  {expandedIps.has(station.ip) && (
+                    <tr>
+                      <td colSpan={6} className="p-0">
+                        <StationTerminal ip={station.ip} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -181,6 +323,13 @@ export function StationsPage() {
             setModalOpen(false);
             setSelectedStation(null);
           }}
+        />
+      )}
+
+      {commandTargetIps && (
+        <CommandModal
+          ips={commandTargetIps}
+          onClose={() => setCommandTargetIps(null)}
         />
       )}
     </div>

@@ -310,3 +310,22 @@ impl From<HubStateEvent> for admin_pb::SubscribtionMessage {
         }
     }
 }
+
+impl From<admin_pb::client_command::Command> for StationCommand {
+    fn from(value: admin_pb::client_command::Command) -> Self {
+        match value {
+            admin_pb::client_command::Command::LoginWithCredentials(
+                login_with_credentials_comman,
+            ) => Self::LoginWithCredentials {
+                username: login_with_credentials_comman.username,
+                password: login_with_credentials_comman.password,
+            },
+            admin_pb::client_command::Command::Login(_) => Self::Login,
+            admin_pb::client_command::Command::Logout(_) => Self::Logout,
+            admin_pb::client_command::Command::Custom(custom_command) => Self::CustomCommand {
+                id: custom_command.id,
+                command: custom_command.command,
+            },
+        }
+    }
+}

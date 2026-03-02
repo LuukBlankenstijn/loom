@@ -5,8 +5,10 @@ import {
   useCallback,
   use,
   useMemo,
+  useRef,
 } from "react";
 import { adminClient } from "../lib/client";
+import { useCommandStore } from "./command";
 
 type State = {
   getState: (ip: string) => { connected: boolean; loggedIn: boolean };
@@ -17,6 +19,9 @@ const StationsContext = createContext<State | undefined>(undefined);
 
 export function StationsProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Record<string, boolean>>({});
+  const { setOutput } = useCommandStore();
+  const setOutputRef = useRef(setOutput);
+  setOutputRef.current = setOutput;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -33,6 +38,11 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
               update.message.value.status.map((s) => [s.ip, s.loggedIn]),
             );
             setState(newUpdates);
+          } else if (update.message.case === "commandOutput") {
+            setOutputRef.current(
+              update.message.value.id,
+              update.message.value.output,
+            );
           }
         }
       } catch (error) {

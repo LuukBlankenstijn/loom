@@ -141,5 +141,26 @@ pub mod subscribtion_message {
         StatusUpdate(super::StationsState),
     }
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ClientCommand {
+    #[prost(string, repeated, tag="1")]
+    pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(oneof="client_command::Command", tags="2, 3, 4, 5")]
+    pub command: ::core::option::Option<client_command::Command>,
+}
+/// Nested message and enum types in `ClientCommand`.
+pub mod client_command {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Command {
+        #[prost(message, tag="2")]
+        LoginWithCredentials(super::super::super::command::v1::LoginWithCredentialsCommand),
+        #[prost(message, tag="3")]
+        Login(super::super::super::command::v1::LoginCommand),
+        #[prost(message, tag="4")]
+        Logout(super::super::super::command::v1::LogoutCommand),
+        #[prost(message, tag="5")]
+        Custom(super::super::super::command::v1::CustomCommand),
+    }
+}
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

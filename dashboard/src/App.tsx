@@ -5,10 +5,12 @@ import { TeamsPage } from "./pages/TeamsPage";
 import { StationsPage } from "./pages/StationsPage";
 import { MapsPage } from "./pages/MapsPage";
 import { MapEditorPage } from "./pages/MapEditorPage";
+import { CommandProvider } from "./context/command";
 import { StationsProvider } from "./context/station";
 
 function App() {
   return (
+    <CommandProvider>
     <StationsProvider>
       <BrowserRouter>
         <Routes>
@@ -23,6 +25,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </StationsProvider>
+    </CommandProvider>
   );
 }
 

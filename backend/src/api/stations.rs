@@ -79,19 +79,6 @@ impl StationService for StationsHandler {
 
         let (tx, rx) = mpsc::channel(32);
 
-        // Send wallpaper source and contest URL
-        let wallpaper_url = format!("http://{host}/wallpaper");
-        self.hub
-            .send_command(StationCommand::SetWallpaperSource(wallpaper_url), &[&ip]);
-
-        if let Some(base_url) = &self.contest_api_base_url
-            && let Ok(Some(contest)) = self.contest_repo.get_next_contest().await
-        {
-            let contest_url = format!("{base_url}/api/v4/contests/{}", contest.id);
-            self.hub
-                .send_command(StationCommand::SetContestUrl(contest_url), &[&ip]);
-        }
-
         // Single task handles both directions with select!
         let hub = self.hub.clone();
         let station_repo = self.station_repo.clone();
@@ -147,8 +134,6 @@ impl StationService for StationsHandler {
             // Station disconnected — registration is dropped here (deregisters from hub)
             let _ = station_repo.update_disconnected_at(&ip_clone).await;
         });
-
-        self.hub.sync_stations(&[ip.as_str()]);
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }

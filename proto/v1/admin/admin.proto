@@ -108,6 +108,16 @@ message SubscribtionMessage {
   }
 }
 
+message ClientCommand {
+  repeated string ips = 1;
+  oneof command {
+    command.v1.LoginWithCredentialsCommand login_with_credentials = 2;
+    command.v1.LoginCommand login = 3;
+    command.v1.LogoutCommand logout = 4;
+    command.v1.CustomCommand custom = 5;
+  }
+}
+
 service AdminService {
   // Gets the current or next active contest
   rpc GetNextContest(google.protobuf.Empty) returns (Contest) {}
@@ -138,4 +148,7 @@ service AdminService {
 
   // Subscribes to the client broadcast
   rpc Subscribe(google.protobuf.Empty) returns (stream SubscribtionMessage) {}
+  // Sends a command to the backend that is either send to one or more
+  // stations or handled by the backend
+  rpc SendCommand(ClientCommand) returns (google.protobuf.Empty) {}
 }

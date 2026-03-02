@@ -20,7 +20,9 @@ impl CommandRunner {
         loop {
             let msg = match self.receiver.recv().await {
                 Ok(msg) => msg,
-                Err(broadcast::error::RecvError::Closed) => anyhow::bail!("broadcast channel closed"),
+                Err(broadcast::error::RecvError::Closed) => {
+                    anyhow::bail!("broadcast channel closed")
+                }
                 Err(_) => continue,
             };
 
@@ -46,7 +48,7 @@ async fn run_with_timeout(command: &str) -> String {
 }
 
 async fn execute_system_command(command_str: &str) -> String {
-    let result = Command::new("sh")
+    let result = Command::new("/bin/sh")
         .arg("-c")
         .arg(command_str)
         .output()

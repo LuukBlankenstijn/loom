@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use loom_rpc::admin::v1 as pb;
 use loom_rpc::admin::v1::admin_service_server::AdminService;
+use loom_rpc::admin::v1::{self as pb, ClientCommand};
 use loom_rpc::map::v1 as map_pb;
 use tokio::sync::{broadcast, mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
-use tracing::info;
 use uuid::Uuid;
 
 use crate::{convert::CommandOutput, domain::*, hub::StationsHub};
@@ -45,8 +44,6 @@ impl AdminHandler {
 
 #[tonic::async_trait]
 impl AdminService for AdminHandler {
-    type SubscribeStream = ReceiverStream<Result<pb::SubscribtionMessage, Status>>;
-
     async fn get_next_contest(
         &self,
         _request: Request<()>,
@@ -254,6 +251,8 @@ impl AdminService for AdminHandler {
         Ok(Response::new(()))
     }
 
+    type SubscribeStream = ReceiverStream<Result<pb::SubscribtionMessage, Status>>;
+
     async fn subscribe(&self, _: Request<()>) -> Result<Response<Self::SubscribeStream>, Status> {
         let (tx, rx) = mpsc::channel(32);
         let mut hub_channel = self.hub.subscribe_state();
@@ -294,8 +293,16 @@ impl AdminService for AdminHandler {
                 }
             }
         });
-
         Ok(Response::new(ReceiverStream::new(rx)))
+    }
+
+    async fn send_command(&self, request: Request<ClientCommand>) -> Result<Response<()>, Status> {
+        let req = request.into_inner();
+        if let Some(command) = req.command {
+            let ips: Vec<&str> = req.ips.iter().map(|s| s.as_str()).collect();
+            self.hub.send_command(command.into(), &ips);
+        }
+        Ok(Response::new(()))
     }
 }
 
