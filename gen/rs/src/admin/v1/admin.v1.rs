@@ -114,5 +114,32 @@ pub struct UpdateMapRequest {
     #[prost(message, repeated, tag="4")]
     pub updated: ::prost::alloc::vec::Vec<super::super::map::v1::Element>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StationStatus {
+    #[prost(string, tag="1")]
+    pub ip: ::prost::alloc::string::String,
+    #[prost(bool, tag="2")]
+    pub logged_in: bool,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StationsState {
+    #[prost(message, repeated, tag="1")]
+    pub status: ::prost::alloc::vec::Vec<StationStatus>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscribtionMessage {
+    #[prost(oneof="subscribtion_message::Message", tags="1, 2")]
+    pub message: ::core::option::Option<subscribtion_message::Message>,
+}
+/// Nested message and enum types in `SubscribtionMessage`.
+pub mod subscribtion_message {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Message {
+        #[prost(message, tag="1")]
+        CommandOutput(super::super::super::command::v1::CustomCommandOutput),
+        #[prost(message, tag="2")]
+        StatusUpdate(super::StationsState),
+    }
+}
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

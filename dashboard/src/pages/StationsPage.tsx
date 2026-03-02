@@ -3,12 +3,13 @@ import { useState } from "react";
 import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
 import type { Station } from "@client/v1/admin/admin_pb";
-import { timestampDate } from "@bufbuild/protobuf/wkt";
+import { useStationState } from "../context/station";
 
 export function StationsPage() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const { getState: getStationsState, connectedCount } = useStationState();
 
   const { data: stationsData, isLoading } = useQuery({
     queryKey: ["stations"],
@@ -33,20 +34,10 @@ export function StationsPage() {
     },
   });
 
-  const isConnected = (station: Station) => {
-    if (!station.diconnectedAt) return true;
-    if (!station.connectedAt) return false;
-    return (
-      timestampDate(station.connectedAt) > timestampDate(station.diconnectedAt)
-    );
-  };
-
   const openAssignModal = (station: Station) => {
     setSelectedStation(station);
     setModalOpen(true);
   };
-
-  const connectedCount = stations.filter(isConnected).length;
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
@@ -81,6 +72,9 @@ export function StationsPage() {
                   Team
                 </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-36">
+                  Logged In
+                </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-36">
                   Status
                 </th>
               </tr>
@@ -88,7 +82,7 @@ export function StationsPage() {
             <tbody className="divide-y divide-surface-700">
               {stations.map((station) => {
                 const team = ipToTeam.get(station.ip);
-                const connected = isConnected(station);
+                const connectionState = getStationsState(station.ip);
 
                 return (
                   <tr
@@ -141,15 +135,31 @@ export function StationsPage() {
                       <div className="flex items-center gap-2">
                         <span
                           className={`w-2.5 h-2.5 rounded-full ${
-                            connected
+                            connectionState.loggedIn
+                              ? "bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                              : "bg-gray-500"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm ${connectionState.loggedIn ? "text-success-500" : "text-gray-500"}`}
+                        >
+                          {connectionState.loggedIn ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            connectionState.connected
                               ? "bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                               : "bg-danger-500"
                           }`}
                         />
                         <span
-                          className={`text-sm ${connected ? "text-success-500" : "text-gray-500"}`}
+                          className={`text-sm ${connectionState.connected ? "text-success-500" : "text-gray-500"}`}
                         >
-                          {connected ? "Online" : "Offline"}
+                          {connectionState.connected ? "Online" : "Offline"}
                         </span>
                       </div>
                     </td>

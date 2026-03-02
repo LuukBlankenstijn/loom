@@ -4,6 +4,7 @@ import { adminClient } from "../lib/client";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import type { Station } from "@client/v1/admin/admin_pb";
+import { useStationState } from "../context/station";
 
 export function ContestPage() {
   const queryClient = useQueryClient();
@@ -11,6 +12,7 @@ export function ContestPage() {
   const [selectedMapId, setSelectedMapId] = useState<number | null>(null);
   const [textColor, setTextColor] = useState<string>("#ffffff");
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const { getState: getConnectedState } = useStationState();
 
   const { data: contest, isLoading } = useQuery({
     queryKey: ["contest"],
@@ -91,13 +93,8 @@ export function ContestPage() {
     }).format(date);
   };
 
-  const isStationConnected = (station: Station) => {
-    if (!station.diconnectedAt) return true;
-    if (!station.connectedAt) return false;
-    return (
-      timestampDate(station.connectedAt) > timestampDate(station.diconnectedAt)
-    );
-  };
+  const isStationConnected = (station: Station) =>
+    getConnectedState(station.ip).connected;
 
   const teams = teamsData?.teams ?? [];
   const stations = stationsData?.stations ?? [];

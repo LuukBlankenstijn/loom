@@ -7,7 +7,7 @@ use prost_types::Timestamp;
 use uuid::Uuid;
 
 use crate::domain;
-use crate::hub::StationCommand;
+use crate::hub::{HubStateEvent, StationCommand};
 
 // ── Timestamp helpers ──────────────────────────────────────────────
 
@@ -249,11 +249,17 @@ impl From<StationCommand> for stations_pb::ServerMessage {
 
 // ── proto ClientMessage → action enum for the station handler ──────
 
+#[derive(Clone, Debug)]
+pub struct CommandOutput {
+    id: String,
+    output: String,
+}
+
 /// What a station client is telling us.
 pub enum ClientAction {
     LoggedIn,
     LoggedOut,
-    CommandOutput { id: String, output: String },
+    Command(CommandOutput),
 }
 
 impl TryFrom<stations_pb::ClientMessage> for ClientAction {
@@ -264,11 +270,43 @@ impl TryFrom<stations_pb::ClientMessage> for ClientAction {
         match msg.message {
             Some(Message::LoggedIn(_)) => Ok(Self::LoggedIn),
             Some(Message::LoggedOut(_)) => Ok(Self::LoggedOut),
-            Some(Message::CommandOutput(o)) => Ok(Self::CommandOutput {
+            Some(Message::CommandOutput(o)) => Ok(Self::Command(CommandOutput {
                 id: o.id,
                 output: o.output,
-            }),
+            })),
             None => Err(tonic::Status::invalid_argument("empty client message")),
+        }
+    }
+}
+
+impl From<CommandOutput> for admin_pb::SubscribtionMessage {
+    fn from(value: CommandOutput) -> Self {
+        Self {
+            message: Some(admin_pb::subscribtion_message::Message::CommandOutput(
+                command_pb::CustomCommandOutput {
+                    id: value.id,
+                    output: value.output,
+                },
+            )),
+        }
+    }
+}
+
+impl From<HubStateEvent> for admin_pb::SubscribtionMessage {
+    fn from(value: HubStateEvent) -> Self {
+        Self {
+            message: Some(admin_pb::subscribtion_message::Message::StatusUpdate(
+                admin_pb::StationsState {
+                    status: value
+                        .0
+                        .iter()
+                        .map(|s| admin_pb::StationStatus {
+                            ip: s.ip.clone(),
+                            logged_in: s.logged_in,
+                        })
+                        .collect(),
+                },
+            )),
         }
     }
 }

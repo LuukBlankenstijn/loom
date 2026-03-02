@@ -5,6 +5,7 @@ package admin.v1;
 import "buf/validate/validate.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "v1/command/command.proto";
 import "v1/map/map.proto";
 
 message Contest {
@@ -91,6 +92,22 @@ message UpdateMapRequest {
   repeated map.v1.Element updated = 4;
 }
 
+message StationStatus {
+  string ip = 1;
+  bool logged_in = 2;
+}
+
+message StationsState {
+  repeated StationStatus status = 1;
+}
+
+message SubscribtionMessage {
+  oneof message {
+    command.v1.CustomCommandOutput command_output = 1;
+    StationsState status_update = 2;
+  }
+}
+
 service AdminService {
   // Gets the current or next active contest
   rpc GetNextContest(google.protobuf.Empty) returns (Contest) {}
@@ -118,4 +135,7 @@ service AdminService {
   rpc GetMap(GetMapRequest) returns (MapResponse) {}
   // Updates a map
   rpc UpdateMap(UpdateMapRequest) returns (google.protobuf.Empty) {}
+
+  // Subscribes to the client broadcast
+  rpc Subscribe(google.protobuf.Empty) returns (stream SubscribtionMessage) {}
 }

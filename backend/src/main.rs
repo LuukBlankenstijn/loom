@@ -14,12 +14,15 @@ use axum::{Router, middleware};
 use loom_rpc::admin::v1::admin_service_server::AdminServiceServer;
 use loom_rpc::stations::v1::station_service_server::StationServiceServer;
 use sqlx::postgres::PgPoolOptions;
+use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
 
 use config::Config;
 use hub::StationsHub;
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, prelude::*};
+
+use crate::convert::CommandOutput;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -67,6 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let hub = StationsHub::new();
 
+    let (client_broadcast, _) = broadcast::channel::<CommandOutput>(32);
+
     // gRPC services
     let admin = api::admin::AdminHandler::new(
         contest_repo.clone(),
@@ -75,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         wallpaper_repo.clone(),
         map_repo.clone(),
         hub.clone(),
+        client_broadcast.clone(),
     );
 
     let stations = api::stations::StationsHandler::new(
@@ -82,6 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         contest_repo.clone(),
         station_repo.clone(),
         config.icpc_api.as_ref().map(|c| c.base_url.clone()),
+        client_broadcast.clone(),
     );
 
     // Wallpaper HTTP handler state

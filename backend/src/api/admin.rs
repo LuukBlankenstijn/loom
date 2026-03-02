@@ -3,10 +3,13 @@ use std::sync::Arc;
 use loom_rpc::admin::v1 as pb;
 use loom_rpc::admin::v1::admin_service_server::AdminService;
 use loom_rpc::map::v1 as map_pb;
+use tokio::sync::{broadcast, mpsc};
+use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
+use tracing::info;
 use uuid::Uuid;
 
-use crate::{domain::*, hub::StationsHub};
+use crate::{convert::CommandOutput, domain::*, hub::StationsHub};
 
 pub struct AdminHandler {
     contest_repo: Arc<dyn ContestRepository>,
@@ -15,6 +18,7 @@ pub struct AdminHandler {
     wallpaper_repo: Arc<dyn WallpaperRepository>,
     map_repo: Arc<dyn MapRepository>,
     hub: Arc<StationsHub>,
+    client_broadcast: broadcast::Sender<CommandOutput>,
 }
 
 impl AdminHandler {
@@ -25,6 +29,7 @@ impl AdminHandler {
         wallpaper_repo: Arc<dyn WallpaperRepository>,
         map_repo: Arc<dyn MapRepository>,
         hub: Arc<StationsHub>,
+        client_broadcast: broadcast::Sender<CommandOutput>,
     ) -> Self {
         Self {
             contest_repo,
@@ -33,12 +38,15 @@ impl AdminHandler {
             wallpaper_repo,
             map_repo,
             hub,
+            client_broadcast,
         }
     }
 }
 
 #[tonic::async_trait]
 impl AdminService for AdminHandler {
+    type SubscribeStream = ReceiverStream<Result<pb::SubscribtionMessage, Status>>;
+
     async fn get_next_contest(
         &self,
         _request: Request<()>,
@@ -244,6 +252,50 @@ impl AdminService for AdminHandler {
         }
 
         Ok(Response::new(()))
+    }
+
+    async fn subscribe(&self, _: Request<()>) -> Result<Response<Self::SubscribeStream>, Status> {
+        let (tx, rx) = mpsc::channel(32);
+        let mut hub_channel = self.hub.subscribe_state();
+        let mut broadcast_receiver = self.client_broadcast.subscribe();
+
+        // send initial state
+        if tx
+            .send(Ok(self.hub.connected_stations().into()))
+            .await
+            .is_err()
+        {
+            return Err(Status::internal("failed to send state"));
+        };
+
+        tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    msg = hub_channel.recv() => {
+                        match msg {
+                            Ok(stations) => {
+                                if tx.send(Ok(stations.into())).await.is_err() {
+                                    break;
+                                };
+                            }
+                            _ => break,
+                        }
+                    }
+                    msg = broadcast_receiver.recv() => {
+                        match msg {
+                            Ok(msg) => {
+                                if tx.send(Ok(msg.into())).await.is_err() {
+                                    break;
+                                }
+                            }
+                            _ => break,
+                        }
+                    }
+                }
+            }
+        });
+
+        Ok(Response::new(ReceiverStream::new(rx)))
     }
 }
 

@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use loom_rpc::stations::v1 as pb;
 use loom_rpc::stations::v1::station_service_server::StationService;
-use tokio::sync::mpsc;
+use tokio::sync::{broadcast, mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status, Streaming};
 
 use crate::api::middleware::RequestExt;
-use crate::convert::ClientAction;
+use crate::convert::{ClientAction, CommandOutput};
 use crate::domain::{ContestRepository, StationRepository};
 use crate::hub::{StationCommand, StationHandlerCommand, StationsHub};
 
@@ -17,6 +17,7 @@ pub struct StationsHandler {
     contest_repo: Arc<dyn ContestRepository>,
     station_repo: Arc<dyn StationRepository>,
     contest_api_base_url: Option<String>,
+    client_broadcast: broadcast::Sender<CommandOutput>,
 }
 impl StationsHandler {
     pub fn new(
@@ -24,12 +25,14 @@ impl StationsHandler {
         contest_repo: Arc<dyn ContestRepository>,
         station_repo: Arc<dyn StationRepository>,
         contest_api_base_url: Option<String>,
+        client_broadcast: broadcast::Sender<CommandOutput>,
     ) -> Self {
         Self {
             hub,
             contest_repo,
             station_repo,
             contest_api_base_url,
+            client_broadcast,
         }
     }
 }
@@ -94,6 +97,7 @@ impl StationService for StationsHandler {
         let station_repo = self.station_repo.clone();
         let ip_clone = ip.clone();
         let host_clone = host.clone();
+        let broadcast_sender = self.client_broadcast.clone();
         let handler = self.clone();
 
         tokio::spawn(async move {
@@ -127,8 +131,9 @@ impl StationService for StationsHandler {
                                             hub.set_login_status(&ip_clone, false);
                                             hub.sync_stations(&[ip_clone.as_str()]);
                                         }
-                                        ClientAction::CommandOutput { .. } => {
-                                            // TODO: forward command output to admin
+                                        ClientAction::Command(output) => {
+                                            let _ = broadcast_sender.send(output);
+
                                         }
                                     }
                                 }

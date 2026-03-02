@@ -58,9 +58,9 @@ impl DbusClient {
 
                     if matches!(msg, Message::RequestLoginStatus) {
                         let message = if self.service_up().await {
-                            Message::LoggedIn
-                        } else {
                             Message::LoggedOut
+                        } else {
+                            Message::LoggedIn
                         };
                         let _ = self.sender.send(message);
                         continue;

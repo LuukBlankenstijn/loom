@@ -1,9 +1,10 @@
-import { createClient } from "@connectrpc/connect";
+import { Code, ConnectError, createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { AdminService } from "@client/v1/admin/admin_pb";
 import type {
   Contest,
   StationsResponse,
+  SubscribtionMessage,
   TeamsResponse,
   WallpaperResponse,
 } from "@client/v1/admin/admin_pb";
@@ -57,5 +58,33 @@ export const adminClient = {
   },
   setMap: async (contestId: string, mapId: number): Promise<void> => {
     await client.setMap(create(SetMapRequestSchema, { contestId, mapId }));
+  },
+  subscribe: async function* (
+    signal?: AbortSignal,
+  ): AsyncIterable<SubscribtionMessage> {
+    const stream = client.subscribe(create(EmptySchema), { signal });
+
+    try {
+      for await (const response of stream) {
+        yield response;
+      }
+    } catch (err: unknown) {
+      const isGrpcCanceled =
+        err instanceof ConnectError && err.code === Code.Canceled;
+      const isBrowserAbort = err instanceof Error && err.name === "AbortError";
+      const isStreamAbort =
+        err instanceof Error && err.message.includes("input stream");
+
+      if (
+        isGrpcCanceled ||
+        isBrowserAbort ||
+        isStreamAbort ||
+        signal?.aborted
+      ) {
+        return;
+      }
+
+      throw err;
+    }
   },
 };

@@ -7,6 +7,8 @@ import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { CustomCommandOutput } from "../command/command_pb";
+import { file_v1_command_command } from "../command/command_pb";
 import type { Element, Map } from "../map/map_pb";
 import { file_v1_map_map } from "../map/map_pb";
 import type { Message } from "@bufbuild/protobuf";
@@ -15,7 +17,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/admin.proto.
  */
 export const file_v1_admin_admin: GenFile = /*@__PURE__*/
-  fileDesc("ChR2MS9hZG1pbi9hZG1pbi5wcm90bxIIYWRtaW4udjEitgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAESEwoGbWFwX2lkGAUgASgFSACIAQFCCQoHX21hcF9pZCJBCgRUZWFtEgoKAmlkGAEgASgJEhgKAmlwGAIgASgJQge6SARyAnABSACIAQESDAoEbmFtZRgDIAEoCUIFCgNfaXAisAEKB1N0YXRpb24SCgoCaWQYASABKAUSEwoCaXAYAiABKAlCB7pIBHICcAESOAoMY29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjcKDmRpY29ubmVjdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAiAEBQhEKD19kaWNvbm5lY3RlZF9hdCIuCg1UZWFtc1Jlc3BvbnNlEh0KBXRlYW1zGAEgAygLMg4uYWRtaW4udjEuVGVhbSI3ChBTdGF0aW9uc1Jlc3BvbnNlEiMKCHN0YXRpb25zGAEgAygLMhEuYWRtaW4udjEuU3RhdGlvbiI3CgxTZXRJcFJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgJpcBgCIAEoCUgAiAEBQgUKA19pcCJUChZVcGxvYWRXYWxscGFwZXJSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIm0KHFNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QSEgoKY29udGVzdF9pZBgBIAEoCRI5CgVjb2xvchgCIAEoCUIqukgnciUyI14jPyhbQS1GYS1mMC05XXszfXxbQS1GYS1mMC05XXs2fSkkIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIoUBChFXYWxscGFwZXJSZXNwb25zZRIXCgppbWFnZV9kYXRhGAEgASgMSACIAQESPgoFY29sb3IYAiABKAlCKrpIJ3IlMiNeIz8oW0EtRmEtZjAtOV17M318W0EtRmEtZjAtOV17Nn0pJEgBiAEBQg0KC19pbWFnZV9kYXRhQggKBl9jb2xvciIzCg1TZXRNYXBSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSDgoGbWFwX2lkGAIgASgFIhsKDUdldE1hcFJlcXVlc3QSCgoCaWQYASABKAUiIAoQQ3JlYXRlTWFwUmVxdWVzdBIMCgRuYW1lGAEgASgJIkoKC01hcFJlc3BvbnNlEhgKA21hcBgBIAEoCzILLm1hcC52MS5NYXASIQoIZWxlbWVudHMYAiADKAsyDy5tYXAudjEuRWxlbWVudCIvChJHZXRBbGxNYXBzUmVzcG9uc2USGQoEbWFwcxgBIAMoCzILLm1hcC52MS5NYXAiYAoQVXBkYXRlTWFwUmVxdWVzdBIKCgJpZBgBIAEoBRIeCgdkZWxldGVkGAMgAygJQg26SAqSAQciBXIDsAEBEiAKB3VwZGF0ZWQYBCADKAsyDy5tYXAudjEuRWxlbWVudDLLBgoMQWRtaW5TZXJ2aWNlEj0KDkdldE5leHRDb250ZXN0EhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhEuYWRtaW4udjEuQ29udGVzdCIAEkMKDkdldEFjdGl2ZVRlYW1zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhcuYWRtaW4udjEuVGVhbXNSZXNwb25zZSIAEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEjkKBVNldElwEhYuYWRtaW4udjEuU2V0SXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASSgoMU2V0V2FsbHBhcGVyEiAuYWRtaW4udjEuVXBsb2FkV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAElkKFVNldFdhbGxwYXBlclRleHRDb2xvchImLmFkbWluLnYxLlNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJMCgxHZXRXYWxscGFwZXISHS5hZG1pbi52MS5HZXRXYWxscGFwZXJSZXF1ZXN0GhsuYWRtaW4udjEuV2FsbHBhcGVyUmVzcG9uc2UiABJECgpHZXRBbGxNYXBzEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhwuYWRtaW4udjEuR2V0QWxsTWFwc1Jlc3BvbnNlIgASOwoGU2V0TWFwEhcuYWRtaW4udjEuU2V0TWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkAKCUNyZWF0ZU1hcBIaLmFkbWluLnYxLkNyZWF0ZU1hcFJlcXVlc3QaFS5hZG1pbi52MS5NYXBSZXNwb25zZSIAEjoKBkdldE1hcBIXLmFkbWluLnYxLkdldE1hcFJlcXVlc3QaFS5hZG1pbi52MS5NYXBSZXNwb25zZSIAEkEKCVVwZGF0ZU1hcBIaLmFkbWluLnYxLlVwZGF0ZU1hcFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiAEKVAQoMY29tLmFkbWluLnYxQgpBZG1pblByb3RvUAFaOGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9hZG1pbjthZG1pbnYxogIDQVhYqgIIQWRtaW4uVjHKAghBZG1pblxWMeICFEFkbWluXFYxXEdQQk1ldGFkYXRh6gIJQWRtaW46OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp, file_v1_map_map]);
+  fileDesc("ChR2MS9hZG1pbi9hZG1pbi5wcm90bxIIYWRtaW4udjEitgEKB0NvbnRlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRI2CgpzdGFydF90aW1lGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjkKCGVuZF90aW1lGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEILukgIyAEBsgECQAESEwoGbWFwX2lkGAUgASgFSACIAQFCCQoHX21hcF9pZCJBCgRUZWFtEgoKAmlkGAEgASgJEhgKAmlwGAIgASgJQge6SARyAnABSACIAQESDAoEbmFtZRgDIAEoCUIFCgNfaXAisAEKB1N0YXRpb24SCgoCaWQYASABKAUSEwoCaXAYAiABKAlCB7pIBHICcAESOAoMY29ubmVjdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIGukgDyAEBEjcKDmRpY29ubmVjdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAiAEBQhEKD19kaWNvbm5lY3RlZF9hdCIuCg1UZWFtc1Jlc3BvbnNlEh0KBXRlYW1zGAEgAygLMg4uYWRtaW4udjEuVGVhbSI3ChBTdGF0aW9uc1Jlc3BvbnNlEiMKCHN0YXRpb25zGAEgAygLMhEuYWRtaW4udjEuU3RhdGlvbiI3CgxTZXRJcFJlcXVlc3QSDwoHdGVhbV9pZBgBIAEoCRIPCgJpcBgCIAEoCUgAiAEBQgUKA19pcCJUChZVcGxvYWRXYWxscGFwZXJSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSFwoKaW1hZ2VfZGF0YRgCIAEoDEgAiAEBQg0KC19pbWFnZV9kYXRhIm0KHFNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QSEgoKY29udGVzdF9pZBgBIAEoCRI5CgVjb2xvchgCIAEoCUIqukgnciUyI14jPyhbQS1GYS1mMC05XXszfXxbQS1GYS1mMC05XXs2fSkkIj0KE0dldFdhbGxwYXBlclJlcXVlc3QSFwoKY29udGVzdF9pZBgBIAEoCUgAiAEBQg0KC19jb250ZXN0X2lkIoUBChFXYWxscGFwZXJSZXNwb25zZRIXCgppbWFnZV9kYXRhGAEgASgMSACIAQESPgoFY29sb3IYAiABKAlCKrpIJ3IlMiNeIz8oW0EtRmEtZjAtOV17M318W0EtRmEtZjAtOV17Nn0pJEgBiAEBQg0KC19pbWFnZV9kYXRhQggKBl9jb2xvciIzCg1TZXRNYXBSZXF1ZXN0EhIKCmNvbnRlc3RfaWQYASABKAkSDgoGbWFwX2lkGAIgASgFIhsKDUdldE1hcFJlcXVlc3QSCgoCaWQYASABKAUiIAoQQ3JlYXRlTWFwUmVxdWVzdBIMCgRuYW1lGAEgASgJIkoKC01hcFJlc3BvbnNlEhgKA21hcBgBIAEoCzILLm1hcC52MS5NYXASIQoIZWxlbWVudHMYAiADKAsyDy5tYXAudjEuRWxlbWVudCIvChJHZXRBbGxNYXBzUmVzcG9uc2USGQoEbWFwcxgBIAMoCzILLm1hcC52MS5NYXAiYAoQVXBkYXRlTWFwUmVxdWVzdBIKCgJpZBgBIAEoBRIeCgdkZWxldGVkGAMgAygJQg26SAqSAQciBXIDsAEBEiAKB3VwZGF0ZWQYBCADKAsyDy5tYXAudjEuRWxlbWVudCIuCg1TdGF0aW9uU3RhdHVzEgoKAmlwGAEgASgJEhEKCWxvZ2dlZF9pbhgCIAEoCCI4Cg1TdGF0aW9uc1N0YXRlEicKBnN0YXR1cxgBIAMoCzIXLmFkbWluLnYxLlN0YXRpb25TdGF0dXMijQEKE1N1YnNjcmlidGlvbk1lc3NhZ2USOQoOY29tbWFuZF9vdXRwdXQYASABKAsyHy5jb21tYW5kLnYxLkN1c3RvbUNvbW1hbmRPdXRwdXRIABIwCg1zdGF0dXNfdXBkYXRlGAIgASgLMhcuYWRtaW4udjEuU3RhdGlvbnNTdGF0ZUgAQgkKB21lc3NhZ2UykwcKDEFkbWluU2VydmljZRI9Cg5HZXROZXh0Q29udGVzdBIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoRLmFkbWluLnYxLkNvbnRlc3QiABJDCg5HZXRBY3RpdmVUZWFtcxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoXLmFkbWluLnYxLlRlYW1zUmVzcG9uc2UiABJDCgtHZXRTdGF0aW9ucxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoaLmFkbWluLnYxLlN0YXRpb25zUmVzcG9uc2UiABI5CgVTZXRJcBIWLmFkbWluLnYxLlNldElwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkoKDFNldFdhbGxwYXBlchIgLmFkbWluLnYxLlVwbG9hZFdhbGxwYXBlclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJZChVTZXRXYWxscGFwZXJUZXh0Q29sb3ISJi5hZG1pbi52MS5TZXRXYWxscGFwZXJUZXh0Q29sb3JSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASTAoMR2V0V2FsbHBhcGVyEh0uYWRtaW4udjEuR2V0V2FsbHBhcGVyUmVxdWVzdBobLmFkbWluLnYxLldhbGxwYXBlclJlc3BvbnNlIgASRAoKR2V0QWxsTWFwcxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRocLmFkbWluLnYxLkdldEFsbE1hcHNSZXNwb25zZSIAEjsKBlNldE1hcBIXLmFkbWluLnYxLlNldE1hcFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJACglDcmVhdGVNYXASGi5hZG1pbi52MS5DcmVhdGVNYXBSZXF1ZXN0GhUuYWRtaW4udjEuTWFwUmVzcG9uc2UiABI6CgZHZXRNYXASFy5hZG1pbi52MS5HZXRNYXBSZXF1ZXN0GhUuYWRtaW4udjEuTWFwUmVzcG9uc2UiABJBCglVcGRhdGVNYXASGi5hZG1pbi52MS5VcGRhdGVNYXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASRgoJU3Vic2NyaWJlEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5Gh0uYWRtaW4udjEuU3Vic2NyaWJ0aW9uTWVzc2FnZSIAMAFClQEKDGNvbS5hZG1pbi52MUIKQWRtaW5Qcm90b1ABWjhnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vdjEvYWRtaW47YWRtaW52MaICA0FYWKoCCEFkbWluLlYxygIIQWRtaW5cVjHiAhRBZG1pblxWMVxHUEJNZXRhZGF0YeoCCUFkbWluOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp, file_v1_command_command, file_v1_map_map]);
 
 /**
  * @generated from message admin.v1.Contest
@@ -375,6 +377,74 @@ export const UpdateMapRequestSchema: GenMessage<UpdateMapRequest> = /*@__PURE__*
   messageDesc(file_v1_admin_admin, 15);
 
 /**
+ * @generated from message admin.v1.StationStatus
+ */
+export type StationStatus = Message<"admin.v1.StationStatus"> & {
+  /**
+   * @generated from field: string ip = 1;
+   */
+  ip: string;
+
+  /**
+   * @generated from field: bool logged_in = 2;
+   */
+  loggedIn: boolean;
+};
+
+/**
+ * Describes the message admin.v1.StationStatus.
+ * Use `create(StationStatusSchema)` to create a new message.
+ */
+export const StationStatusSchema: GenMessage<StationStatus> = /*@__PURE__*/
+  messageDesc(file_v1_admin_admin, 16);
+
+/**
+ * @generated from message admin.v1.StationsState
+ */
+export type StationsState = Message<"admin.v1.StationsState"> & {
+  /**
+   * @generated from field: repeated admin.v1.StationStatus status = 1;
+   */
+  status: StationStatus[];
+};
+
+/**
+ * Describes the message admin.v1.StationsState.
+ * Use `create(StationsStateSchema)` to create a new message.
+ */
+export const StationsStateSchema: GenMessage<StationsState> = /*@__PURE__*/
+  messageDesc(file_v1_admin_admin, 17);
+
+/**
+ * @generated from message admin.v1.SubscribtionMessage
+ */
+export type SubscribtionMessage = Message<"admin.v1.SubscribtionMessage"> & {
+  /**
+   * @generated from oneof admin.v1.SubscribtionMessage.message
+   */
+  message: {
+    /**
+     * @generated from field: command.v1.CustomCommandOutput command_output = 1;
+     */
+    value: CustomCommandOutput;
+    case: "commandOutput";
+  } | {
+    /**
+     * @generated from field: admin.v1.StationsState status_update = 2;
+     */
+    value: StationsState;
+    case: "statusUpdate";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message admin.v1.SubscribtionMessage.
+ * Use `create(SubscribtionMessageSchema)` to create a new message.
+ */
+export const SubscribtionMessageSchema: GenMessage<SubscribtionMessage> = /*@__PURE__*/
+  messageDesc(file_v1_admin_admin, 18);
+
+/**
  * @generated from service admin.v1.AdminService
  */
 export const AdminService: GenService<{
@@ -497,6 +567,14 @@ export const AdminService: GenService<{
     methodKind: "unary";
     input: typeof UpdateMapRequestSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc admin.v1.AdminService.Subscribe
+   */
+  subscribe: {
+    methodKind: "server_streaming";
+    input: typeof EmptySchema;
+    output: typeof SubscribtionMessageSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_v1_admin_admin, 0);

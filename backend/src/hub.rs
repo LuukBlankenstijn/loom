@@ -39,7 +39,8 @@ pub struct ConnectedStation {
 }
 
 /// Every broadcast is a full snapshot of all connected stations.
-pub type HubStateEvent = Vec<ConnectedStation>;
+#[derive(Clone)]
+pub struct HubStateEvent(pub Vec<ConnectedStation>);
 
 struct StationEntry {
     state: ConnectedStation,
@@ -75,7 +76,7 @@ fn broadcast_snapshot(
     tx: &broadcast::Sender<HubStateEvent>,
 ) {
     let snapshot: Vec<ConnectedStation> = stations.values().map(|e| e.state.clone()).collect();
-    let _ = tx.send(snapshot);
+    let _ = tx.send(HubStateEvent(snapshot));
 }
 
 impl StationsHub {
@@ -93,13 +94,15 @@ impl StationsHub {
     }
 
     /// Snapshot of all currently connected stations.
-    pub fn connected_stations(&self) -> Vec<ConnectedStation> {
-        self.stations
-            .read()
-            .unwrap()
-            .values()
-            .map(|e| e.state.clone())
-            .collect()
+    pub fn connected_stations(&self) -> HubStateEvent {
+        HubStateEvent(
+            self.stations
+                .read()
+                .unwrap()
+                .values()
+                .map(|e| e.state.clone())
+                .collect(),
+        )
     }
 
     /// Register a station. Returns a registration handle with a command receiver.
