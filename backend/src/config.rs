@@ -8,6 +8,7 @@ pub struct Config {
     pub listen: SocketAddr,
     pub database: DatabaseConfig,
     pub icpc_api: Option<IcpcApiConfig>,
+    pub auth_token: Option<String>,
 }
 
 #[derive(Clone)]
@@ -35,7 +36,7 @@ struct TomlConfig {
     listen: Option<SocketAddr>,
     database: TomlDatabase,
     contest_api: Option<TomlIcpcApi>,
-    enable_reflector: bool,
+    auth_token: Option<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -95,6 +96,7 @@ impl Config {
                 username: a.username,
                 password: a.password,
             }),
+            auth_token: toml.auth_token,
         })
     }
 
@@ -121,6 +123,7 @@ impl Config {
                 sslmode: env::var("DB_SSLMODE").unwrap_or_else(|_| "disable".into()),
             },
             icpc_api,
+            auth_token: env::var("AUTH_TOKEN").ok(),
         }
     }
 

@@ -22,6 +22,10 @@ struct Args {
     /// Server to connect to
     #[arg(short, long)]
     server: String,
+
+    /// Secret to use to authenticate with the backend
+    #[arg(short, long)]
+    auth: Option<String>,
 }
 
 #[tokio::main]
@@ -38,7 +42,7 @@ async fn main() -> Result<()> {
         }
     });
 
-    let rpc_client = RpcClient::new(args.server, tx.clone());
+    let rpc_client = RpcClient::new(args.server, args.auth, tx.clone());
     tokio::spawn(async move {
         if let Err(e) = rpc_client.run().await {
             error!("Rpc client error: {}", e);

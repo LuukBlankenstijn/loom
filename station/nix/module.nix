@@ -31,6 +31,12 @@ in
       type = types.str;
       description = "The server to connect to.";
     };
+
+    authTokenCommand = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "The command to the the authentication token for the service.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -39,7 +45,13 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       serviceConfig = {
-        ExecStart = "${stationPackage}/bin/loomd --server ${cfg.server}";
+        ExecStart =
+          let
+            authFlag = lib.optionalString (cfg.authTokenCommand != null) "--auth $(${cfg.authTokenCommand})";
+          in
+          pkgs.writeShellScript "start-loomd" ''
+            exec ${stationPackage}/bin/loomd --server ${cfg.server} ${authFlag}
+          '';
         Restart = "on-failure";
         RestartSec = "5s";
         User = "root";

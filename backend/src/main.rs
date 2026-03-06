@@ -22,6 +22,7 @@ use hub::StationsHub;
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, prelude::*};
 
+use crate::api::middleware::check_auth;
 use crate::convert::CommandOutput;
 
 #[tokio::main]
@@ -98,13 +99,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         wallpaper_repo,
     ));
 
-    let grpc_router = tonic::service::Routes::new(StationServiceServer::new(stations))
-        .add_service(AdminServiceServer::new(admin))
-        .into_axum_router()
-        .layer(tonic_web::GrpcWebLayer::new())
-        .layer(middleware::from_fn(
-            api::middleware::client_meta_interceptor,
-        ));
+    let grpc_router = tonic::service::Routes::new(StationServiceServer::with_interceptor(
+        stations,
+        move |req| check_auth(req, config.auth_token.clone()),
+    ))
+    .add_service(AdminServiceServer::new(admin))
+    .into_axum_router()
+    .layer(tonic_web::GrpcWebLayer::new())
+    .layer(middleware::from_fn(
+        api::middleware::client_meta_interceptor,
+    ));
 
     // Merge gRPC with axum HTTP routes
     let app = Router::new()

@@ -10,7 +10,7 @@ use loom_rpc::{
 };
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
-use tonic::Streaming;
+use tonic::{Streaming, metadata::MetadataValue};
 use tracing::{error, info, warn};
 
 use crate::messages::Message;
@@ -61,15 +61,21 @@ impl TryFrom<ServerMessage> for Message {
 
 pub struct RpcClient {
     address: String,
+    auth_token: Option<String>,
     sender: broadcast::Sender<Message>,
     receiver: broadcast::Receiver<Message>,
 }
 
 impl RpcClient {
-    pub fn new(address: String, sender: broadcast::Sender<Message>) -> Self {
+    pub fn new(
+        address: String,
+        auth_token: Option<String>,
+        sender: broadcast::Sender<Message>,
+    ) -> Self {
         let receiver = sender.subscribe();
         Self {
             address,
+            auth_token,
             sender,
             receiver,
         }
@@ -107,7 +113,21 @@ impl RpcClient {
             .connect_timeout(Duration::from_secs(5))
             .connect()
             .await?;
-        let mut client = StationServiceClient::new(transport);
+
+        let maybe_token = self
+            .auth_token
+            .as_ref()
+            .map(|s| format!("Bearer {}", s).parse::<MetadataValue<tonic::metadata::Ascii>>())
+            .transpose()?;
+
+        // Create the client with an inline interceptor
+        let mut client =
+            StationServiceClient::with_interceptor(transport, move |mut req: tonic::Request<()>| {
+                if let Some(token) = maybe_token.clone() {
+                    req.metadata_mut().insert("authorization", token);
+                }
+                Ok(req)
+            });
 
         let (tx, rx) = tokio::sync::mpsc::channel(32);
         let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
