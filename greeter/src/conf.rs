@@ -1,8 +1,52 @@
-use std::fs;
+use std::{fs, process::Command};
 
 use anyhow::Result;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum Secret {
+    Static(String),
+    Command { command: String },
+}
+
+impl Default for Secret {
+    fn default() -> Self {
+        Self::Static(String::new())
+    }
+}
+
+impl From<Secret> for String {
+    fn from(value: Secret) -> Self {
+        match value {
+            Secret::Static(s) => s,
+            Secret::Command { command } => {
+                let output = Command::new("sh").arg("-c").arg(&command).output();
+
+                match output {
+                    Ok(out) if out.status.success() => {
+                        String::from_utf8_lossy(&out.stdout).trim().to_string()
+                    }
+                    Ok(out) => {
+                        let err = String::from_utf8_lossy(&out.stderr);
+                        panic!("Config secret command '{}' failed: {}", command, err)
+                    }
+                    Err(e) => panic!("Failed to get secret'{}': {}", command, e),
+                }
+            }
+        }
+    }
+}
+
+fn deserialize_secret<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::Deserialize;
+    let s = Secret::deserialize(deserializer)?;
+    Ok(String::from(s))
+}
 
 /// Top-level configuration combining UI, greeter, and contest API settings.
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -16,7 +60,7 @@ pub struct Conf {
     pub enable_dbus: bool,
 
     /// Key sequence to toggle the login UI.
-    #[serde(default = "default_chain")]
+    #[serde(default = "default_chain", deserialize_with = "deserialize_secret")]
     pub(crate) chain: String,
 
     /// File path or URL for the background image.
@@ -36,7 +80,7 @@ pub struct Conf {
     pub(crate) username: String,
 
     /// Password used for automatic login.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_secret")]
     pub(crate) password: String,
 
     /// Contest API URL returning a JSON object with `start_time` (RFC3339).

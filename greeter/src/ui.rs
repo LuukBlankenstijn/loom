@@ -116,7 +116,9 @@ impl Greeter {
             layers.push(countdown_indicator_fn(form_element.is_some()).map(Message::Countdown));
         }
 
-        if let Some(danger_label) = danger_label {
+        if let Some(danger_label) = danger_label
+            && form_element.is_none()
+        {
             layers.push(danger_label.map(Message::DangerLabel));
         }
 

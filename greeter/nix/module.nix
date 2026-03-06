@@ -66,9 +66,19 @@ in
     };
 
     chain = mkOption {
-      type = types.str;
+      type =
+        with types;
+        either str (submodule {
+          options.command = mkOption {
+            type = str;
+            description = "The command to execute to retrieve the key sequence.";
+          };
+        });
       default = "chain";
-      description = "Key sequence to toggle the login UI.";
+      description = ''
+        Key sequence to toggle the login UI.
+        Can be a plain string or an attribute set: { command = "get-chain-script"; }.
+      '';
     };
 
     backgroundSource = mkOption {
@@ -111,9 +121,19 @@ in
     };
 
     password = mkOption {
-      type = types.str;
+      type =
+        with types;
+        either str (submodule {
+          options.command = mkOption {
+            type = str;
+            description = "The command to execute to retrieve the secret.";
+          };
+        });
       default = "";
-      description = "Password for automatic login.";
+      description = ''
+        The password for automatic login. 
+        Can be a plain string or an attribute set like { command = "my-cmd"; }.
+      '';
     };
 
     url = mkOption {
