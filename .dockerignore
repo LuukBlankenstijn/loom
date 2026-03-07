@@ -1,0 +1,10 @@
+**/target/
+**/node_modules/
+**/dist/
+**/.cargo/registry/
+**/.cargo/git/
+map-editor/.cargo/
+greeter/
+station/
+.git/
+*.md
