@@ -10,7 +10,7 @@ use loom_rpc::{
 };
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
-use tonic::{Streaming, metadata::MetadataValue};
+use tonic::{Streaming, metadata::MetadataValue, transport::ClientTlsConfig};
 use tracing::{error, info, warn};
 
 use crate::messages::Message;
@@ -92,7 +92,7 @@ impl RpcClient {
                     }
                 }
                 Err(e) => {
-                    error!("failed to connect to {}: {}", self.address, e);
+                    error!("failed to connect to {}: {:?}", self.address, e.source());
                 }
             }
 
@@ -109,10 +109,13 @@ impl RpcClient {
         tokio::sync::mpsc::Sender<ClientMessage>,
         Streaming<ServerMessage>,
     )> {
-        let transport = tonic::transport::Channel::from_shared(self.address.clone())?
-            .connect_timeout(Duration::from_secs(5))
-            .connect()
-            .await?;
+        let mut endpoint = tonic::transport::Channel::from_shared(self.address.clone())?
+            .connect_timeout(Duration::from_secs(5));
+
+        if self.address.starts_with("https") {
+            endpoint = endpoint.tls_config(ClientTlsConfig::new().with_native_roots())?;
+        }
+        let transport = endpoint.connect().await?;
 
         let maybe_token = self
             .auth_token
