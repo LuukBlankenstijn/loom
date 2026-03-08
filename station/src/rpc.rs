@@ -110,7 +110,10 @@ impl RpcClient {
         Streaming<ServerMessage>,
     )> {
         let mut endpoint = tonic::transport::Channel::from_shared(self.address.clone())?
-            .connect_timeout(Duration::from_secs(5));
+            .connect_timeout(Duration::from_secs(5))
+            .http2_keep_alive_interval(Duration::from_secs(15))
+            .keep_alive_timeout(Duration::from_secs(10))
+            .keep_alive_while_idle(true);
 
         if self.address.starts_with("https") {
             endpoint = endpoint.tls_config(ClientTlsConfig::new().with_native_roots())?;
