@@ -4,9 +4,8 @@ FROM rust:1.94-bookworm AS wasm-builder
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install cargo-binstall && \
     cargo binstall trunk --no-confirm && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends binaryen && \
-    rm -rf /var/lib/apt/lists/*
+    curl -fsSL https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-linux.tar.gz \
+      | tar -xz -C /usr/local --strip-components=1
 
 WORKDIR /src
 
@@ -61,8 +60,8 @@ COPY <<'EOF' /etc/caddy/Caddyfile
 :80 {
 	root * /srv
 
-	# SPA fallback
-	try_files {path} /index.html
+	# SPA fallback (try directory index.html before falling back to dashboard SPA)
+	try_files {path} {path}/index.html /index.html
 
 	file_server
 }

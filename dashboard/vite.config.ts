@@ -28,8 +28,9 @@ function serveMapEditor(): Plugin {
       const dest = path.resolve(__dirname, "dist/editor");
 
       if (!fs.existsSync(mapEditorDist)) {
-        console.warn("map-editor/dist not found, skipping editor bundle");
-        return;
+        throw new Error(
+          "map-editor/dist not found – build the map-editor first (cd map-editor && trunk build --release)",
+        );
       }
 
       // Copy all files
