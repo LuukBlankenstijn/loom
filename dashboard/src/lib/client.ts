@@ -39,6 +39,9 @@ export const adminClient = {
   deleteStations: async (ids: number[]): Promise<void> => {
     await client.deleteStation({ ids });
   },
+  assignTeam: async (ids: number[]): Promise<void> => {
+    await client.assignTeam({ ids });
+  },
   setIp: async (teamId: string, ip?: string): Promise<void> => {
     await client.setIp({ teamId, ip });
   },

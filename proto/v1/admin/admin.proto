@@ -103,6 +103,10 @@ message DeleteStationRequest {
   repeated int32 ids = 1;
 }
 
+message AssignTeamRequest {
+  repeated int32 ids = 1;
+}
+
 message SubscribtionMessage {
   oneof message {
     command.v1.CustomCommandOutput command_output = 1;
@@ -129,6 +133,8 @@ service AdminService {
   rpc GetStations(google.protobuf.Empty) returns (StationsResponse) {}
   // Delete station
   rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
+  // Tries to assign a team to each of the stations
+  rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}
 
   // Sets the ip for some team. Only allows ips that are not used by a different team yet
   rpc SetIp(SetIpRequest) returns (google.protobuf.Empty) {}

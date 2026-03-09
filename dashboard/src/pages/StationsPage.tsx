@@ -5,6 +5,7 @@ import { AssignModal } from "../components/AssignModal";
 import { StationActinoModal } from "../components/StationActionModal";
 import { StationTerminal } from "../components/StationTerminal";
 import type { Station } from "@client/v1/admin/admin_pb";
+import type { StationTarget } from "../lib/actions";
 import { useStationState } from "../context/station";
 
 export function StationsPage() {
@@ -12,8 +13,8 @@ export function StationsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set());
-  const [commandTargetStations, setActionTargetStations] = useState<
-    Station[] | null
+  const [actionTargetStations, setActionTargetStations] = useState<
+    StationTarget[] | null
   >(null);
   const [expandedIps, setExpandedIps] = useState<Set<string>>(new Set());
   const { getState: getStationsState, connectedCount } = useStationState();
@@ -91,7 +92,9 @@ export function StationsPage() {
           <button
             onClick={() =>
               setActionTargetStations(
-                stations.filter((s) => selectedIps.has(s.ip)),
+                stations
+                  .filter((s) => selectedIps.has(s.ip))
+                  .map((s) => ({ ...s, team: ipToTeam.get(s.ip) })),
               )
             }
             disabled={selectedIps.size === 0}
@@ -273,7 +276,7 @@ export function StationsPage() {
                       <td className="px-6 py-4">
                         <div className="flex">
                           <button
-                            onClick={() => setActionTargetStations([station])}
+                            onClick={() => setActionTargetStations([{ ...station, team }])}
                             className="px-3 py-1.5 bg-surface-600 hover:bg-surface-500 text-gray-300 text-sm rounded-l-lg transition-colors"
                           >
                             Actions
@@ -337,9 +340,9 @@ export function StationsPage() {
         />
       )}
 
-      {commandTargetStations && (
+      {actionTargetStations && (
         <StationActinoModal
-          stations={commandTargetStations}
+          stations={actionTargetStations}
           onClose={() => setActionTargetStations(null)}
         />
       )}

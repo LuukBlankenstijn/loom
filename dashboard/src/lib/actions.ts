@@ -6,7 +6,7 @@ import {
   LogoutCommandSchema,
 } from "@client/v1/command/command_pb";
 import { adminClient } from "./client";
-import type { Station } from "@client/v1/admin/admin_pb";
+import type { Station, Team } from "@client/v1/admin/admin_pb";
 import { queryClient } from "../main";
 
 type ActionField = {
@@ -17,6 +17,8 @@ type ActionField = {
   required: boolean;
 };
 
+export type StationTarget = Station & { team?: Team };
+
 export type StationAction = {
   key: string;
   name: string;
@@ -25,7 +27,7 @@ export type StationAction = {
   fields: ActionField[];
   type?: "normal" | "danger";
   execute: (
-    stations: Station[],
+    stations: StationTarget[],
     values: Record<string, string>,
     register?: (id: string, ips: string[], command: string) => void,
   ) => Promise<void> | void;
@@ -190,6 +192,20 @@ export const STATION_ACTIONS: StationAction[] = [
     execute: async (stations) => {
       await adminClient.deleteStations(stations.map((s) => s.id));
       queryClient.invalidateQueries({ queryKey: ["stations"] });
+    },
+  },
+  {
+    key: "assignTeam",
+    name: "Assign team",
+    allowSingle: true,
+    description: "Tries to assign an available team to every selected station",
+    fields: [],
+    execute: async (stations) => {
+      const unassigned = stations.filter((s) => !s.team);
+      if (unassigned.length === 0) return;
+      await adminClient.assignTeam(unassigned.map((s) => s.id));
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   },
 ];

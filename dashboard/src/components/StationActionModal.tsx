@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { STATION_ACTIONS } from "../lib/actions";
+import { STATION_ACTIONS, type StationTarget } from "../lib/actions";
 import { useCommandStore } from "../context/command";
-import type { Station } from "@client/v1/admin/admin_pb";
 
 type StationActionProps = {
-  stations: Station[];
+  stations: StationTarget[];
   onClose: () => void;
 };
 

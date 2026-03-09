@@ -127,6 +127,11 @@ pub struct DeleteStationRequest {
     #[prost(int32, repeated, tag="1")]
     pub ids: ::prost::alloc::vec::Vec<i32>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AssignTeamRequest {
+    #[prost(int32, repeated, tag="1")]
+    pub ids: ::prost::alloc::vec::Vec<i32>,
+}
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SubscribtionMessage {
     #[prost(oneof="subscribtion_message::Message", tags="1, 2")]

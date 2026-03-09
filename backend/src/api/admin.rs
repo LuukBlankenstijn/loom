@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
+use futures::future::try_join_all;
 use loom_rpc::admin::v1::admin_service_server::AdminService;
-use loom_rpc::admin::v1::{self as pb, ClientCommand, DeleteStationRequest};
+use loom_rpc::admin::v1::{self as pb, AssignTeamRequest, ClientCommand, DeleteStationRequest};
 use loom_rpc::map::v1 as map_pb;
 use tokio::sync::{broadcast, mpsc};
 use tokio_stream::wrappers::ReceiverStream;
@@ -311,6 +312,62 @@ impl AdminService for AdminHandler {
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         self.station_repo.delete(&req.ids).await?;
+
+        Ok(Response::new(()))
+    }
+
+    async fn assign_team(
+        &self,
+        request: Request<AssignTeamRequest>,
+    ) -> Result<Response<()>, Status> {
+        let ids = request.into_inner().ids;
+
+        let (contest_opt, all_stations) = tokio::try_join!(
+            self.contest_repo.get_next_contest(),
+            self.station_repo.get_all(),
+        )
+        .map_err(|e| Status::internal(format!("Dependency error: {}", e)))?;
+
+        let contest = match contest_opt {
+            Some(c) => c,
+            None => return Ok(Response::new(())),
+        };
+
+        let mut teams: Vec<_> = self
+            .team_repo
+            .get_all(&contest.id)
+            .await?
+            .into_iter()
+            .filter(|t| t.ip.is_none())
+            .collect();
+
+        let mut stations: Vec<_> = all_stations
+            .into_iter()
+            .filter(|s| ids.contains(&s.id))
+            .collect();
+
+        let mut update_futures = Vec::new();
+        let mut updated_ips = Vec::new();
+        let pair_count = std::cmp::min(stations.len(), teams.len());
+
+        for _ in 0..pair_count {
+            if let (Some(station), Some(team)) = (stations.pop(), teams.pop()) {
+                let team_id = team.id.clone();
+                let station_ip = station.ip.clone();
+                updated_ips.push(station_ip.clone());
+
+                let fut = async move { self.team_repo.set_ip(&team_id, Some(&station_ip)).await };
+                update_futures.push(Box::pin(fut));
+            }
+        }
+
+        if !update_futures.is_empty() {
+            try_join_all(update_futures)
+                .await
+                .map_err(|e| Status::internal(format!("Failed to batch update teams: {}", e)))?;
+        }
+        let sync_refs: Vec<&str> = updated_ips.iter().map(|s| s.as_str()).collect();
+        self.hub.sync_stations(&sync_refs);
 
         Ok(Response::new(()))
     }
