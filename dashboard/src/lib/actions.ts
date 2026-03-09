@@ -6,6 +6,8 @@ import {
   LogoutCommandSchema,
 } from "@client/v1/command/command_pb";
 import { adminClient } from "./client";
+import type { Station } from "@client/v1/admin/admin_pb";
+import { queryClient } from "../main";
 
 type ActionField = {
   key: string;
@@ -21,8 +23,9 @@ export type StationAction = {
   description: string;
   allowSingle: boolean;
   fields: ActionField[];
+  type?: "normal" | "danger";
   execute: (
-    ips: string[],
+    stations: Station[],
     values: Record<string, string>,
     register?: (id: string, ips: string[], command: string) => void,
   ) => Promise<void> | void;
@@ -51,14 +54,17 @@ export const STATION_ACTIONS: StationAction[] = [
         required: true,
       },
     ],
-    execute: (ips, values) =>
-      adminClient.sendCommand(ips, {
-        case: "loginWithCredentials",
-        value: create(LoginWithCredentialsCommandSchema, {
-          username: values.username,
-          password: values.password,
-        }),
-      }),
+    execute: (stations, values) =>
+      adminClient.sendCommand(
+        stations.map((s) => s.ip),
+        {
+          case: "loginWithCredentials",
+          value: create(LoginWithCredentialsCommandSchema, {
+            username: values.username,
+            password: values.password,
+          }),
+        },
+      ),
   },
   {
     key: "login",
@@ -66,11 +72,14 @@ export const STATION_ACTIONS: StationAction[] = [
     allowSingle: true,
     description: "Send a login command to the selected stations.",
     fields: [],
-    execute: (ips) =>
-      adminClient.sendCommand(ips, {
-        case: "login",
-        value: create(LoginCommandSchema),
-      }),
+    execute: (stations) =>
+      adminClient.sendCommand(
+        stations.map((s) => s.ip),
+        {
+          case: "login",
+          value: create(LoginCommandSchema),
+        },
+      ),
   },
   {
     key: "logout",
@@ -78,11 +87,14 @@ export const STATION_ACTIONS: StationAction[] = [
     allowSingle: true,
     description: "Send a logout command to the selected stations.",
     fields: [],
-    execute: (ips) =>
-      adminClient.sendCommand(ips, {
-        case: "logout",
-        value: create(LogoutCommandSchema),
-      }),
+    execute: (stations) =>
+      adminClient.sendCommand(
+        stations.map((s) => s.ip),
+        {
+          case: "logout",
+          value: create(LogoutCommandSchema),
+        },
+      ),
   },
   {
     key: "custom",
@@ -99,10 +111,11 @@ export const STATION_ACTIONS: StationAction[] = [
         required: true,
       },
     ],
-    execute: (ips, values, register) => {
+    execute: (stations, values, register) => {
       if (!values) {
         return;
       }
+      const ips = stations.map((s) => s.ip);
       const id = crypto.randomUUID();
       register?.(id, ips, values.command);
       return adminClient.sendCommand(ips, {
@@ -121,9 +134,9 @@ export const STATION_ACTIONS: StationAction[] = [
     description:
       "Download a YAML-formatted Ansible inventory with hosts in the 'contest' group.",
     fields: [],
-    execute: (ips) => {
+    execute: (stations) => {
       const yamlHeader = "contest:\n  hosts:\n";
-      const hostLines = ips.map((ip) => `    ${ip}:`).join("\n");
+      const hostLines = stations.map((s) => `    ${s.ip}:`).join("\n");
       const content = yamlHeader + hostLines;
 
       const blob = new Blob([content], { type: "text/yaml" });
@@ -156,7 +169,8 @@ export const STATION_ACTIONS: StationAction[] = [
         required: false,
       },
     ],
-    execute: (ips, values) => {
+    execute: (stations, values) => {
+      const ips = stations.map((s) => s.ip);
       let command;
       if (values.user?.length > 0) {
         command = `cssh -l ${values.user} ${ips.join(" ")}`;
@@ -164,6 +178,18 @@ export const STATION_ACTIONS: StationAction[] = [
         command = `cssh ${ips.join(" ")}`;
       }
       navigator.clipboard.writeText(command);
+    },
+  },
+  {
+    key: "deleteStation",
+    name: "Delete station",
+    allowSingle: true,
+    description: "Permanently deletes the selected stations from the system",
+    fields: [],
+    type: "danger",
+    execute: async (stations) => {
+      await adminClient.deleteStations(stations.map((s) => s.id));
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
     },
   },
 ];

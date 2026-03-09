@@ -22,12 +22,7 @@ pub fn to_timestamp(dt: DateTime<Utc>) -> Timestamp {
 
 impl From<domain::Station> for admin_pb::Station {
     fn from(s: domain::Station) -> Self {
-        Self {
-            id: s.id,
-            ip: s.ip,
-            connected_at: Some(to_timestamp(s.connected_at)),
-            diconnected_at: s.disconnected_at.map(to_timestamp),
-        }
+        Self { id: s.id, ip: s.ip }
     }
 }
 

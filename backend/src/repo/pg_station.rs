@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
 use crate::domain::{Station, StationRepository};
@@ -9,8 +8,6 @@ use crate::error::AppError;
 struct StationRow {
     id: i64,
     ip: String,
-    connected_at: DateTime<Utc>,
-    disconnected_at: Option<DateTime<Utc>>,
 }
 
 impl From<StationRow> for Station {
@@ -18,8 +15,6 @@ impl From<StationRow> for Station {
         Self {
             id: r.id as i32,
             ip: r.ip,
-            connected_at: r.connected_at,
-            disconnected_at: r.disconnected_at,
         }
     }
 }
@@ -35,10 +30,9 @@ impl PgStationRepo {
 #[async_trait]
 impl StationRepository for PgStationRepo {
     async fn get_all(&self) -> Result<Vec<Station>, AppError> {
-        let rows: Vec<StationRow> =
-            sqlx::query_as("SELECT id, ip, connected_at, disconnected_at FROM stations")
-                .fetch_all(&self.0)
-                .await?;
+        let rows: Vec<StationRow> = sqlx::query_as("SELECT id, ip FROM stations")
+            .fetch_all(&self.0)
+            .await?;
         Ok(rows.into_iter().map(Into::into).collect())
     }
 
@@ -51,6 +45,15 @@ impl StationRepository for PgStationRepo {
         .bind(ip)
         .execute(&self.0)
         .await?;
+
+        Ok(())
+    }
+
+    async fn delete(&self, ids: &[i32]) -> Result<(), AppError> {
+        sqlx::query("DELETE FROM stations WHERE id = ANY($1)")
+            .bind(ids)
+            .execute(&self.0)
+            .await?;
 
         Ok(())
     }

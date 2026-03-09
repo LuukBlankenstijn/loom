@@ -36,6 +36,9 @@ export const adminClient = {
   getStations: async (): Promise<StationsResponse> => {
     return (await client.getStations(create(EmptySchema))) as StationsResponse;
   },
+  deleteStations: async (ids: number[]): Promise<void> => {
+    await client.deleteStation({ ids });
+  },
   setIp: async (teamId: string, ip?: string): Promise<void> => {
     await client.setIp({ teamId, ip });
   },
@@ -67,9 +70,7 @@ export const adminClient = {
     ips: string[],
     command: ClientCommand["command"],
   ): Promise<void> => {
-    await client.sendCommand(
-      create(ClientCommandSchema, { ips, command }),
-    );
+    await client.sendCommand(create(ClientCommandSchema, { ips, command }));
   },
   subscribe: async function* (
     signal?: AbortSignal,

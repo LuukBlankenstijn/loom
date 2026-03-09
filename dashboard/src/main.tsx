@@ -5,7 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 1000, // 1 minute - data considered fresh, won't refetch

@@ -28,8 +28,6 @@ message Team {
 message Station {
   int32 id = 1;
   string ip = 2 [(buf.validate.field).string.ip = true];
-  google.protobuf.Timestamp connected_at = 3 [(buf.validate.field).required = true];
-  optional google.protobuf.Timestamp diconnected_at = 4;
 }
 
 message TeamsResponse {
@@ -101,6 +99,10 @@ message StationsState {
   repeated StationStatus status = 1;
 }
 
+message DeleteStationRequest {
+  repeated int32 ids = 1;
+}
+
 message SubscribtionMessage {
   oneof message {
     command.v1.CustomCommandOutput command_output = 1;
@@ -125,6 +127,8 @@ service AdminService {
   rpc GetActiveTeams(google.protobuf.Empty) returns (TeamsResponse) {}
   // Gets all registered stations
   rpc GetStations(google.protobuf.Empty) returns (StationsResponse) {}
+  // Delete station
+  rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
 
   // Sets the ip for some team. Only allows ips that are not used by a different team yet
   rpc SetIp(SetIpRequest) returns (google.protobuf.Empty) {}

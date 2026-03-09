@@ -1,20 +1,21 @@
 import { useState } from "react";
 import { STATION_ACTIONS } from "../lib/actions";
 import { useCommandStore } from "../context/command";
+import type { Station } from "@client/v1/admin/admin_pb";
 
-type CommandModalProps = {
-  ips: string[];
+type StationActionProps = {
+  stations: Station[];
   onClose: () => void;
 };
 
-export function CommandModal({ ips, onClose }: CommandModalProps) {
+export function StationActinoModal({ stations, onClose }: StationActionProps) {
   const { register } = useCommandStore();
   const [selectedActionKey, setSelectedActionKey] = useState("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set());
   const [isPending, setIsPending] = useState(false);
 
-  const isSingle = ips.length === 1;
+  const isSingle = stations.length === 1;
   const availableActions = STATION_ACTIONS.filter(
     (a) => !isSingle || a.allowSingle,
   );
@@ -43,7 +44,7 @@ export function CommandModal({ ips, onClose }: CommandModalProps) {
     }
 
     setIsPending(true);
-    await selectedAction.execute(ips, fieldValues, register);
+    await selectedAction.execute(stations, fieldValues, register);
     setIsPending(false);
     onClose();
   };
@@ -51,13 +52,13 @@ export function CommandModal({ ips, onClose }: CommandModalProps) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-surface-800 rounded-xl border border-surface-600 p-6 w-full max-w-md shadow-2xl">
-        <h2 className="text-xl font-semibold text-white mb-1">Send Command</h2>
+        <h2 className="text-xl font-semibold text-white mb-1">Actions</h2>
         <p className="text-sm text-gray-400 mb-6">
-          Target: {ips.length} station(s)
+          Target: {stations.length} station(s)
         </p>
 
         <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Command</label>
+          <label className="block text-sm text-gray-400 mb-2">Action</label>
           <select
             value={selectedActionKey}
             onChange={(e) => handleActionChange(e.target.value)}
@@ -128,7 +129,11 @@ export function CommandModal({ ips, onClose }: CommandModalProps) {
           <button
             onClick={handleExecute}
             disabled={!selectedAction || isPending}
-            className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-600 disabled:text-gray-500 text-white rounded-lg transition-colors"
+            className={`px-4 py-2 disabled:bg-surface-600 disabled:text-gray-500 text-white rounded-lg transition-colors ${
+              selectedAction?.type === "danger"
+                ? "bg-danger-500 hover:bg-danger-600"
+                : "bg-primary-500 hover:bg-primary-600"
+            }`}
           >
             {isPending ? "Executing..." : "Execute"}
           </button>

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use loom_rpc::admin::v1::admin_service_server::AdminService;
-use loom_rpc::admin::v1::{self as pb, ClientCommand};
+use loom_rpc::admin::v1::{self as pb, ClientCommand, DeleteStationRequest};
 use loom_rpc::map::v1 as map_pb;
 use tokio::sync::{broadcast, mpsc};
 use tokio_stream::wrappers::ReceiverStream;
@@ -302,6 +302,16 @@ impl AdminService for AdminHandler {
             let ips: Vec<&str> = req.ips.iter().map(|s| s.as_str()).collect();
             self.hub.send_command(command.into(), &ips);
         }
+        Ok(Response::new(()))
+    }
+
+    async fn delete_station(
+        &self,
+        request: Request<DeleteStationRequest>,
+    ) -> Result<Response<()>, Status> {
+        let req = request.into_inner();
+        self.station_repo.delete(&req.ids).await?;
+
         Ok(Response::new(()))
     }
 }

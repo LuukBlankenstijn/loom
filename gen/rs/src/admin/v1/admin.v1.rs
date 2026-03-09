@@ -28,10 +28,6 @@ pub struct Station {
     pub id: i32,
     #[prost(string, tag="2")]
     pub ip: ::prost::alloc::string::String,
-    #[prost(message, optional, tag="3")]
-    pub connected_at: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(message, optional, tag="4")]
-    pub diconnected_at: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TeamsResponse {
@@ -125,6 +121,11 @@ pub struct StationStatus {
 pub struct StationsState {
     #[prost(message, repeated, tag="1")]
     pub status: ::prost::alloc::vec::Vec<StationStatus>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteStationRequest {
+    #[prost(int32, repeated, tag="1")]
+    pub ids: ::prost::alloc::vec::Vec<i32>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SubscribtionMessage {
