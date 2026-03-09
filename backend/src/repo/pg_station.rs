@@ -44,21 +44,14 @@ impl StationRepository for PgStationRepo {
 
     async fn upsert(&self, ip: &str) -> Result<(), AppError> {
         sqlx::query(
-            "INSERT INTO stations (ip, connected_at)
-             VALUES ($1, NOW())
-             ON CONFLICT (ip) DO UPDATE SET connected_at = NOW()",
+            "INSERT INTO stations (ip)
+         VALUES ($1)
+         ON CONFLICT (ip) DO NOTHING",
         )
         .bind(ip)
         .execute(&self.0)
         .await?;
-        Ok(())
-    }
 
-    async fn update_disconnected_at(&self, ip: &str) -> Result<(), AppError> {
-        sqlx::query("UPDATE stations SET disconnected_at = NOW() WHERE ip = $1")
-            .bind(ip)
-            .execute(&self.0)
-            .await?;
         Ok(())
     }
 }
