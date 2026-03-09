@@ -15,5 +15,4 @@ pub struct Station {
 pub trait StationRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Station>, AppError>;
     async fn upsert(&self, ip: &str) -> Result<(), AppError>;
-    async fn update_disconnected_at(&self, ip: &str) -> Result<(), AppError>;
 }

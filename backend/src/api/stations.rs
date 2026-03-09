@@ -85,7 +85,6 @@ impl StationService for StationsHandler {
 
         // Single task handles both directions with select!
         let hub = self.hub.clone();
-        let station_repo = self.station_repo.clone();
         let ip_clone = ip.clone();
         let broadcast_sender = self.client_broadcast.clone();
         let handler = self.clone();
@@ -133,9 +132,6 @@ impl StationService for StationsHandler {
                     }
                 }
             }
-
-            // Station disconnected — registration is dropped here (deregisters from hub)
-            let _ = station_repo.update_disconnected_at(&ip_clone).await;
         });
 
         Ok(Response::new(ReceiverStream::new(rx)))
