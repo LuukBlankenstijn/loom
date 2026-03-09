@@ -9,8 +9,8 @@ mod repo;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use axum::Router;
 use axum::routing::get;
-use axum::{Router, middleware};
 use loom_rpc::admin::v1::admin_service_server::AdminServiceServer;
 use loom_rpc::stations::v1::station_service_server::StationServiceServer;
 use sqlx::postgres::PgPoolOptions;
@@ -105,10 +105,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ))
     .add_service(AdminServiceServer::new(admin))
     .into_axum_router()
-    .layer(tonic_web::GrpcWebLayer::new())
-    .layer(middleware::from_fn(
-        api::middleware::client_meta_interceptor,
-    ));
+    .layer(tonic_web::GrpcWebLayer::new());
 
     // Merge gRPC with axum HTTP routes
     let app = Router::new()

@@ -16,7 +16,7 @@ pub enum StationHandlerCommand {
 /// A command sent TO a specific station client.
 #[derive(Debug, Clone)]
 pub enum StationCommand {
-    SetWallpaperSource(String),
+    SyncWallpaper,
     SetContestUrl(String),
     Login,
     Logout,

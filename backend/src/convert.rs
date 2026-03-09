@@ -227,7 +227,7 @@ impl From<StationCommand> for stations_pb::ServerMessage {
     fn from(cmd: StationCommand) -> Self {
         use stations_pb::server_message::Message;
         let message = match cmd {
-            StationCommand::SetWallpaperSource(s) => Message::SetWallpaperSource(s),
+            StationCommand::SyncWallpaper => Message::SyncWallpaper(()),
             StationCommand::SetContestUrl(u) => Message::SetContestUrl(u),
             StationCommand::Login => Message::Login(command_pb::LoginCommand {}),
             StationCommand::Logout => Message::Logout(command_pb::LogoutCommand {}),

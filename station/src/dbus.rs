@@ -8,6 +8,7 @@ use zbus::{Connection, fdo::DBusProxy, names::UniqueName};
 use crate::messages::Message;
 
 pub struct DbusClient {
+    server_address: String,
     proxy: GreeterServiceProxy<'static>,
     dbus_proxy: DBusProxy<'static>,
     sender: broadcast::Sender<Message>,
@@ -15,7 +16,7 @@ pub struct DbusClient {
 }
 
 impl DbusClient {
-    pub async fn new(sender: broadcast::Sender<Message>) -> Result<Self> {
+    pub async fn new(sender: broadcast::Sender<Message>, server_address: String) -> Result<Self> {
         let receiver = sender.subscribe();
 
         let connection = Connection::system()
@@ -26,6 +27,7 @@ impl DbusClient {
         let dbus_proxy = zbus::fdo::DBusProxy::new(&connection).await?;
 
         Ok(Self {
+            server_address,
             proxy,
             dbus_proxy,
             sender,
@@ -90,7 +92,8 @@ impl DbusClient {
 
     async fn handle_message(&self, msg: Message) -> Result<()> {
         match msg {
-            Message::SetWallpaper(source) => {
+            Message::SyncWallpaper => {
+                let source = format!("{}/wallpaper", self.server_address.clone());
                 debug!("setting wallpaper source to {}", source);
                 self.proxy.set_wallpaper_source(source).await?;
             }

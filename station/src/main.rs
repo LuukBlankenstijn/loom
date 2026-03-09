@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
 
     let (tx, _) = broadcast::channel::<Message>(32);
 
-    let dbus_client = DbusClient::new(tx.clone()).await?;
+    let dbus_client = DbusClient::new(tx.clone(), args.server.clone()).await?;
     tokio::spawn(async move {
         if let Err(e) = dbus_client.run().await {
             error!("Dbus client error: {}", e);
