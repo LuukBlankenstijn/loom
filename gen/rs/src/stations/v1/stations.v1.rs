@@ -23,8 +23,8 @@ pub struct ServerMessage {
 pub mod server_message {
     #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
     pub enum Message {
-        #[prost(string, tag="1")]
-        SetWallpaperSource(::prost::alloc::string::String),
+        #[prost(message, tag="1")]
+        SyncWallpaper(()),
         #[prost(string, tag="2")]
         SetContestUrl(::prost::alloc::string::String),
         #[prost(message, tag="3")]

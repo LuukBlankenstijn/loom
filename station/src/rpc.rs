@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use local_ip_address::linux::local_ip;
 use loom_rpc::{
     command::v1::CustomCommandOutput,
     stations::v1::{
@@ -10,10 +11,31 @@ use loom_rpc::{
 };
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
-use tonic::{Streaming, metadata::MetadataValue, transport::ClientTlsConfig};
+use tonic::{
+    Request, Status, Streaming,
+    metadata::{Ascii, MetadataValue},
+    service::Interceptor,
+    transport::ClientTlsConfig,
+};
 use tracing::{error, info, warn};
 
 use crate::messages::Message;
+
+#[derive(Clone)]
+pub struct AuthInterceptor {
+    token: Option<MetadataValue<Ascii>>,
+}
+
+impl Interceptor for AuthInterceptor {
+    fn call(&mut self, mut request: Request<()>) -> Result<Request<()>, Status> {
+        if let Some(token) = self.token.as_ref() {
+            request
+                .metadata_mut()
+                .insert("authorization", token.clone());
+        }
+        Ok(request)
+    }
+}
 
 impl TryFrom<Message> for ClientMessage {
     type Error = ();
@@ -39,9 +61,7 @@ impl TryFrom<ServerMessage> for Message {
     fn try_from(value: ServerMessage) -> std::result::Result<Self, Self::Error> {
         let message = match value.message {
             Some(message) => match message {
-                server_message::Message::SetWallpaperSource(source) => {
-                    Message::SetWallpaper(source)
-                }
+                server_message::Message::SyncWallpaper(()) => Message::SyncWallpaper,
                 server_message::Message::SetContestUrl(url) => Message::SetContestUrl(url),
                 server_message::Message::Login(_) => Message::Login,
                 server_message::Message::Logout(_) => Message::Logout,
@@ -92,7 +112,7 @@ impl RpcClient {
                     }
                 }
                 Err(e) => {
-                    error!("failed to connect to {}: {:?}", self.address, e.source());
+                    error!("failed to connect to {}: {:?}", self.address, e);
                 }
             }
 
@@ -120,25 +140,34 @@ impl RpcClient {
         }
         let transport = endpoint.connect().await?;
 
-        let maybe_token = self
+        let token = self
             .auth_token
             .as_ref()
-            .map(|s| format!("Bearer {}", s).parse::<MetadataValue<tonic::metadata::Ascii>>())
-            .transpose()?;
+            .map(|s| format!("Bearer {}", s).parse::<MetadataValue<Ascii>>())
+            .transpose()
+            .map_err(|e| Status::invalid_argument(format!("Invalid metadata: {}", e)))?;
 
-        // Create the client with an inline interceptor
-        let mut client =
-            StationServiceClient::with_interceptor(transport, move |mut req: tonic::Request<()>| {
-                if let Some(token) = maybe_token.clone() {
-                    req.metadata_mut().insert("authorization", token);
-                }
-                Ok(req)
-            });
+        let interceptor = AuthInterceptor { token };
 
+        let mut client = StationServiceClient::with_interceptor(transport, interceptor);
+
+        // create streams
         let (tx, rx) = tokio::sync::mpsc::channel(32);
         let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
 
-        let response = client.subscribe(stream).await?;
+        // add ip to meta data
+        let mut request = Request::new(stream);
+
+        let ip = local_ip().context("Could not get local IP")?;
+        let header_value = ip
+            .to_string()
+            .parse()
+            .context("Failed to parse local IP into a valid header value")?;
+        request
+            .metadata_mut()
+            .insert("x-loom-client-ip", header_value);
+
+        let response = client.subscribe(request).await?;
         Ok((tx, response.into_inner()))
     }
 

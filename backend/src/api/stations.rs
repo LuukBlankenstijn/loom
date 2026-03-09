@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use loom_rpc::stations::v1 as pb;
 use loom_rpc::stations::v1::station_service_server::StationService;
+use loom_rpc::stations::v1::{self as pb};
 use tokio::sync::{broadcast, mpsc};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status, Streaming};
 
-use crate::api::middleware::RequestExt;
 use crate::convert::{ClientAction, CommandOutput};
 use crate::domain::{ContestRepository, StationRepository};
 use crate::hub::{StationCommand, StationHandlerCommand, StationsHub};
@@ -39,10 +38,8 @@ impl StationsHandler {
 
 impl StationsHandler {
     /// Helper to push the latest configuration to a specific station
-    async fn sync_station(&self, ip: &str, host: &str) {
-        let wallpaper_url = format!("http://{host}/wallpaper");
-        self.hub
-            .send_command(StationCommand::SetWallpaperSource(wallpaper_url), &[ip]);
+    async fn sync_station(&self, ip: &str) {
+        self.hub.send_command(StationCommand::SyncWallpaper, &[ip]);
 
         if let Some(base_url) = &self.contest_api_base_url
             && let Ok(Some(contest)) = self.contest_repo.get_next_contest().await
@@ -62,12 +59,19 @@ impl StationService for StationsHandler {
         &self,
         request: Request<Streaming<pb::ClientMessage>>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
-        let client_meta = request.client_meta()?;
-        let ip = client_meta.clone().ip.to_string();
-        let host = client_meta.host.clone();
-
+        let ip = match request.metadata().get("x-loom-client-ip") {
+            Some(ip) => {
+                if let Ok(ip) = ip.to_str() {
+                    ip.to_string()
+                } else {
+                    return Err(Status::invalid_argument("ip metadata could not be decoded"));
+                }
+            }
+            None => {
+                return Err(Status::invalid_argument("ip not found on meta data"));
+            }
+        };
         let client_stream = request.into_inner();
-
         // Record in DB
         self.station_repo
             .upsert(&ip)
@@ -83,7 +87,6 @@ impl StationService for StationsHandler {
         let hub = self.hub.clone();
         let station_repo = self.station_repo.clone();
         let ip_clone = ip.clone();
-        let host_clone = host.clone();
         let broadcast_sender = self.client_broadcast.clone();
         let handler = self.clone();
 
@@ -102,7 +105,7 @@ impl StationService for StationsHandler {
                                 }
                             },
                             StationHandlerCommand::Sync => {
-                                handler.sync_station(&ip_clone, &host_clone).await;
+                                handler.sync_station(&ip_clone).await;
                             },
                         }
                     }

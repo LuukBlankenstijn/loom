@@ -18,7 +18,7 @@ message CustomCommandMessage {
 
 message ServerMessage {
   oneof message {
-    string set_wallpaper_source = 1 [(buf.validate.field).string.uri_ref = true];
+    google.protobuf.Empty sync_wallpaper = 1;
     string set_contest_url = 2 [(buf.validate.field).string.uri = true];
     command.v1.LoginCommand login = 3;
     command.v1.LogoutCommand logout = 4;
