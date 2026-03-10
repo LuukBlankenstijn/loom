@@ -4,7 +4,7 @@ version = "1.1.2"
 edition = "2024"
 
 [dependencies]
-iced = { version = "0.14", features = ["image", "tokio"] }
+iced = { version = "0.14", features = ["image-without-codecs", "tokio"] }
 tokio = { version = "1.49.0", features = ["sync", "rt"] }
 ureq = { version = "3.2.0", features = ["json"] }
 zbus = { version = "5", default-features = false, features = ["tokio"] }
@@ -15,14 +15,13 @@ greeter-dbus = { path = "../shared/greeter-dbus" }
 log = "0.4"
 env_logger = "0.11.8"
 anyhow = "1.0.101"
-image = "0.25.9"
+image = { version = "0.25.9", default-features = false, features = ["png", "jpeg", "webp"] }
 
 chrono = { version = "0.4", default-features = false, features = [
     "clock",
     "std",
     "serde",
 ] }
-schemars = { version = "0.8", features = ["chrono"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.9.11"
 rust-ini = "0.21.3"

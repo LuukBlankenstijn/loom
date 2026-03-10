@@ -1,10 +1,9 @@
 use std::{fs, process::Command};
 
 use anyhow::Result;
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Secret {
     Static(String),
@@ -49,7 +48,7 @@ where
 }
 
 /// Top-level configuration combining UI, greeter, and contest API settings.
-#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Conf {
     /// Log level (env_logger style, e.g. `info`, `debug`).
     #[serde(default = "default_log_level")]
