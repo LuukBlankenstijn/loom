@@ -23,7 +23,7 @@ export type StationAction = {
   key: string;
   name: string;
   description: string;
-  allowSingle: boolean;
+  target: "single" | "multiple" | "both";
   fields: ActionField[];
   type?: "normal" | "danger";
   execute: (
@@ -37,7 +37,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "loginWithCredentials",
     name: "Login with Credentials",
-    allowSingle: true,
+    target: "both",
     description:
       "Send a login command with username and password to the selected stations.",
     fields: [
@@ -71,7 +71,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "login",
     name: "Login",
-    allowSingle: true,
+    target: "both",
     description: "Send a login command to the selected stations.",
     fields: [],
     execute: (stations) =>
@@ -86,7 +86,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "logout",
     name: "Logout",
-    allowSingle: true,
+    target: "both",
     description: "Send a logout command to the selected stations.",
     fields: [],
     execute: (stations) =>
@@ -101,7 +101,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "custom",
     name: "Remote Command",
-    allowSingle: false,
+    target: "multiple",
     description:
       "Send a remote command to be executed to the selected stations.",
     fields: [
@@ -132,7 +132,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "exportYamlInventory",
     name: "Export YAML Inventory",
-    allowSingle: false,
+    target: "multiple",
     description:
       "Download a YAML-formatted Ansible inventory with hosts in the 'contest' group.",
     fields: [],
@@ -159,7 +159,7 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "copyCssh",
     name: "Copy ClusterSSH Command",
-    allowSingle: false,
+    target: "multiple",
     description:
       "Copy a 'cssh' command for all selected stations to your clipboard.",
     fields: [
@@ -185,19 +185,24 @@ export const STATION_ACTIONS: StationAction[] = [
   {
     key: "deleteStation",
     name: "Delete station",
-    allowSingle: true,
+    target: "single",
     description: "Permanently deletes the selected stations from the system",
     fields: [],
     type: "danger",
     execute: async (stations) => {
-      await adminClient.deleteStations(stations.map((s) => s.id));
+      if (stations.length != 1) {
+        console.error('deleteStation is a "single" action');
+      }
+      const station = stations[0];
+      await adminClient.deleteStation(station.id);
       queryClient.invalidateQueries({ queryKey: ["stations"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   },
   {
     key: "assignTeam",
     name: "Assign team",
-    allowSingle: true,
+    target: "both",
     description: "Tries to assign an available team to every selected station",
     fields: [],
     execute: async (stations) => {

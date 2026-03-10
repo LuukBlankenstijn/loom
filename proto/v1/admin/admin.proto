@@ -100,7 +100,7 @@ message StationsState {
 }
 
 message DeleteStationRequest {
-  repeated int32 ids = 1;
+  int32 id = 1;
 }
 
 message AssignTeamRequest {
@@ -131,7 +131,7 @@ service AdminService {
   rpc GetActiveTeams(google.protobuf.Empty) returns (TeamsResponse) {}
   // Gets all registered stations
   rpc GetStations(google.protobuf.Empty) returns (StationsResponse) {}
-  // Delete station
+  // Delete a station
   rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
   // Tries to assign a team to each of the stations
   rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}

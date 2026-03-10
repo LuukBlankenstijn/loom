@@ -29,6 +29,15 @@ impl PgStationRepo {
 
 #[async_trait]
 impl StationRepository for PgStationRepo {
+    async fn get_by_id(&self, id: i32) -> Result<Station, AppError> {
+        let row: StationRow = sqlx::query_as("SELECT * FROM STATIONS WHERE id = $1")
+            .bind(id)
+            .fetch_one(&self.0)
+            .await?;
+
+        Ok(row.into())
+    }
+
     async fn get_all(&self) -> Result<Vec<Station>, AppError> {
         let rows: Vec<StationRow> = sqlx::query_as("SELECT id, ip FROM stations")
             .fetch_all(&self.0)
@@ -49,9 +58,9 @@ impl StationRepository for PgStationRepo {
         Ok(())
     }
 
-    async fn delete(&self, ids: &[i32]) -> Result<(), AppError> {
-        sqlx::query("DELETE FROM stations WHERE id = ANY($1)")
-            .bind(ids)
+    async fn delete(&self, id: i32) -> Result<(), AppError> {
+        sqlx::query("DELETE FROM stations WHERE id = $1")
+            .bind(id)
             .execute(&self.0)
             .await?;
 

@@ -16,7 +16,7 @@ export function StationActinoModal({ stations, onClose }: StationActionProps) {
 
   const isSingle = stations.length === 1;
   const availableActions = STATION_ACTIONS.filter(
-    (a) => !isSingle || a.allowSingle,
+    (a) => a.target === "both" || a.target === (isSingle ? "single" : "multiple"),
   );
 
   const selectedAction = availableActions.find(

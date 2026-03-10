@@ -10,7 +10,8 @@ pub struct Station {
 
 #[async_trait]
 pub trait StationRepository: Send + Sync {
+    async fn get_by_id(&self, id: i32) -> Result<Station, AppError>;
     async fn get_all(&self) -> Result<Vec<Station>, AppError>;
     async fn upsert(&self, ip: &str) -> Result<(), AppError>;
-    async fn delete(&self, ids: &[i32]) -> Result<(), AppError>;
+    async fn delete(&self, id: i32) -> Result<(), AppError>;
 }

@@ -311,7 +311,11 @@ impl AdminService for AdminHandler {
         request: Request<DeleteStationRequest>,
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        self.station_repo.delete(&req.ids).await?;
+        let station = self.station_repo.get_by_id(req.id).await?;
+        if let Some(team) = self.team_repo.get_by_ip(&station.ip).await? {
+            self.team_repo.set_ip(&team.id, None).await?;
+        }
+        self.station_repo.delete(req.id).await?;
 
         Ok(Response::new(()))
     }

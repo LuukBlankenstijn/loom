@@ -152,7 +152,7 @@ pub mod admin_service_client {
                 .insert(GrpcMethod::new("admin.v1.AdminService", "GetStations"));
             self.inner.unary(req, path, codec).await
         }
-        /** Delete station
+        /** Delete a station
 */
         pub async fn delete_station(
             &mut self,
@@ -499,7 +499,7 @@ pub mod admin_service_server {
             tonic::Response<super::StationsResponse>,
             tonic::Status,
         >;
-        /** Delete station
+        /** Delete a station
 */
         async fn delete_station(
             &self,

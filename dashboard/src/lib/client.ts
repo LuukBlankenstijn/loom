@@ -36,8 +36,8 @@ export const adminClient = {
   getStations: async (): Promise<StationsResponse> => {
     return (await client.getStations(create(EmptySchema))) as StationsResponse;
   },
-  deleteStations: async (ids: number[]): Promise<void> => {
-    await client.deleteStation({ ids });
+  deleteStation: async (id: number): Promise<void> => {
+    await client.deleteStation({ id });
   },
   assignTeam: async (ids: number[]): Promise<void> => {
     await client.assignTeam({ ids });

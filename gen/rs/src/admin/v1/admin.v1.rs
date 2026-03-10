@@ -122,10 +122,10 @@ pub struct StationsState {
     #[prost(message, repeated, tag="1")]
     pub status: ::prost::alloc::vec::Vec<StationStatus>,
 }
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct DeleteStationRequest {
-    #[prost(int32, repeated, tag="1")]
-    pub ids: ::prost::alloc::vec::Vec<i32>,
+    #[prost(int32, tag="1")]
+    pub id: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct AssignTeamRequest {
