@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use greeter_dbus::GreeterServiceProxy;
+use local_ip_address::linux::local_ip;
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
 use tracing::debug;
@@ -93,7 +94,10 @@ impl DbusClient {
     async fn handle_message(&self, msg: Message) -> Result<()> {
         match msg {
             Message::SyncWallpaper => {
-                let source = format!("{}/wallpaper", self.server_address.clone());
+                let mut source = format!("{}/wallpaper", self.server_address.clone());
+                if let Ok(ip) = local_ip() {
+                    source = format!("{}?ip={}", source, ip)
+                }
                 debug!("setting wallpaper source to {}", source);
                 self.proxy.set_wallpaper_source(source).await?;
             }
