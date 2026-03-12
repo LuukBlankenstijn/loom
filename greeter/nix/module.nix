@@ -47,10 +47,10 @@ in
       description = "The loom-greeter package to use.";
     };
 
-    cagePackage = mkOption {
+    westonPackage = mkOption {
       type = types.package;
-      default = pkgs.cage;
-      description = "The cage package to use";
+      default = pkgs.weston;
+      description = "The weston package to use";
     };
 
     logLevel = mkOption {
@@ -150,7 +150,7 @@ in
         services.greetd = {
           enable = true;
           settings.default_session = {
-            command = "${cfg.cagePackage}/bin/cage -s -- ${pkgs.systemd}/bin/systemd-cat -t loom-greeter ${cfg.package}/bin/loom-greeter ${configFile}";
+            command = "${cfg.westonPackage}/bin/weston --shell=kiosk-shell.so -- ${pkgs.systemd}/bin/systemd-cat -t loom-greeter ${cfg.package}/bin/loom-greeter ${configFile}";
             user = "greeter";
           };
         };
