@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT t.id, t.name, s.ip as \"ip?\"\n             FROM teams t\n             JOIN contest_teams ct ON ct.team_id = t.id\n             LEFT JOIN stations s ON t.team_station = s.id\n             WHERE ct.contest_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "ip?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "138c7b7fa2262f4b3f841d2691ead1ec9e8f04cf015c34aaf2a8395a04cb9ce0"
+}

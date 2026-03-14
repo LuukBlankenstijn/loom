@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.id\n             FROM contest_map m\n             JOIN contest_map_contest cmc ON cmc.map_id = m.id\n             WHERE cmc.contest_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "58c353480c8503c983318abbce9b7bbd540b0df167d085cbef2548efe33dc302"
+}

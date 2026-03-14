@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, element_type, props FROM map_element WHERE map_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "element_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "props",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d95fdc55f95b30d957487339d32f5bf32fd1b3ba5baa9c9e07dae77d2f97ea43"
+}

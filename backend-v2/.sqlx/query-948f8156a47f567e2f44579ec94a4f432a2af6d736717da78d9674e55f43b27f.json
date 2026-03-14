@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO stations (ip) VALUES ($1) ON CONFLICT (ip) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "948f8156a47f567e2f44579ec94a4f432a2af6d736717da78d9674e55f43b27f"
+}

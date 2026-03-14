@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.ip FROM teams t\n             JOIN stations s ON t.team_station = s.id\n             WHERE t.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ip",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b14219d88bc45ba69f08c845e38552fe2a9ee2522e00e7403991060157cca74d"
+}

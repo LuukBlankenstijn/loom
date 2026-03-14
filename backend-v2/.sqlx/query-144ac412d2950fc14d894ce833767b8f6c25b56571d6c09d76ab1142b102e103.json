@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO wallpapers (contest_id, data, mime_type)\n             VALUES ($1, $2, $3)\n             ON CONFLICT (contest_id) DO UPDATE\n             SET data = $2, mime_type = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "144ac412d2950fc14d894ce833767b8f6c25b56571d6c09d76ab1142b102e103"
+}

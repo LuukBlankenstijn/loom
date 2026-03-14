@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE wallpapers SET text_color = $1 WHERE contest_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c27e426fbfb4ec62795a7d9c88e280d675f8289349f1d4bb9b7daeb9f7b45281"
+}
