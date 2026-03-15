@@ -16,7 +16,7 @@ message CustomCommandMessage {
   string command = 2;
 }
 
-message ServerMessage {
+message StationCommand {
   oneof message {
     google.protobuf.Empty sync_wallpaper = 1;
     string set_contest_url = 2 [(buf.validate.field).string.uri = true];
@@ -27,7 +27,7 @@ message ServerMessage {
   }
 }
 
-message StationMessage {
+message StationEvent {
   oneof message {
     google.protobuf.Empty logged_out = 1;
     google.protobuf.Empty logged_in = 2;
@@ -36,5 +36,6 @@ message StationMessage {
 }
 
 service StationService {
-  rpc Subscribe(stream StationMessage) returns (stream ServerMessage) {}
+  rpc Subscribe(google.protobuf.Empty) returns (stream StationCommand) {}
+  rpc Push(stream StationEvent) returns (google.protobuf.Empty) {}
 }

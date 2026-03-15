@@ -3,20 +3,16 @@ mod convert;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use derive_more::derive::Constructor;
 use loom_rpc::map::v1::{self as pb, map_service_server::MapService};
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
 use crate::domain::{MapElement, MapRepository};
 
+#[derive(Constructor)]
 pub struct MapHandler {
     map_repo: Arc<dyn MapRepository>,
-}
-
-impl MapHandler {
-    pub fn new(map_repo: Arc<dyn MapRepository>) -> Self {
-        Self { map_repo }
-    }
 }
 
 #[async_trait]

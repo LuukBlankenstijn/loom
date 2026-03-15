@@ -1,7 +1,7 @@
 #[derive(Clone, Debug)]
 pub struct CommandOutput {
-    id: String,
-    output: String,
+    pub id: String,
+    pub output: String,
 }
 
 // Events comming from a statino

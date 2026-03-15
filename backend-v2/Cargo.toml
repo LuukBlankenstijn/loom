@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-loom-rpc = { path = "../gen/rs", features = ["admin-v1", "stations-v1", "map-v1"] }
+loom-rpc = { path = "../gen/rs", features = ["admin-v1", "station-v1", "map-v1"] }
 
 tokio = { version = "1", features = ["full"] }
 tonic = "0.14"

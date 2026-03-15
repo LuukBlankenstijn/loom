@@ -38,20 +38,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.icpc_api.map(|config| config.base_url),
     ));
 
-    let contest_handler =
-        api::ContestHandler::new(contest_repo.clone(), map_repo.clone(), orchestrator.clone());
-    let station_handler = api::StationHandler::new(
+    let contest_handler = api::admin::ContestHandler::new(
+        contest_repo.clone(),
+        map_repo.clone(),
+        orchestrator.clone(),
+    );
+    let station_handler = api::admin::StationHandler::new(
         contest_repo.clone(),
         station_repo.clone(),
         team_repo.clone(),
         orchestrator.clone(),
     );
-    let team_handler = api::TeamHandler::new(
+    let team_handler = api::admin::TeamHandler::new(
         contest_repo.clone(),
         team_repo.clone(),
         orchestrator.clone(),
     );
-    let map_handler = api::MapHandler::new(map_repo);
+    let map_handler = api::map::MapHandler::new(map_repo);
+    let station_stream_handler = api::station::StationsHandler::new(orchestrator);
 
     Ok(())
 }
