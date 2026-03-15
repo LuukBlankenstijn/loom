@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use sqlx::postgres::PgPoolOptions;
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -27,8 +28,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = Config::load();
 
-    let repositories =
-        repository::Repositories::new(config.database, config.icpc_api.clone()).await;
+    let pool = PgPoolOptions::new()
+        .max_connections(100)
+        .connect(&config.database_url())
+        .await
+        .expect("Failed to build pgPool");
+
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
+    let repositories = repository::Repositories::new(pool, config.icpc_api.clone()).await;
     let contest_repo = repositories.get_contest();
     let map_repo = repositories.get_map();
     let station_repo = repositories.get_station();

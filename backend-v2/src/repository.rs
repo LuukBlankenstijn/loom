@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use sqlx::{PgPool, postgres::PgPoolOptions};
+use sqlx::PgPool;
 
 use crate::{
-    config::{DatabaseConfig, IcpcApiConfig},
+    config::IcpcApiConfig,
     domain::{ContestRepository, MapRepository, StationRepository, TeamRepository},
 };
 
@@ -23,20 +23,11 @@ pub struct Repositories {
 }
 
 impl Repositories {
-    pub async fn new(
-        database_config: DatabaseConfig,
-        icpc_config: Option<IcpcApiConfig>,
-    ) -> Repositories {
+    pub async fn new(pool: PgPool, icpc_config: Option<IcpcApiConfig>) -> Repositories {
         let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(100))
             .build()
             .expect("failed to build http client");
-
-        let pool = PgPoolOptions::new()
-            .max_connections(10)
-            .connect(&database_config.database_url())
-            .await
-            .expect("Failed to build pgPool");
 
         Self {
             http_client,
