@@ -1181,6 +1181,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "axum",
+ "bytes",
  "chrono",
  "derive_more",
  "dotenvy",
