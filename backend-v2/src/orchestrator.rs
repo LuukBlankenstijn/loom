@@ -5,18 +5,19 @@ mod types;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use tokio::sync::broadcast::Receiver;
+use futures::StreamExt;
+use tokio_stream::wrappers::BroadcastStream;
 
 use crate::{
     domain::{
-        self,
+        self, BroadcastEventStream,
         event::{
             LoomEvent,
             admin::AdminEvent,
-            broadcast::BroadcastEvent,
             station::{StationCommand, StationEvent},
         },
     },
+    error::AppError,
     orchestrator::{
         event_hub::EventHub,
         state::MemoryStationState,
@@ -56,7 +57,7 @@ impl domain::Orchestrator for Orchestrator {
         match event {
             LoomEvent::Station((ip, event)) => match event {
                 StationEvent::LoggedIn => self.state.login(&ip),
-                StationEvent::LoggedOut => self.state.login(&ip),
+                StationEvent::LoggedOut => self.state.logout(&ip),
                 StationEvent::Command(command_output) => self.hub.broadcast(command_output.into()),
             },
             LoomEvent::Admin(admin_event) => match admin_event {
@@ -81,14 +82,23 @@ impl domain::Orchestrator for Orchestrator {
         }
     }
 
-    fn subscribe_broadcast(&self) -> Receiver<BroadcastEvent> {
-        self.hub.subscribe_broadcast()
+    fn subscribe_broadcast(&self) -> BroadcastEventStream {
+        let rx = self.hub.subscribe_broadcast();
+        let broadcast_stream = BroadcastStream::new(rx);
+        let mapped_stream = broadcast_stream.map(|e| match e {
+            Ok(e) => Ok(e),
+            Err(_) => Err(AppError::Internal(
+                "Error reading from broadcast stream".into(),
+            )),
+        });
+
+        Box::pin(mapped_stream)
     }
 
     async fn register_station(
         &self,
         ip: &str,
-    ) -> Result<domain::EventStream, crate::error::AppError> {
+    ) -> Result<domain::StationCommandStream, crate::error::AppError> {
         let registration = self.hub.register_station(ip)?;
         self.state.connect(ip);
 

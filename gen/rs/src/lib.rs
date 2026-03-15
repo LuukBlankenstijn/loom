@@ -7,20 +7,20 @@ pub mod admin {
         // @@protoc_insertion_point(admin.v1)
     }
 }
+pub mod broadcast {
+    #[cfg(feature = "broadcast-v1")]
+    // @@protoc_insertion_point(attribute:broadcast.v1)
+    pub mod v1 {
+        include!("broadcast/v1/broadcast.v1.rs");
+        // @@protoc_insertion_point(broadcast.v1)
+    }
+}
 pub mod command {
     #[cfg(feature = "command-v1")]
     // @@protoc_insertion_point(attribute:command.v1)
     pub mod v1 {
         include!("command/v1/command.v1.rs");
         // @@protoc_insertion_point(command.v1)
-    }
-}
-pub mod event {
-    #[cfg(feature = "event-v1")]
-    // @@protoc_insertion_point(attribute:event.v1)
-    pub mod v1 {
-        include!("event/v1/event.v1.rs");
-        // @@protoc_insertion_point(event.v1)
     }
 }
 pub mod map {

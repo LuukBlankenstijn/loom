@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod events_service_client {
+pub mod broadcast_service_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -12,10 +12,10 @@ pub mod events_service_client {
     use tonic::codegen::http::Uri;
     ///
     #[derive(Debug, Clone)]
-    pub struct EventsServiceClient<T> {
+    pub struct BroadcastServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl<T> EventsServiceClient<T>
+    impl<T> BroadcastServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
@@ -33,7 +33,7 @@ pub mod events_service_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> EventsServiceClient<InterceptedService<T, F>>
+        ) -> BroadcastServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -47,7 +47,7 @@ pub mod events_service_client {
                 http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            EventsServiceClient::new(InterceptedService::new(inner, interceptor))
+            BroadcastServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -99,40 +99,17 @@ pub mod events_service_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/event.v1.EventsService/Subscribe",
+                "/broadcast.v1.BroadcastService/Subscribe",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("event.v1.EventsService", "Subscribe"));
+                .insert(GrpcMethod::new("broadcast.v1.BroadcastService", "Subscribe"));
             self.inner.server_streaming(req, path, codec).await
-        }
-        /** Sends a command to the backend that is sent to one or more stations
-*/
-        pub async fn send_command(
-            &mut self,
-            request: impl tonic::IntoRequest<super::AdminEvent>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/event.v1.EventsService/SendCommand",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("event.v1.EventsService", "SendCommand"));
-            self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod events_service_server {
+pub mod broadcast_service_server {
     #![allow(
         unused_variables,
         dead_code,
@@ -141,9 +118,9 @@ pub mod events_service_server {
         clippy::let_unit_value,
     )]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with EventsServiceServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with BroadcastServiceServer.
     #[async_trait]
-    pub trait EventsService: std::marker::Send + std::marker::Sync + 'static {
+    pub trait BroadcastService: std::marker::Send + std::marker::Sync + 'static {
         /// Server streaming response type for the Subscribe method.
         type SubscribeStream: tonic::codegen::tokio_stream::Stream<
                 Item = std::result::Result<super::BroadcastEvent, tonic::Status>,
@@ -156,23 +133,17 @@ pub mod events_service_server {
             &self,
             request: tonic::Request<()>,
         ) -> std::result::Result<tonic::Response<Self::SubscribeStream>, tonic::Status>;
-        /** Sends a command to the backend that is sent to one or more stations
-*/
-        async fn send_command(
-            &self,
-            request: tonic::Request<super::AdminEvent>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
     }
     ///
     #[derive(Debug)]
-    pub struct EventsServiceServer<T> {
+    pub struct BroadcastServiceServer<T> {
         inner: Arc<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
         max_decoding_message_size: Option<usize>,
         max_encoding_message_size: Option<usize>,
     }
-    impl<T> EventsServiceServer<T> {
+    impl<T> BroadcastServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -223,9 +194,9 @@ pub mod events_service_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for EventsServiceServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for BroadcastServiceServer<T>
     where
-        T: EventsService,
+        T: BroadcastService,
         B: Body + std::marker::Send + 'static,
         B::Error: Into<StdError> + std::marker::Send + 'static,
     {
@@ -240,10 +211,10 @@ pub mod events_service_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
-                "/event.v1.EventsService/Subscribe" => {
+                "/broadcast.v1.BroadcastService/Subscribe" => {
                     #[allow(non_camel_case_types)]
-                    struct SubscribeSvc<T: EventsService>(pub Arc<T>);
-                    impl<T: EventsService> tonic::server::ServerStreamingService<()>
+                    struct SubscribeSvc<T: BroadcastService>(pub Arc<T>);
+                    impl<T: BroadcastService> tonic::server::ServerStreamingService<()>
                     for SubscribeSvc<T> {
                         type Response = super::BroadcastEvent;
                         type ResponseStream = T::SubscribeStream;
@@ -254,7 +225,7 @@ pub mod events_service_server {
                         fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as EventsService>::subscribe(&inner, request).await
+                                <T as BroadcastService>::subscribe(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -281,49 +252,6 @@ pub mod events_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/event.v1.EventsService/SendCommand" => {
-                    #[allow(non_camel_case_types)]
-                    struct SendCommandSvc<T: EventsService>(pub Arc<T>);
-                    impl<T: EventsService> tonic::server::UnaryService<super::AdminEvent>
-                    for SendCommandSvc<T> {
-                        type Response = ();
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::AdminEvent>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as EventsService>::send_command(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = SendCommandSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
                 _ => {
                     Box::pin(async move {
                         let mut response = http::Response::new(
@@ -346,7 +274,7 @@ pub mod events_service_server {
             }
         }
     }
-    impl<T> Clone for EventsServiceServer<T> {
+    impl<T> Clone for BroadcastServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -359,8 +287,8 @@ pub mod events_service_server {
         }
     }
     /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "event.v1.EventsService";
-    impl<T> tonic::server::NamedService for EventsServiceServer<T> {
+    pub const SERVICE_NAME: &str = "broadcast.v1.BroadcastService";
+    impl<T> tonic::server::NamedService for BroadcastServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }

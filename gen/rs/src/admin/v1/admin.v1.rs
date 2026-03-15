@@ -55,6 +55,27 @@ pub struct AssignTeamRequest {
     pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AdminEvent {
+    #[prost(string, repeated, tag="1")]
+    pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(oneof="admin_event::Command", tags="2, 3, 4, 5")]
+    pub command: ::core::option::Option<admin_event::Command>,
+}
+/// Nested message and enum types in `AdminEvent`.
+pub mod admin_event {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Command {
+        #[prost(message, tag="2")]
+        LoginWithCredentials(super::super::super::command::v1::LoginWithCredentialsCommand),
+        #[prost(message, tag="3")]
+        Login(super::super::super::command::v1::LoginCommand),
+        #[prost(message, tag="4")]
+        Logout(super::super::super::command::v1::LogoutCommand),
+        #[prost(message, tag="5")]
+        Custom(super::super::super::command::v1::CustomCommand),
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Team {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,

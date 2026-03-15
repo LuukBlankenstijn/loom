@@ -6,7 +6,6 @@ use crate::error::AppError;
 
 #[derive(sqlx::FromRow)]
 struct StationRow {
-    id: i64,
     ip: String,
 }
 
@@ -27,7 +26,7 @@ impl StationRepo {
 #[async_trait]
 impl StationRepository for StationRepo {
     async fn get(&self, ip: &str) -> Result<Station, AppError> {
-        let row = sqlx::query_as!(StationRow, "SELECT id, ip FROM stations WHERE ip = $1", ip)
+        let row = sqlx::query_as!(StationRow, "SELECT ip FROM stations WHERE ip = $1", ip)
             .fetch_one(&self.0)
             .await?;
 
@@ -35,7 +34,7 @@ impl StationRepository for StationRepo {
     }
 
     async fn get_all(&self) -> Result<Vec<Station>, AppError> {
-        let rows = sqlx::query_as!(StationRow, "SELECT id, ip FROM stations")
+        let rows = sqlx::query_as!(StationRow, "SELECT ip FROM stations")
             .fetch_all(&self.0)
             .await?;
         Ok(rows.into_iter().map(Into::into).collect())

@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/event/event.proto.
  */
 export const file_v1_event_event: GenFile = /*@__PURE__*/
-  fileDesc("ChR2MS9ldmVudC9ldmVudC5wcm90bxIIZXZlbnQudjEiLgoNU3RhdGlvblN0YXR1cxIKCgJpcBgBIAEoCRIRCglsb2dnZWRfaW4YAiABKAgiOAoNU3RhdGlvbnNTdGF0ZRInCgZzdGF0dXMYASADKAsyFy5ldmVudC52MS5TdGF0aW9uU3RhdHVzIosBChFTdWJzY3JpYnRpb25FdmVudBI5Cg5jb21tYW5kX291dHB1dBgBIAEoCzIfLmNvbW1hbmQudjEuQ3VzdG9tQ29tbWFuZE91dHB1dEgAEjAKDXN0YXR1c191cGRhdGUYAiABKAsyFy5ldmVudC52MS5TdGF0aW9uc1N0YXRlSABCCQoHbWVzc2FnZSL3AQoNQ2xpZW50Q29tbWFuZBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEisKBmN1c3RvbRgFIAEoCzIZLmNvbW1hbmQudjEuQ3VzdG9tQ29tbWFuZEgAQgkKB2NvbW1hbmQylwEKDUV2ZW50c1NlcnZpY2USRAoJU3Vic2NyaWJlEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhsuZXZlbnQudjEuU3Vic2NyaWJ0aW9uRXZlbnQiADABEkAKC1NlbmRDb21tYW5kEhcuZXZlbnQudjEuQ2xpZW50Q29tbWFuZBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpUBCgxjb20uZXZlbnQudjFCCkV2ZW50UHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2V2ZW50O2V2ZW50djGiAgNFWFiqAghFdmVudC5WMcoCCEV2ZW50XFYx4gIURXZlbnRcVjFcR1BCTWV0YWRhdGHqAglFdmVudDo6VjFiBnByb3RvMw", [file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("ChR2MS9ldmVudC9ldmVudC5wcm90bxIIZXZlbnQudjEiLgoNU3RhdGlvblN0YXR1cxIKCgJpcBgBIAEoCRIRCglsb2dnZWRfaW4YAiABKAgiOAoNU3RhdGlvbnNTdGF0ZRInCgZzdGF0dXMYASADKAsyFy5ldmVudC52MS5TdGF0aW9uU3RhdHVzIogBCg5Ccm9hZGNhc3RFdmVudBI5Cg5jb21tYW5kX291dHB1dBgBIAEoCzIfLmNvbW1hbmQudjEuQ3VzdG9tQ29tbWFuZE91dHB1dEgAEjAKDXN0YXR1c191cGRhdGUYAiABKAsyFy5ldmVudC52MS5TdGF0aW9uc1N0YXRlSABCCQoHbWVzc2FnZSL0AQoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEisKBmN1c3RvbRgFIAEoCzIZLmNvbW1hbmQudjEuQ3VzdG9tQ29tbWFuZEgAQgkKB2NvbW1hbmQykQEKDUV2ZW50c1NlcnZpY2USQQoJU3Vic2NyaWJlEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhguZXZlbnQudjEuQnJvYWRjYXN0RXZlbnQiADABEj0KC1NlbmRDb21tYW5kEhQuZXZlbnQudjEuQWRtaW5FdmVudBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpUBCgxjb20uZXZlbnQudjFCCkV2ZW50UHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2V2ZW50O2V2ZW50djGiAgNFWFiqAghFdmVudC5WMcoCCEV2ZW50XFYx4gIURXZlbnRcVjFcR1BCTWV0YWRhdGHqAglFdmVudDo6VjFiBnByb3RvMw", [file_google_protobuf_empty, file_v1_command_command]);
 
 /**
  * @generated from message event.v1.StationStatus
@@ -56,11 +56,11 @@ export const StationsStateSchema: GenMessage<StationsState> = /*@__PURE__*/
   messageDesc(file_v1_event_event, 1);
 
 /**
- * @generated from message event.v1.SubscribtionEvent
+ * @generated from message event.v1.BroadcastEvent
  */
-export type SubscribtionEvent = Message<"event.v1.SubscribtionEvent"> & {
+export type BroadcastEvent = Message<"event.v1.BroadcastEvent"> & {
   /**
-   * @generated from oneof event.v1.SubscribtionEvent.message
+   * @generated from oneof event.v1.BroadcastEvent.message
    */
   message: {
     /**
@@ -78,23 +78,23 @@ export type SubscribtionEvent = Message<"event.v1.SubscribtionEvent"> & {
 };
 
 /**
- * Describes the message event.v1.SubscribtionEvent.
- * Use `create(SubscribtionEventSchema)` to create a new message.
+ * Describes the message event.v1.BroadcastEvent.
+ * Use `create(BroadcastEventSchema)` to create a new message.
  */
-export const SubscribtionEventSchema: GenMessage<SubscribtionEvent> = /*@__PURE__*/
+export const BroadcastEventSchema: GenMessage<BroadcastEvent> = /*@__PURE__*/
   messageDesc(file_v1_event_event, 2);
 
 /**
- * @generated from message event.v1.ClientCommand
+ * @generated from message event.v1.AdminEvent
  */
-export type ClientCommand = Message<"event.v1.ClientCommand"> & {
+export type AdminEvent = Message<"event.v1.AdminEvent"> & {
   /**
    * @generated from field: repeated string ips = 1;
    */
   ips: string[];
 
   /**
-   * @generated from oneof event.v1.ClientCommand.command
+   * @generated from oneof event.v1.AdminEvent.command
    */
   command: {
     /**
@@ -124,10 +124,10 @@ export type ClientCommand = Message<"event.v1.ClientCommand"> & {
 };
 
 /**
- * Describes the message event.v1.ClientCommand.
- * Use `create(ClientCommandSchema)` to create a new message.
+ * Describes the message event.v1.AdminEvent.
+ * Use `create(AdminEventSchema)` to create a new message.
  */
-export const ClientCommandSchema: GenMessage<ClientCommand> = /*@__PURE__*/
+export const AdminEventSchema: GenMessage<AdminEvent> = /*@__PURE__*/
   messageDesc(file_v1_event_event, 3);
 
 /**
@@ -142,17 +142,16 @@ export const EventsService: GenService<{
   subscribe: {
     methodKind: "server_streaming";
     input: typeof EmptySchema;
-    output: typeof SubscribtionEventSchema;
+    output: typeof BroadcastEventSchema;
   },
   /**
-   * Sends a command to the backend that is either send to one or more
-   * stations or handled by the backend
+   * Sends a command to the backend that is sent to one or more stations
    *
    * @generated from rpc event.v1.EventsService.SendCommand
    */
   sendCommand: {
     methodKind: "unary";
-    input: typeof ClientCommandSchema;
+    input: typeof AdminEventSchema;
     output: typeof EmptySchema;
   },
 }> = /*@__PURE__*/

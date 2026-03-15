@@ -40,12 +40,14 @@ impl crate::orchestrator::types::EventHub for EventHub {
         let (command_tx, command_rx) = mpsc::unbounded_channel();
 
         stations.insert(ip.to_string(), command_tx);
+        tracing::debug!(ip, "[HUB] deregistered station");
 
         let hub = Arc::clone(self);
         let ip_owned = ip.to_string();
         let cleanup = move || {
             let mut stations = hub.stations.write().unwrap();
             stations.remove(&ip_owned);
+            tracing::debug!(ip = %ip_owned, "[HUB] deregistered station");
         };
 
         Ok(StationRegistration::new(

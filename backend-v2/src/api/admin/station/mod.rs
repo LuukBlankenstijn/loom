@@ -6,7 +6,9 @@ use loom_rpc::admin::v1::{
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, Orchestrator, StationRepository, TeamRepository};
+use crate::domain::{
+    ContestRepository, Orchestrator, StationRepository, TeamRepository, event::admin::AdminEvent,
+};
 
 mod convert;
 
@@ -98,5 +100,12 @@ impl StationService for StationHandler {
         self.orchestrator.sync_wallpaper(&sync_refs);
 
         Ok(Response::new(()))
+    }
+
+    async fn send_command(&self, request: Request<pb::AdminEvent>) -> Result<Response<()>, Status> {
+        let req = request.into_inner();
+        let event: AdminEvent = req.try_into()?;
+        self.orchestrator.handle_event(event.into());
+        Ok(().into())
     }
 }

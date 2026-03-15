@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package broadcast.v1;
+
+import "google/protobuf/empty.proto";
+import "v1/command/command.proto";
+
+message StationState {
+  string ip = 1;
+  bool logged_in = 2;
+}
+
+message StationsState {
+  repeated StationState state = 1;
+}
+
+message BroadcastEvent {
+  oneof message {
+    command.v1.CustomCommandOutput command_output = 1;
+    StationsState stations_state = 2;
+  }
+}
+
+service BroadcastService {
+  // Subscribes to the event broadcast
+  rpc Subscribe(google.protobuf.Empty) returns (stream BroadcastEvent) {}
+}

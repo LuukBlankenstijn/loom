@@ -13,12 +13,12 @@ pub struct StationsState {
     pub status: ::prost::alloc::vec::Vec<StationStatus>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SubscribtionEvent {
-    #[prost(oneof="subscribtion_event::Message", tags="1, 2")]
-    pub message: ::core::option::Option<subscribtion_event::Message>,
+pub struct BroadcastEvent {
+    #[prost(oneof="broadcast_event::Message", tags="1, 2")]
+    pub message: ::core::option::Option<broadcast_event::Message>,
 }
-/// Nested message and enum types in `SubscribtionEvent`.
-pub mod subscribtion_event {
+/// Nested message and enum types in `BroadcastEvent`.
+pub mod broadcast_event {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Message {
         #[prost(message, tag="1")]
@@ -28,14 +28,14 @@ pub mod subscribtion_event {
     }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct ClientCommand {
+pub struct AdminEvent {
     #[prost(string, repeated, tag="1")]
     pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(oneof="client_command::Command", tags="2, 3, 4, 5")]
-    pub command: ::core::option::Option<client_command::Command>,
+    #[prost(oneof="admin_event::Command", tags="2, 3, 4, 5")]
+    pub command: ::core::option::Option<admin_event::Command>,
 }
-/// Nested message and enum types in `ClientCommand`.
-pub mod client_command {
+/// Nested message and enum types in `AdminEvent`.
+pub mod admin_event {
     #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
     pub enum Command {
         #[prost(message, tag="2")]

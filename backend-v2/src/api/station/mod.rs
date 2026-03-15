@@ -9,17 +9,18 @@ use tonic::{Request, Response, Status, Streaming, metadata::MetadataMap};
 use tracing::error;
 
 use crate::{
-    domain::{Orchestrator, event::station::StationEvent},
+    domain::{ContestRepository, Orchestrator, event::station::StationEvent},
     error::AppError,
 };
 
 #[derive(Clone, Constructor)]
-pub struct StationsHandler {
+pub struct StationHandler {
+    contests_repo: Arc<dyn ContestRepository>,
     orchestrator: Arc<dyn Orchestrator>,
 }
 
 #[tonic::async_trait]
-impl StationService for StationsHandler {
+impl StationService for StationHandler {
     type SubscribeStream = Pin<Box<dyn Stream<Item = Result<pb::StationCommand, Status>> + Send>>;
 
     async fn subscribe(
@@ -29,6 +30,14 @@ impl StationService for StationsHandler {
         let ip = get_ip(request.metadata())?;
         let domain_stream = self.orchestrator.register_station(&ip).await?;
 
+        // send state
+        let contest = self.contests_repo.get_next_contest().await?;
+        if let Some(contest) = contest {
+            self.orchestrator.sync_api_url(&[&ip], contest.id);
+        }
+        self.orchestrator.sync_wallpaper(&[&ip]);
+
+        // map stream
         let response_stream =
             domain_stream.map(|res| res.map(pb::StationCommand::from).map_err(Status::from));
         Ok(Response::new(Box::pin(response_stream)))
