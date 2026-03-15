@@ -54,10 +54,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         team_repo.clone(),
         orchestrator.clone(),
     );
-    let map_handler = api::map::MapHandler::new(map_repo);
+    let map_handler = api::map::MapHandler::new(map_repo.clone());
+
     let broadcast_handler = api::broadcast::BroadcastHandler::new(orchestrator.clone());
-    let station_stream_handler =
-        api::station::StationHandler::new(contest_repo.clone(), orchestrator.clone());
+    let station_stream_handler = api::station::StationHandler::new(
+        contest_repo.clone(),
+        station_repo.clone(),
+        orchestrator.clone(),
+    );
 
     Ok(())
 }

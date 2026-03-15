@@ -9,13 +9,14 @@ use tonic::{Request, Response, Status, Streaming, metadata::MetadataMap};
 use tracing::error;
 
 use crate::{
-    domain::{ContestRepository, Orchestrator, event::station::StationEvent},
+    domain::{ContestRepository, Orchestrator, StationRepository, event::station::StationEvent},
     error::AppError,
 };
 
 #[derive(Clone, Constructor)]
 pub struct StationHandler {
     contests_repo: Arc<dyn ContestRepository>,
+    station_repo: Arc<dyn StationRepository>,
     orchestrator: Arc<dyn Orchestrator>,
 }
 
@@ -27,7 +28,10 @@ impl StationService for StationHandler {
         &self,
         request: Request<()>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
+        // get ip and save in database
         let ip = get_ip(request.metadata())?;
+        self.station_repo.upsert(&ip).await?;
+
         let domain_stream = self.orchestrator.register_station(&ip).await?;
 
         // send state
@@ -47,7 +51,10 @@ impl StationService for StationHandler {
         &self,
         request: Request<Streaming<pb::StationEvent>>,
     ) -> Result<Response<()>, Status> {
+        // get ip and save in database
         let ip = get_ip(request.metadata())?;
+        self.station_repo.upsert(&ip).await?;
+
         let mut stream = request.into_inner();
 
         while let Some(result) = stream.next().await {
