@@ -15,6 +15,14 @@ pub mod command {
         // @@protoc_insertion_point(command.v1)
     }
 }
+pub mod event {
+    #[cfg(feature = "event-v1")]
+    // @@protoc_insertion_point(attribute:event.v1)
+    pub mod v1 {
+        include!("event/v1/event.v1.rs");
+        // @@protoc_insertion_point(event.v1)
+    }
+}
 pub mod map {
     #[cfg(feature = "map-v1")]
     // @@protoc_insertion_point(attribute:map.v1)

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+
+message Station {
+  string ip = 2 [(buf.validate.field).string.ip = true];
+}
+
+message StationsResponse {
+  repeated Station stations = 1;
+}
+
+message DeleteStationRequest {
+  string ip = 1;
+}
+
+message AssignTeamRequest {
+  repeated string ips = 1;
+}
+
+service StationService {
+  // Gets all registered stations
+  rpc GetStations(google.protobuf.Empty) returns (StationsResponse) {}
+  // Delete a station
+  rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
+  // Tries to assign a team to each of the stations
+  rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}
+}

@@ -14,39 +14,6 @@ pub struct Contest {
     pub map_id: ::core::option::Option<i32>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Team {
-    #[prost(string, tag="1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, optional, tag="2")]
-    pub ip: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, tag="3")]
-    pub name: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Station {
-    #[prost(int32, tag="1")]
-    pub id: i32,
-    #[prost(string, tag="2")]
-    pub ip: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TeamsResponse {
-    #[prost(message, repeated, tag="1")]
-    pub teams: ::prost::alloc::vec::Vec<Team>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StationsResponse {
-    #[prost(message, repeated, tag="1")]
-    pub stations: ::prost::alloc::vec::Vec<Station>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct SetIpRequest {
-    #[prost(string, tag="1")]
-    pub team_id: ::prost::alloc::string::String,
-    #[prost(string, optional, tag="2")]
-    pub ip: ::core::option::Option<::prost::alloc::string::String>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UploadWallpaperRequest {
     #[prost(string, tag="1")]
     pub contest_id: ::prost::alloc::string::String,
@@ -61,112 +28,52 @@ pub struct SetWallpaperTextColorRequest {
     pub color: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct GetWallpaperRequest {
-    #[prost(string, optional, tag="1")]
-    pub contest_id: ::core::option::Option<::prost::alloc::string::String>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct WallpaperResponse {
-    #[prost(bytes="vec", optional, tag="1")]
-    pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
-    #[prost(string, optional, tag="2")]
-    pub color: ::core::option::Option<::prost::alloc::string::String>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SetMapRequest {
     #[prost(string, tag="1")]
     pub contest_id: ::prost::alloc::string::String,
     #[prost(int32, tag="2")]
     pub map_id: i32,
 }
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct GetMapRequest {
-    #[prost(int32, tag="1")]
-    pub id: i32,
-}
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct CreateMapRequest {
-    #[prost(string, tag="1")]
-    pub name: ::prost::alloc::string::String,
+pub struct Station {
+    #[prost(string, tag="2")]
+    pub ip: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct MapResponse {
-    #[prost(message, optional, tag="1")]
-    pub map: ::core::option::Option<super::super::map::v1::Map>,
-    #[prost(message, repeated, tag="2")]
-    pub elements: ::prost::alloc::vec::Vec<super::super::map::v1::Element>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetAllMapsResponse {
+pub struct StationsResponse {
     #[prost(message, repeated, tag="1")]
-    pub maps: ::prost::alloc::vec::Vec<super::super::map::v1::Map>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UpdateMapRequest {
-    #[prost(int32, tag="1")]
-    pub id: i32,
-    #[prost(string, repeated, tag="3")]
-    pub deleted: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(message, repeated, tag="4")]
-    pub updated: ::prost::alloc::vec::Vec<super::super::map::v1::Element>,
+    pub stations: ::prost::alloc::vec::Vec<Station>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct StationStatus {
+pub struct DeleteStationRequest {
     #[prost(string, tag="1")]
     pub ip: ::prost::alloc::string::String,
-    #[prost(bool, tag="2")]
-    pub logged_in: bool,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StationsState {
-    #[prost(message, repeated, tag="1")]
-    pub status: ::prost::alloc::vec::Vec<StationStatus>,
-}
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct DeleteStationRequest {
-    #[prost(int32, tag="1")]
-    pub id: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct AssignTeamRequest {
-    #[prost(int32, repeated, tag="1")]
-    pub ids: ::prost::alloc::vec::Vec<i32>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SubscribtionMessage {
-    #[prost(oneof="subscribtion_message::Message", tags="1, 2")]
-    pub message: ::core::option::Option<subscribtion_message::Message>,
-}
-/// Nested message and enum types in `SubscribtionMessage`.
-pub mod subscribtion_message {
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Message {
-        #[prost(message, tag="1")]
-        CommandOutput(super::super::super::command::v1::CustomCommandOutput),
-        #[prost(message, tag="2")]
-        StatusUpdate(super::StationsState),
-    }
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct ClientCommand {
     #[prost(string, repeated, tag="1")]
     pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(oneof="client_command::Command", tags="2, 3, 4, 5")]
-    pub command: ::core::option::Option<client_command::Command>,
 }
-/// Nested message and enum types in `ClientCommand`.
-pub mod client_command {
-    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
-    pub enum Command {
-        #[prost(message, tag="2")]
-        LoginWithCredentials(super::super::super::command::v1::LoginWithCredentialsCommand),
-        #[prost(message, tag="3")]
-        Login(super::super::super::command::v1::LoginCommand),
-        #[prost(message, tag="4")]
-        Logout(super::super::super::command::v1::LogoutCommand),
-        #[prost(message, tag="5")]
-        Custom(super::super::super::command::v1::CustomCommand),
-    }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Team {
+    #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="2")]
+    pub ip: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, tag="3")]
+    pub name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TeamsResponse {
+    #[prost(message, repeated, tag="1")]
+    pub teams: ::prost::alloc::vec::Vec<Team>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetIpRequest {
+    #[prost(string, tag="1")]
+    pub team_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="2")]
+    pub ip: ::core::option::Option<::prost::alloc::string::String>,
 }
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

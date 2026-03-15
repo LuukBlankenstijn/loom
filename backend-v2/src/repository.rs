@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use sqlx::{PgPool, postgres::PgPoolOptions};
 
 use crate::{
@@ -12,17 +14,21 @@ mod team;
 
 mod utils;
 
-pub struct RepoContainer {
+#[derive(Clone)]
+pub struct Repositories {
     pool: PgPool,
     http_client: reqwest::Client,
 
     icpc_config: Option<IcpcApiConfig>,
 }
 
-impl RepoContainer {
-    pub async fn new(database_config: DatabaseConfig, icpc_config: Option<IcpcApiConfig>) -> Self {
+impl Repositories {
+    pub async fn new(
+        database_config: DatabaseConfig,
+        icpc_config: Option<IcpcApiConfig>,
+    ) -> Repositories {
         let http_client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
+            .timeout(std::time::Duration::from_secs(100))
             .build()
             .expect("failed to build http client");
 
@@ -38,28 +44,27 @@ impl RepoContainer {
             icpc_config,
         }
     }
-
-    pub fn get_contest(&self) -> impl ContestRepository {
-        contest::ContestRepo::new(
+    pub fn get_contest(&self) -> Arc<dyn ContestRepository> {
+        Arc::new(contest::ContestRepo::new(
             self.pool.clone(),
             self.http_client.clone(),
             self.icpc_config.clone(),
-        )
+        ))
     }
 
-    pub fn get_team(&self) -> impl TeamRepository {
-        team::TeamRepo::new(
+    pub fn get_team(&self) -> Arc<dyn TeamRepository> {
+        Arc::new(team::TeamRepo::new(
             self.pool.clone(),
             self.http_client.clone(),
             self.icpc_config.clone(),
-        )
+        ))
     }
 
-    pub fn get_map(&self) -> impl MapRepository {
-        map::MapRepo::new(self.pool.clone())
+    pub fn get_map(&self) -> Arc<dyn MapRepository> {
+        Arc::new(map::MapRepo::new(self.pool.clone()))
     }
 
-    pub fn get_station(&self) -> impl StationRepository {
-        station::StationRepo::new(self.pool.clone())
+    pub fn get_station(&self) -> Arc<dyn StationRepository> {
+        Arc::new(station::StationRepo::new(self.pool.clone()))
     }
 }

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use derive_more::derive::From;
 use uuid::Uuid;
 
 use crate::error::AppError;
@@ -10,7 +11,7 @@ pub struct Map {
     pub elements: Vec<MapElement>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, From)]
 pub enum MapElement {
     Wall(Wall),
     Door(Door),
@@ -18,7 +19,7 @@ pub enum MapElement {
 }
 
 #[derive(Debug, Clone)]
-pub struct MapMetaData {
+pub struct MapMetadata {
     pub id: i32,
     pub name: String,
 }
@@ -83,7 +84,7 @@ pub trait MapRepository: Send + Sync {
 
     async fn create_map(&self, name: &str) -> Result<Map, AppError>;
 
-    async fn get_all_metadata(&self) -> Result<Vec<Map>, AppError>;
+    async fn get_all_metadata(&self) -> Result<Vec<MapMetadata>, AppError>;
 
     async fn delete_elements(&self, element_ids: &[Uuid]) -> Result<(), AppError>;
     async fn upsert_elements(&self, map_id: i32, elements: Vec<MapElement>)

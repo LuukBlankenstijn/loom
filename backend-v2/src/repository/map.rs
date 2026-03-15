@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::domain::{Door, Map, MapElement, MapRepository, Rotation, Seat, Wall};
+use crate::domain::{Door, Map, MapElement, MapMetadata, MapRepository, Rotation, Seat, Wall};
 use crate::error::AppError;
 
 pub struct MapRepo(PgPool);
@@ -33,10 +33,9 @@ struct PointProps {
 #[async_trait]
 impl MapRepository for MapRepo {
     async fn get(&self, map_id: i32) -> Result<Option<Map>, AppError> {
-        let map_row =
-            sqlx::query!("SELECT id, name FROM contest_map WHERE id = $1", map_id)
-                .fetch_optional(&self.0)
-                .await?;
+        let map_row = sqlx::query!("SELECT id, name FROM contest_map WHERE id = $1", map_id)
+            .fetch_optional(&self.0)
+            .await?;
 
         let (id, name) = match map_row {
             Some(row) => (row.id, row.name),
@@ -187,14 +186,17 @@ impl MapRepository for MapRepo {
         Ok(())
     }
 
-    async fn get_all_metadata(&self) -> Result<Vec<Map>, AppError> {
+    async fn get_all_metadata(&self) -> Result<Vec<MapMetadata>, AppError> {
         let rows = sqlx::query!("SELECT id, name FROM contest_map")
             .fetch_all(&self.0)
             .await?;
 
         Ok(rows
             .into_iter()
-            .map(|r| Map { id: r.id, name: r.name, elements: vec![] })
+            .map(|r| MapMetadata {
+                id: r.id,
+                name: r.name,
+            })
             .collect())
     }
 
@@ -223,6 +225,10 @@ impl MapRepository for MapRepo {
         .fetch_one(&self.0)
         .await?;
 
-        Ok(Map { id: row.id, name: row.name, elements: vec![] })
+        Ok(Map {
+            id: row.id,
+            name: row.name,
+            elements: vec![],
+        })
     }
 }

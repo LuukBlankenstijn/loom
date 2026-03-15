@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package map.v1;
+
+import "buf/validate/validate.proto";
+
+message Location {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+enum Rotation {
+  ROTATION_UNSPECIFIED = 0;
+  ROTATION_0 = 1;
+  ROTATION_90 = 2;
+  ROTATION_180 = 3;
+  ROTATION_270 = 4;
+}
+
+message MapMetadata {
+  int32 id = 1;
+  string name = 2;
+}
+
+message Door {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location location = 2;
+  Rotation rotation = 3;
+}
+
+message Wall {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location start = 2;
+  Location end = 3;
+}
+
+message Seat {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  Location location = 2;
+  Rotation rotation = 3;
+}
+
+message Element {
+  oneof element {
+    Wall wall = 1;
+    Door door = 2;
+    Seat seat = 3;
+  }
+}
