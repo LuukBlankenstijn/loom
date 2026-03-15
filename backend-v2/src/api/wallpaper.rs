@@ -16,9 +16,9 @@ use crate::{
     error::AppError,
 };
 
-#[derive(Constructor)]
+#[derive(Clone, Constructor)]
 pub struct WallpaperHandler {
-    constest_repo: Arc<dyn ContestRepository>,
+    contest_repo: Arc<dyn ContestRepository>,
     team_repo: Arc<dyn TeamRepository>,
 }
 
@@ -35,14 +35,14 @@ pub async fn wallpaper_handler(
     let contest_id = if let Some(id) = query.contest_id {
         id
     } else {
-        let contest_option = state.constest_repo.get_next_contest().await?;
+        let contest_option = state.contest_repo.get_next_contest().await?;
         contest_option
             .map(|c| c.id)
             .ok_or_else(|| AppError::NotFound("no upcomming contest found".to_string()))?
     };
     // get the wallpaper
     let wallpaper = state
-        .constest_repo
+        .contest_repo
         .get_wallpaper(&contest_id)
         .await?
         .ok_or_else(|| AppError::NotFound("no wallpaper found".to_string()))?;

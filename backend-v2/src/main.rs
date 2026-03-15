@@ -1,10 +1,21 @@
 use std::sync::Arc;
 
+use axum::{Router, routing::get};
+use loom_rpc::{
+    admin::v1::{
+        contest_service_server::ContestServiceServer, station_service_server::StationServiceServer,
+        team_service_server::TeamServiceServer,
+    },
+    broadcast::v1::broadcast_service_server::BroadcastServiceServer,
+    map::v1::map_service_server::MapServiceServer,
+    station::v1::station_service_server,
+};
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::CorsLayer;
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::{config::Config, orchestrator::Orchestrator};
+use crate::{api::combined_auth_interceptor, config::Config, orchestrator::Orchestrator};
 
 mod api;
 mod config;
@@ -46,30 +57,75 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.icpc_api.map(|config| config.base_url),
     ));
 
-    let contest_handler = api::admin::ContestHandler::new(
-        contest_repo.clone(),
-        map_repo.clone(),
-        orchestrator.clone(),
-    );
-    let station_handler = api::admin::StationHandler::new(
-        contest_repo.clone(),
-        station_repo.clone(),
-        team_repo.clone(),
-        orchestrator.clone(),
-    );
-    let team_handler = api::admin::TeamHandler::new(
-        contest_repo.clone(),
-        team_repo.clone(),
-        orchestrator.clone(),
-    );
-    let map_handler = api::map::MapHandler::new(map_repo.clone());
+    let interceptor = combined_auth_interceptor(config.auth_token);
 
-    let broadcast_handler = api::broadcast::BroadcastHandler::new(orchestrator.clone());
-    let station_stream_handler = api::station::StationHandler::new(
-        contest_repo.clone(),
-        station_repo.clone(),
-        orchestrator.clone(),
+    let contest_serice = ContestServiceServer::with_interceptor(
+        api::admin::ContestHandler::new(
+            contest_repo.clone(),
+            map_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let station_service = StationServiceServer::with_interceptor(
+        api::admin::StationHandler::new(
+            contest_repo.clone(),
+            station_repo.clone(),
+            team_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let team_service = TeamServiceServer::with_interceptor(
+        api::admin::TeamHandler::new(
+            contest_repo.clone(),
+            team_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let map_service = MapServiceServer::with_interceptor(
+        api::map::MapHandler::new(map_repo.clone()),
+        interceptor.clone(),
     );
 
+    let broadcast_service = BroadcastServiceServer::with_interceptor(
+        api::broadcast::BroadcastHandler::new(orchestrator.clone()),
+        interceptor.clone(),
+    );
+    let station_stream_service = station_service_server::StationServiceServer::with_interceptor(
+        api::station::StationHandler::new(
+            contest_repo.clone(),
+            station_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+
+    let wallpaper_handler = api::wallpaper::WallpaperHandler::new(contest_repo, team_repo);
+
+    let grpc_router = tonic::service::Routes::builder()
+        .add_service(contest_serice)
+        .add_service(station_service)
+        .add_service(team_service)
+        .add_service(map_service)
+        .add_service(broadcast_service)
+        .add_service(station_stream_service)
+        .clone()
+        .routes()
+        .into_axum_router()
+        .layer(tonic_web::GrpcWebLayer::new());
+
+    let routes = Router::new()
+        .route("/wallpaper", get(api::wallpaper::wallpaper_handler))
+        .with_state(wallpaper_handler)
+        .merge(grpc_router)
+        .layer(CorsLayer::permissive());
+
+    tracing::info!(addr = %config.listen, "starting server");
+
+    let listener = tokio::net::TcpListener::bind(config.listen).await?;
+    let service = routes.into_make_service();
+    axum::serve(listener, service).await?;
     Ok(())
 }

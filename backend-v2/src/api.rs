@@ -7,7 +7,7 @@ pub mod wallpaper;
 use axum::http::StatusCode;
 use chrono::{DateTime, Utc};
 use prost_types::Timestamp;
-use tonic::Status;
+use tonic::{Request, Status};
 
 use crate::error::AppError;
 
@@ -64,22 +64,36 @@ impl From<AppError> for Status {
     }
 }
 
-impl From<AppError> for StatusCode {
-    fn from(value: AppError) -> Self {
-        match &value {
-            AppError::NotFound(_) => StatusCode::NOT_FOUND,
-            AppError::InvalidArgument(_) => StatusCode::BAD_REQUEST,
-            AppError::AlreadyExists(_) => StatusCode::NOT_MODIFIED,
-            AppError::FailedPrecondition(_) => StatusCode::PRECONDITION_FAILED,
-            AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
 pub fn to_timestamp(dt: DateTime<Utc>) -> Timestamp {
     Timestamp {
         seconds: dt.timestamp(),
         nanos: dt.timestamp_subsec_nanos() as i32,
+    }
+}
+
+pub fn combined_auth_interceptor(
+    secret_option: Option<String>,
+) -> impl Fn(Request<()>) -> Result<Request<()>, Status> + Clone {
+    let expected_header = secret_option.map(|s| format!("Bearer {}", s));
+    move |req: Request<()>| {
+        let expected = match &expected_header {
+            Some(e) => e,
+            None => return Ok(req),
+        };
+
+        let metadata = req.metadata();
+
+        if metadata.contains_key("x-proxy-authorized") {
+            return Ok(req);
+        }
+
+        let auth_header = metadata.get("authorization").and_then(|h| h.to_str().ok());
+
+        if auth_header == Some(expected) {
+            Ok(req)
+        } else {
+            tracing::warn!("Unauthorized gRPC access attempt");
+            Err(Status::unauthenticated("Missing or invalid credentials"))
+        }
     }
 }
