@@ -1,11 +1,7 @@
 use async_trait::async_trait;
 
+use crate::domain::types::Station;
 use crate::error::AppError;
-
-#[derive(Debug, Clone)]
-pub struct Station {
-    pub ip: String,
-}
 
 #[async_trait]
 pub trait StationRepository: Send + Sync {

@@ -1,3 +1,4 @@
+use derive_more::derive::Constructor;
 use futures::future::try_join_all;
 use loom_rpc::admin::v1::{
     self as pb, AssignTeamRequest, DeleteStationRequest, station_service_server::StationService,
@@ -5,28 +6,16 @@ use loom_rpc::admin::v1::{
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, StationRepository, TeamRepository};
+use crate::domain::{ContestRepository, Orchestrator, StationRepository, TeamRepository};
 
 mod convert;
 
+#[derive(Constructor)]
 pub struct StationHandler {
     contest_repo: Arc<dyn ContestRepository>,
     station_repo: Arc<dyn StationRepository>,
     team_repo: Arc<dyn TeamRepository>,
-}
-
-impl StationHandler {
-    pub fn new(
-        contest_repo: Arc<dyn ContestRepository>,
-        station_repo: Arc<dyn StationRepository>,
-        team_repo: Arc<dyn TeamRepository>,
-    ) -> Self {
-        Self {
-            contest_repo,
-            station_repo,
-            team_repo,
-        }
-    }
+    orchestrator: Arc<dyn Orchestrator>,
 }
 
 #[tonic::async_trait]
@@ -106,8 +95,7 @@ impl StationService for StationHandler {
                 .map_err(|e| Status::internal(format!("Failed to batch update teams: {}", e)))?;
         }
         let sync_refs: Vec<&str> = updated_ips.iter().map(|s| s.as_str()).collect();
-        // TODO: fix
-        // self.hub.sync_stations(&sync_refs);
+        self.orchestrator.sync_wallpaper(&sync_refs);
 
         Ok(Response::new(()))
     }

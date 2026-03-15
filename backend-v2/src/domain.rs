@@ -1,9 +1,7 @@
-mod contest;
-mod map;
-mod station;
-mod team;
+pub mod infra;
+pub mod repositories;
+pub mod types;
 
-pub use contest::*;
-pub use map::*;
-pub use station::*;
-pub use team::*;
+pub use infra::*;
+pub use repositories::*;
+pub use types::*;

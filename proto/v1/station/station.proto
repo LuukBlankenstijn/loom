@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package stations.v1;
+package station.v1;
 
 import "buf/validate/validate.proto";
 import "google/protobuf/empty.proto";
@@ -27,7 +27,7 @@ message ServerMessage {
   }
 }
 
-message ClientMessage {
+message StationMessage {
   oneof message {
     google.protobuf.Empty logged_out = 1;
     google.protobuf.Empty logged_in = 2;
@@ -36,5 +36,5 @@ message ClientMessage {
 }
 
 service StationService {
-  rpc Subscribe(stream ClientMessage) returns (stream ServerMessage) {}
+  rpc Subscribe(stream StationMessage) returns (stream ServerMessage) {}
 }

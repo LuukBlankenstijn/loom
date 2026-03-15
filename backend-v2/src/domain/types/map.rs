@@ -1,8 +1,5 @@
-use async_trait::async_trait;
 use derive_more::derive::From;
 use uuid::Uuid;
-
-use crate::error::AppError;
 
 #[derive(Debug, Clone)]
 pub struct Map {
@@ -25,20 +22,20 @@ pub struct MapMetadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct Door {
-    pub id: Uuid,
-    pub x: i32,
-    pub y: i32,
-    pub rotation: Rotation,
-}
-
-#[derive(Debug, Clone)]
 pub struct Wall {
     pub id: Uuid,
     pub x_start: i32,
     pub y_start: i32,
     pub x_end: i32,
     pub y_end: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Door {
+    pub id: Uuid,
+    pub x: i32,
+    pub y: i32,
+    pub rotation: Rotation,
 }
 
 #[derive(Debug, Clone)]
@@ -75,18 +72,4 @@ impl Rotation {
             _ => Self::R0,
         }
     }
-}
-
-#[async_trait]
-pub trait MapRepository: Send + Sync {
-    async fn get(&self, map_id: i32) -> Result<Option<Map>, AppError>;
-    async fn get_by_contest(&self, contest_id: &str) -> Result<Option<Map>, AppError>;
-
-    async fn create_map(&self, name: &str) -> Result<Map, AppError>;
-
-    async fn get_all_metadata(&self) -> Result<Vec<MapMetadata>, AppError>;
-
-    async fn delete_elements(&self, element_ids: &[Uuid]) -> Result<(), AppError>;
-    async fn upsert_elements(&self, map_id: i32, elements: Vec<MapElement>)
-    -> Result<(), AppError>;
 }

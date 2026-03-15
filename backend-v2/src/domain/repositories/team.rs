@@ -1,13 +1,7 @@
 use async_trait::async_trait;
 
+use crate::domain::types::Team;
 use crate::error::AppError;
-
-#[derive(Debug, Clone)]
-pub struct Team {
-    pub id: String,
-    pub name: String,
-    pub ip: Option<String>,
-}
 
 #[async_trait]
 pub trait TeamRepository: Send + Sync {

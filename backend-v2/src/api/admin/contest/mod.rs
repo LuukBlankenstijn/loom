@@ -1,23 +1,17 @@
+use derive_more::derive::Constructor;
 use loom_rpc::admin::v1::{self as pb, contest_service_server::ContestService};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, MapRepository};
+use crate::domain::{ContestRepository, MapRepository, Orchestrator};
 
 mod convert;
 
+#[derive(Constructor)]
 pub struct ContestHandler {
     contest_repo: Arc<dyn ContestRepository>,
     map_repo: Arc<dyn MapRepository>,
-}
-
-impl ContestHandler {
-    pub fn new(contest_repo: Arc<dyn ContestRepository>, map_repo: Arc<dyn MapRepository>) -> Self {
-        Self {
-            contest_repo,
-            map_repo,
-        }
-    }
+    orchestrator: Arc<dyn Orchestrator>,
 }
 
 #[tonic::async_trait]
@@ -61,9 +55,7 @@ impl ContestService for ContestHandler {
                 self.contest_repo.delete_wallpaper(&req.contest_id).await?;
             }
         }
-        // update stations
-        // TODO: fix
-        // self.hub.sync_stations(&[]);
+        self.orchestrator.sync_wallpaper(&[]);
         Ok(Response::new(()))
     }
 
@@ -76,8 +68,7 @@ impl ContestService for ContestHandler {
             .set_wallpaper_text_color(&req.contest_id, &req.color)
             .await?;
         // update stations
-        // TODO: fix
-        // self.hub.sync_stations(&[]);
+        self.orchestrator.sync_wallpaper(&[]);
         Ok(Response::new(()))
     }
 

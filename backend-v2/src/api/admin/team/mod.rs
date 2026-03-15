@@ -2,26 +2,17 @@ mod convert;
 
 use std::sync::Arc;
 
+use derive_more::derive::Constructor;
 use loom_rpc::admin::v1::{self as pb, team_service_server::TeamService};
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, TeamRepository};
+use crate::domain::{ContestRepository, Orchestrator, TeamRepository};
 
+#[derive(Constructor)]
 pub struct TeamHandler {
     contest_repo: Arc<dyn ContestRepository>,
     team_repo: Arc<dyn TeamRepository>,
-}
-
-impl TeamHandler {
-    pub fn new(
-        contest_repo: Arc<dyn ContestRepository>,
-        team_repo: Arc<dyn TeamRepository>,
-    ) -> Self {
-        Self {
-            contest_repo,
-            team_repo,
-        }
-    }
+    orchestrator: Arc<dyn Orchestrator>,
 }
 
 #[tonic::async_trait]
@@ -46,8 +37,7 @@ impl TeamService for TeamHandler {
             .set_ip(&req.team_id, req.ip.as_deref())
             .await?;
         if let Some(ip) = maybe_ip {
-            // TODO: fix
-            // self.hub.sync_stations(&[&ip]);
+            self.orchestrator.sync_wallpaper(&[&ip]);
         }
         Ok(Response::new(()))
     }
