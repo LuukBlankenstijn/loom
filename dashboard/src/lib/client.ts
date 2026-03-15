@@ -1,84 +1,101 @@
 import { Code, ConnectError, createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
-import { AdminService } from "@client/v1/admin/admin_pb";
-import type {
-  ClientCommand,
-  Contest,
-  StationsResponse,
-  SubscribtionMessage,
-  TeamsResponse,
-  WallpaperResponse,
-} from "@client/v1/admin/admin_pb";
-import type {
-  GetAllMapsResponse,
-  MapResponse,
-} from "@client/v1/admin/admin_pb";
-import {
-  ClientCommandSchema,
-  SetMapRequestSchema,
-} from "@client/v1/admin/admin_pb";
 import { create } from "@bufbuild/protobuf";
 import { EmptySchema } from "@bufbuild/protobuf/wkt";
+import {
+  ContestService,
+  SetMapRequestSchema,
+  type Contest,
+} from "@client/v1/admin/contest_pb";
+import {
+  AdminEventSchema,
+  StationService,
+  type AdminEvent,
+  type StationsResponse,
+} from "@client/v1/admin/station_pb";
+import { TeamService, type TeamsResponse } from "@client/v1/admin/team_pb";
+import {
+  MapService,
+  type GetAllMapMetadataResponse,
+  type MapResponse,
+} from "@client/v1/map/map_pb";
+import {
+  BroadcastService,
+  type BroadcastEvent,
+} from "@client/v1/broadcast/broadcast_pb";
 
 const transport = createGrpcWebTransport({
   baseUrl: "/api",
 });
 
-const client = createClient(AdminService, transport);
+const contest_client = createClient(ContestService, transport);
+const team_client = createClient(TeamService, transport);
+const station_client = createClient(StationService, transport);
+const map_client = createClient(MapService, transport);
+const broadcast_client = createClient(BroadcastService, transport);
 
 export const adminClient = {
+  // contest
   getNextContest: async (): Promise<Contest> => {
-    return (await client.getNextContest(create(EmptySchema))) as Contest;
-  },
-  getActiveTeams: async (): Promise<TeamsResponse> => {
-    return (await client.getActiveTeams(create(EmptySchema))) as TeamsResponse;
-  },
-  getStations: async (): Promise<StationsResponse> => {
-    return (await client.getStations(create(EmptySchema))) as StationsResponse;
-  },
-  deleteStation: async (id: number): Promise<void> => {
-    await client.deleteStation({ id });
-  },
-  assignTeam: async (ids: number[]): Promise<void> => {
-    await client.assignTeam({ ids });
-  },
-  setIp: async (teamId: string, ip?: string): Promise<void> => {
-    await client.setIp({ teamId, ip });
-  },
-  getWallpaper: async (contestId?: string): Promise<WallpaperResponse> => {
-    return (await client.getWallpaper({ contestId })) as WallpaperResponse;
+    return await contest_client.getNextContest(create(EmptySchema));
   },
   setWallpaper: async (
     contestId: string,
     imageData: Uint8Array,
   ): Promise<void> => {
-    await client.setWallpaper({ contestId, imageData });
+    await contest_client.setWallpaper({ contestId, imageData });
   },
   setWallpaperTextColor: async (
     contestId: string,
     color: string,
   ): Promise<void> => {
-    await client.setWallpaperTextColor({ contestId, color });
-  },
-  getAllMaps: async (): Promise<GetAllMapsResponse> => {
-    return (await client.getAllMaps(create(EmptySchema))) as GetAllMapsResponse;
-  },
-  createMap: async (name: string): Promise<MapResponse> => {
-    return (await client.createMap({ name })) as MapResponse;
+    await contest_client.setWallpaperTextColor({ contestId, color });
   },
   setMap: async (contestId: string, mapId: number): Promise<void> => {
-    await client.setMap(create(SetMapRequestSchema, { contestId, mapId }));
+    await contest_client.setMap(
+      create(SetMapRequestSchema, { contestId, mapId }),
+    );
+  },
+
+  // teams
+  getActiveTeams: async (): Promise<TeamsResponse> => {
+    return await team_client.getActiveTeams(create(EmptySchema));
+  },
+  setIp: async (teamId: string, ip?: string): Promise<void> => {
+    await team_client.setIp({ teamId, ip });
+  },
+
+  // station
+  getStations: async (): Promise<StationsResponse> => {
+    return station_client.getStations(create(EmptySchema));
+  },
+  deleteStation: async (ip: string): Promise<void> => {
+    await station_client.deleteStation({ ip });
+  },
+  assignTeam: async (ips: string[]): Promise<void> => {
+    await station_client.assignTeam({ ips });
   },
   sendCommand: async (
     ips: string[],
-    command: ClientCommand["command"],
+    command: AdminEvent["command"],
   ): Promise<void> => {
-    await client.sendCommand(create(ClientCommandSchema, { ips, command }));
+    await station_client.sendCommand(
+      create(AdminEventSchema, { ips, command }),
+    );
   },
+
+  // map
+  getAllMaps: async (): Promise<GetAllMapMetadataResponse> => {
+    return await map_client.getAllMapMetadata(create(EmptySchema));
+  },
+  createMap: async (name: string): Promise<MapResponse> => {
+    return await map_client.createMap({ name });
+  },
+
   subscribe: async function* (
     signal?: AbortSignal,
-  ): AsyncIterable<SubscribtionMessage> {
-    const stream = client.subscribe(create(EmptySchema), { signal });
+  ): AsyncIterable<BroadcastEvent> {
+    const stream = broadcast_client.subscribe(create(EmptySchema), { signal });
 
     try {
       for await (const response of stream) {

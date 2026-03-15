@@ -6,8 +6,9 @@ import {
   LogoutCommandSchema,
 } from "@client/v1/command/command_pb";
 import { adminClient } from "./client";
-import type { Station, Team } from "@client/v1/admin/admin_pb";
 import { queryClient } from "../main";
+import type { Station } from "@client/v1/admin/station_pb";
+import type { Team } from "@client/v1/admin/team_pb";
 
 type ActionField = {
   key: string;
@@ -194,7 +195,7 @@ export const STATION_ACTIONS: StationAction[] = [
         console.error('deleteStation is a "single" action');
       }
       const station = stations[0];
-      await adminClient.deleteStation(station.id);
+      await adminClient.deleteStation(station.ip);
       queryClient.invalidateQueries({ queryKey: ["stations"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
@@ -208,7 +209,7 @@ export const STATION_ACTIONS: StationAction[] = [
     execute: async (stations) => {
       const unassigned = stations.filter((s) => !s.team);
       if (unassigned.length === 0) return;
-      await adminClient.assignTeam(unassigned.map((s) => s.id));
+      await adminClient.assignTeam(unassigned.map((s) => s.ip));
       queryClient.invalidateQueries({ queryKey: ["stations"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
