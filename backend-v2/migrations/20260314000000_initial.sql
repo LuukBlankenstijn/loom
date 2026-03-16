@@ -48,7 +48,7 @@ CREATE TABLE contest_teams (
 
 -- Wallpapers (one per contest)
 CREATE TABLE wallpapers (
-    contest_id TEXT        PRIMARY KEY REFERENCES contests(id) ON DELETE CASCADE,
+    contest_id TEXT        PRIMARY KEY,
     data       BYTEA       NOT NULL,
     mime_type  TEXT        NOT NULL,
     text_color TEXT        NOT NULL DEFAULT '#ffffff'
