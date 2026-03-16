@@ -3,7 +3,9 @@ use std::{collections::HashMap, sync::RwLock};
 
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
+use tracing::info;
 
+use crate::domain::event;
 use crate::orchestrator::types::StationRegistration;
 use crate::{
     domain::{
@@ -40,7 +42,7 @@ impl crate::orchestrator::types::EventHub for EventHub {
         let (command_tx, command_rx) = mpsc::unbounded_channel();
 
         stations.insert(ip.to_string(), command_tx);
-        tracing::debug!(ip, "[HUB] deregistered station");
+        tracing::debug!(ip, "[HUB] registered station");
 
         let hub = Arc::clone(self);
         let ip_owned = ip.to_string();

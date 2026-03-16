@@ -40,34 +40,67 @@ impl crate::orchestrator::types::StationStateStore for MemoryStationState {
     }
 
     fn connect(&self, ip: &str) {
-        let mut state = self.state.write().unwrap();
-        if !state.contains_key(ip) {
-            state.insert(ip.to_string(), false);
+        let mut changed = false;
+        {
+            let mut state = self.state.write().unwrap();
+            if !state.contains_key(ip) {
+                state.insert(ip.to_string(), false);
+                changed = true;
+            }
+        }
+
+        if changed {
             self.on_change();
         }
     }
 
     fn disconnect(&self, ip: &str) {
-        let mut state = self.state.write().unwrap();
-        let result = state.remove(ip);
-        // there was previous state, notify
-        if result.is_some() {
+        let changed = {
+            let mut state = self.state.write().unwrap();
+            state.remove(ip).is_some()
+        };
+
+        if changed {
             self.on_change();
         }
     }
 
     fn login(&self, ip: &str) {
-        let mut state = self.state.write().unwrap();
-        if state.contains_key(ip) {
-            state.insert(ip.to_string(), true);
+        let changed = {
+            let mut state = self.state.write().unwrap();
+            if let Some(logged_in) = state.get_mut(ip) {
+                if !*logged_in {
+                    *logged_in = true;
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        if changed {
             self.on_change();
         }
     }
 
     fn logout(&self, ip: &str) {
-        let mut state = self.state.write().unwrap();
-        if state.contains_key(ip) {
-            state.insert(ip.to_string(), false);
+        let changed = {
+            let mut state = self.state.write().unwrap();
+            if let Some(logged_in) = state.get_mut(ip) {
+                if *logged_in {
+                    *logged_in = false;
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        if changed {
             self.on_change();
         }
     }

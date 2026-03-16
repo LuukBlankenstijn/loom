@@ -100,6 +100,7 @@ impl domain::Orchestrator for Orchestrator {
         ip: &str,
     ) -> Result<domain::StationCommandStream, crate::error::AppError> {
         let registration = self.hub.register_station(ip)?;
+
         self.state.connect(ip);
 
         let state_store = Arc::clone(&self.state);

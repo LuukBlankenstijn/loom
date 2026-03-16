@@ -60,8 +60,7 @@ impl StationService for StationHandler {
         while let Some(result) = stream.next().await {
             let message = match result {
                 Ok(msg) => msg,
-                Err(e) => {
-                    error!(%ip, "gRPC stream error: {}", e);
+                Err(_) => {
                     break;
                 }
             };

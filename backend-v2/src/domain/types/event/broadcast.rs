@@ -11,7 +11,7 @@ pub struct StationConnectionState {
 #[derive(Debug, Clone)]
 pub struct StationsState(pub Vec<StationConnectionState>);
 
-#[derive(Clone, From)]
+#[derive(Debug, Clone, From)]
 pub enum BroadcastEvent {
     State(StationsState),
     Command(CommandOutput),

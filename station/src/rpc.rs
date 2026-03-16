@@ -4,8 +4,8 @@ use anyhow::{Context, Result};
 use local_ip_address::linux::local_ip;
 use loom_rpc::{
     command::v1::CustomCommandOutput,
-    stations::v1::{
-        ClientMessage, ServerMessage, client_message, server_message,
+    station::v1::{
+        StationCommand, StationEvent, station_command, station_event,
         station_service_client::StationServiceClient,
     },
 };
@@ -37,15 +37,15 @@ impl Interceptor for AuthInterceptor {
     }
 }
 
-impl TryFrom<Message> for ClientMessage {
+impl TryFrom<Message> for StationEvent {
     type Error = ();
 
     fn try_from(value: Message) -> std::result::Result<Self, ()> {
         let message = match value {
-            Message::LoggedIn => client_message::Message::LoggedIn(()),
-            Message::LoggedOut => client_message::Message::LoggedOut(()),
+            Message::LoggedIn => station_event::Message::LoggedIn(()),
+            Message::LoggedOut => station_event::Message::LoggedOut(()),
             Message::CommandOutput { id, output } => {
-                client_message::Message::CommandOutput(CustomCommandOutput { id, output })
+                station_event::Message::CommandOutput(CustomCommandOutput { id, output })
             }
             _ => return Err(()),
         };
@@ -55,20 +55,20 @@ impl TryFrom<Message> for ClientMessage {
     }
 }
 
-impl TryFrom<ServerMessage> for Message {
+impl TryFrom<StationCommand> for Message {
     type Error = anyhow::Error;
 
-    fn try_from(value: ServerMessage) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: StationCommand) -> std::result::Result<Self, Self::Error> {
         let message = match value.message {
             Some(message) => match message {
-                server_message::Message::SyncWallpaper(()) => Message::SyncWallpaper,
-                server_message::Message::SetContestUrl(url) => Message::SetContestUrl(url),
-                server_message::Message::Login(_) => Message::Login,
-                server_message::Message::Logout(_) => Message::Logout,
-                server_message::Message::LoginWithCredentials(msg) => {
+                station_command::Message::SyncWallpaper(()) => Message::SyncWallpaper,
+                station_command::Message::SetContestUrl(url) => Message::SetContestUrl(url),
+                station_command::Message::Login(_) => Message::Login,
+                station_command::Message::Logout(_) => Message::Logout,
+                station_command::Message::LoginWithCredentials(msg) => {
                     Message::LoginWithCredentials(msg.username, msg.password)
                 }
-                server_message::Message::CustomCommand(msg) => Message::RunCommand {
+                station_command::Message::CustomCommand(msg) => Message::RunCommand {
                     id: msg.id,
                     command: msg.command,
                 },
@@ -126,8 +126,8 @@ impl RpcClient {
     async fn connect_and_subscribe(
         &self,
     ) -> Result<(
-        tokio::sync::mpsc::Sender<ClientMessage>,
-        Streaming<ServerMessage>,
+        tokio::sync::mpsc::Sender<StationEvent>,
+        Streaming<StationCommand>,
     )> {
         let mut endpoint = tonic::transport::Channel::from_shared(self.address.clone())?
             .connect_timeout(Duration::from_secs(5))
@@ -151,30 +151,37 @@ impl RpcClient {
 
         let mut client = StationServiceClient::with_interceptor(transport, interceptor);
 
-        // create streams
+        // create client-stream request
         let (tx, rx) = tokio::sync::mpsc::channel(32);
         let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+        let mut push_request = Request::new(stream);
+        // create server-stream request
+        let mut subscribe_request = Request::new(());
 
-        // add ip to meta data
-        let mut request = Request::new(stream);
-
+        // add ip to meta data of both requests
         let ip = local_ip().context("Could not get local IP")?;
-        let header_value = ip
+        let header_value: MetadataValue<Ascii> = ip
             .to_string()
             .parse()
             .context("Failed to parse local IP into a valid header value")?;
-        request
+        push_request
             .metadata_mut()
-            .insert("x-loom-client-ip", header_value);
+            .insert("x-loom-station-ip", header_value.clone());
+        subscribe_request
+            .metadata_mut()
+            .insert("x-loom-station-ip", header_value);
 
-        let response = client.subscribe(request).await?;
-        Ok((tx, response.into_inner()))
+        // call server steam
+        let server_stream = client.subscribe(subscribe_request).await?;
+        // call client stream
+        client.push(push_request).await?;
+        Ok((tx, server_stream.into_inner()))
     }
 
     async fn process_io(
         &mut self,
-        rpc_tx: &mut tokio::sync::mpsc::Sender<ClientMessage>,
-        server_stream: &mut Streaming<ServerMessage>,
+        rpc_tx: &mut tokio::sync::mpsc::Sender<StationEvent>,
+        server_stream: &mut Streaming<StationCommand>,
     ) -> Result<()> {
         tokio::pin!(server_stream);
 
@@ -186,7 +193,7 @@ impl RpcClient {
                         Err(broadcast::error::RecvError::Closed) => anyhow::bail!("broadcast channel closed"),
                         Err(_) => continue,
                     };
-                    if let Ok(client_msg) = ClientMessage::try_from(msg) && let Err(e) = rpc_tx.send(client_msg).await {
+                    if let Ok(client_msg) = StationEvent::try_from(msg) && let Err(e) = rpc_tx.send(client_msg).await {
                         return Err(anyhow::anyhow!("gRPC pipe broken: {}", e));
                     }
                 }
