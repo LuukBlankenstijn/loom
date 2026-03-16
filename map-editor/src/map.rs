@@ -12,16 +12,14 @@ use iced::{
     },
 };
 use loom_map::{Door, MapElement, MapMode, Station};
-use loom_rpc::admin::v1::{
-    GetMapRequest, UpdateMapRequest, admin_service_client::AdminServiceClient,
-};
+use loom_rpc::map::v1::{GetMapRequest, UpdateMapRequest, map_service_client::MapServiceClient};
 use tonic_web_wasm_client::Client;
 
 use crate::client::{FromProto, ToProto};
 
 #[derive(Debug)]
 pub struct Map {
-    client: Arc<AdminServiceClient<Client>>,
+    client: Arc<MapServiceClient<Client>>,
     map_id: i32,
     map_mode: MapMode,
     map: loom_map::Map,
@@ -42,7 +40,7 @@ pub enum Message {
 }
 
 impl Map {
-    pub fn new(client: Arc<AdminServiceClient<Client>>, map_id: i32) -> (Self, Task<Message>) {
+    pub fn new(client: Arc<MapServiceClient<Client>>, map_id: i32) -> (Self, Task<Message>) {
         (
             Self {
                 client,

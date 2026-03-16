@@ -6,7 +6,7 @@ use std::sync::Arc;
 use iced::Font;
 use iced::Theme;
 use iced::font;
-use loom_rpc::admin::v1::admin_service_client::AdminServiceClient;
+use loom_rpc::map::v1::map_service_client::MapServiceClient;
 use map::Map;
 use tonic_web_wasm_client::Client;
 
@@ -29,13 +29,13 @@ fn main() {
     let _ = app.run();
 }
 
-fn get_client() -> AdminServiceClient<Client> {
+fn get_client() -> MapServiceClient<Client> {
     let window = web_sys::window().expect("no global `window` exists");
     let location = window.location();
     let origin = location.origin().expect("failed to get origin");
     let base_url = format!("{}/api", origin);
     let wasm_transport = Client::new(base_url);
-    AdminServiceClient::new(wasm_transport)
+    MapServiceClient::new(wasm_transport)
 }
 
 fn get_map_id_from_url() -> i32 {
