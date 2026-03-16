@@ -58,7 +58,12 @@ impl crate::orchestrator::types::EventHub for EventHub {
 
     fn publish_station_command(&self, command: StationCommand, ips: &[&str]) {
         let stations = self.stations.read().unwrap();
-        for &ip in ips {
+        let ip_iter: Box<dyn Iterator<Item = &str>> = if !ips.is_empty() {
+            Box::new(ips.iter().copied())
+        } else {
+            Box::new(stations.keys().map(|s| s.as_str()))
+        };
+        for ip in ip_iter {
             if let Some(sender) = stations.get(ip) {
                 // Ignore error
                 let _ = sender.send(command.clone());
