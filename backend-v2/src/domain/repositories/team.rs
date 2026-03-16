@@ -9,5 +9,5 @@ pub trait TeamRepository: Send + Sync {
     /// is no old ip
     async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError>;
     async fn get_all(&self, contest_id: &str) -> Result<Vec<Team>, AppError>;
-    async fn get_by_ip(&self, ip: &str) -> Result<Team, AppError>;
+    async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError>;
 }

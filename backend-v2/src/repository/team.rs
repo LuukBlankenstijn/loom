@@ -34,7 +34,7 @@ impl TeamRepository for TeamRepo {
         self.inner.get_all(contest_id).await
     }
 
-    async fn get_by_ip(&self, ip: &str) -> Result<Team, AppError> {
+    async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {
         self.inner.get_by_ip(ip).await
     }
 }

@@ -52,9 +52,12 @@ impl TeamRepository for PgTeamRepo {
 
             Ok(Some(ip.to_string()))
         } else {
-            sqlx::query!("UPDATE teams SET team_station = NULL WHERE id = $1", team_id)
-                .execute(&self.0)
-                .await?;
+            sqlx::query!(
+                "UPDATE teams SET team_station = NULL WHERE id = $1",
+                team_id
+            )
+            .execute(&self.0)
+            .await?;
 
             Ok(old_ip)
         }
@@ -74,11 +77,15 @@ impl TeamRepository for PgTeamRepo {
 
         Ok(rows
             .into_iter()
-            .map(|r| Team { id: r.id, name: r.name, ip: r.ip })
+            .map(|r| Team {
+                id: r.id,
+                name: r.name,
+                ip: r.ip,
+            })
             .collect())
     }
 
-    async fn get_by_ip(&self, ip: &str) -> Result<Team, AppError> {
+    async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {
         let row = sqlx::query!(
             "SELECT t.id, t.name, s.ip
              FROM teams t
@@ -89,9 +96,10 @@ impl TeamRepository for PgTeamRepo {
         .fetch_optional(&self.0)
         .await?;
 
-        match row {
-            Some(r) => Ok(Team { id: r.id, name: r.name, ip: Some(r.ip) }),
-            None => Err(AppError::NotFound("team not found".to_string())),
-        }
+        Ok(row.map(|r| Team {
+            id: r.id,
+            name: r.name,
+            ip: Some(r.ip),
+        }))
     }
 }

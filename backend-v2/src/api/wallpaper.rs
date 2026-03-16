@@ -53,8 +53,7 @@ pub async fn wallpaper_handler(
 
     // try to get team name
     let team_name = if let Some(ip) = query.ip {
-        let team = state.team_repo.get_by_ip(&ip).await?;
-        Some(team.name)
+        state.team_repo.get_by_ip(&ip).await?.map(|t| t.name)
     } else {
         None
     };

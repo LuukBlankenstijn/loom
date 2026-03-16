@@ -38,7 +38,7 @@ impl StationService for StationHandler {
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         let station = self.station_repo.get(&req.ip).await?;
-        if let Ok(team) = self.team_repo.get_by_ip(&station.ip).await {
+        if let Ok(Some(team)) = self.team_repo.get_by_ip(&station.ip).await {
             self.team_repo.set_ip(&team.id, None).await?;
         }
         self.station_repo.delete(&req.ip).await?;

@@ -177,13 +177,13 @@ impl TeamRepository for HttpTeamRepo {
         }
     }
 
-    async fn get_by_ip(&self, ip: &str) -> Result<Team, AppError> {
+    async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {
         let users = self.get_users().await?;
         let team_id = match users.iter().find(|u| u.ip.as_deref() == Some(ip)) {
             Some(u) if u.team_id.as_ref().is_some_and(|t| !t.is_empty()) => {
                 u.team_id.clone().unwrap()
             }
-            _ => return Err(AppError::NotFound("Team not found".to_string())),
+            _ => return Ok(None),
         };
 
         let contests: Vec<ApiContestRef> = self
@@ -198,18 +198,18 @@ impl TeamRepository for HttpTeamRepo {
             if let Ok(teams) = self.get_json::<Vec<ApiTeam>>(&url).await
                 && let Some(t) = teams.into_iter().find(|t| t.id == team_id)
             {
-                return Ok(Team {
+                return Ok(Some(Team {
                     id: t.id,
                     name: t.name,
                     ip: Some(ip.to_string()),
-                });
+                }));
             }
         }
 
-        Ok(Team {
+        Ok(Some(Team {
             id: team_id,
             name: String::new(),
             ip: Some(ip.to_string()),
-        })
+        }))
     }
 }
