@@ -55,7 +55,7 @@ impl ContestService for ContestHandler {
                 self.contest_repo.delete_wallpaper(&req.contest_id).await?;
             }
         }
-        self.orchestrator.sync_wallpaper(&[]);
+        self.orchestrator.sync_stations(&[]);
         Ok(Response::new(()))
     }
 
@@ -68,7 +68,7 @@ impl ContestService for ContestHandler {
             .set_wallpaper_text_color(&req.contest_id, &req.color)
             .await?;
         // update stations
-        self.orchestrator.sync_wallpaper(&[]);
+        self.orchestrator.sync_stations(&[]);
         Ok(Response::new(()))
     }
 

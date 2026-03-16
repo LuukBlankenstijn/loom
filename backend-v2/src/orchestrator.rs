@@ -29,12 +29,10 @@ use crate::{
 pub struct Orchestrator {
     hub: Arc<EventHub>,
     state: Arc<MemoryStationState>,
-
-    contest_url: Option<String>,
 }
 
 impl Orchestrator {
-    pub fn new(contest_url: Option<String>) -> Self {
+    pub fn new() -> Self {
         let hub = Arc::new(event_hub::EventHub::new());
         let mut state = state::MemoryStationState::new();
 
@@ -46,7 +44,6 @@ impl Orchestrator {
 
         Self {
             hub,
-            contest_url,
             state: Arc::new(state),
         }
     }
@@ -58,7 +55,11 @@ impl domain::Orchestrator for Orchestrator {
         match event {
             LoomEvent::Station((ip, event)) => match event {
                 StationEvent::LoggedIn => self.state.login(&ip),
-                StationEvent::LoggedOut => self.state.logout(&ip),
+                StationEvent::LoggedOut => {
+                    let ips = [ip.as_str()];
+                    self.state.logout(&ip);
+                    self.sync_stations(&ips);
+                }
                 StationEvent::Command(command_output) => self.hub.broadcast(command_output.into()),
             },
             LoomEvent::Admin(admin_event) => match admin_event {
@@ -70,17 +71,11 @@ impl domain::Orchestrator for Orchestrator {
         }
     }
 
-    fn sync_wallpaper(&self, ips: &[&str]) {
+    fn sync_stations(&self, ips: &[&str]) {
         self.hub
             .publish_station_command(StationCommand::SyncWallpaper, ips);
-    }
-
-    fn sync_api_url(&self, ips: &[&str], contest_id: String) {
-        if let Some(base_url) = self.contest_url.clone() {
-            let contest_url = format!("{base_url}/api/v4/contests/{}", contest_id);
-            self.hub
-                .publish_station_command(StationCommand::SetContestUrl(contest_url), ips);
-        }
+        self.hub
+            .publish_station_command(StationCommand::SyncContestUrl, ips);
     }
 
     fn subscribe_broadcast(&self) -> BroadcastEventStream {

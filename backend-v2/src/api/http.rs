@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
+    Json,
     body::Body,
     extract::{Query, State},
     http::Response,
@@ -70,4 +71,13 @@ pub async fn wallpaper_handler(
     builder
         .body(Body::from_stream(body_stream))
         .map_err(|e| AppError::Internal(e.to_string()))
+}
+
+pub async fn next_contest(
+    State(state): State<WallpaperHandler>,
+) -> Result<impl IntoResponse, AppError> {
+    let contest = state.contest_repo.get_next_contest().await?;
+    let contest = contest.ok_or_else(|| AppError::NotFound("No next contest found".to_string()))?;
+
+    Ok(Json(contest))
 }

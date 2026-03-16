@@ -101,7 +101,8 @@ impl DbusClient {
                 debug!("setting wallpaper source to {}", source);
                 self.proxy.set_wallpaper_source(source).await?;
             }
-            Message::SetContestUrl(url) => {
+            Message::SetContestUrl => {
+                let url = format!("{}/next-contest", self.server_address.clone());
                 debug!("setting contest url to {}", url);
                 self.proxy.set_api_poller_url(url).await?;
             }

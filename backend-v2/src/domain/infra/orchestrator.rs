@@ -20,8 +20,7 @@ pub type BroadcastEventStream =
 #[async_trait]
 pub trait Orchestrator: Send + Sync {
     fn handle_event(&self, event: LoomEvent);
-    fn sync_wallpaper(&self, ips: &[&str]);
-    fn sync_api_url(&self, ips: &[&str], contest_id: String);
+    fn sync_stations(&self, ips: &[&str]);
     async fn register_station(&self, ip: &str) -> Result<StationCommandStream, AppError>;
     fn subscribe_broadcast(&self) -> BroadcastEventStream;
     fn get_state(&self) -> StationsState;

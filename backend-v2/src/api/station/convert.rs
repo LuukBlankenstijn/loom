@@ -31,7 +31,7 @@ impl From<StationCommand> for pb::StationCommand {
     fn from(value: StationCommand) -> Self {
         let inner = match value {
             StationCommand::SyncWallpaper => pb::station_command::Message::SyncWallpaper(()),
-            StationCommand::SetContestUrl(url) => pb::station_command::Message::SetContestUrl(url),
+            StationCommand::SyncContestUrl => pb::station_command::Message::SyncContestUrl(()),
             StationCommand::Login => {
                 pb::station_command::Message::Login(command_pb::LoginCommand {})
             }

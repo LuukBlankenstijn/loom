@@ -62,7 +62,7 @@ impl TryFrom<StationCommand> for Message {
         let message = match value.message {
             Some(message) => match message {
                 station_command::Message::SyncWallpaper(()) => Message::SyncWallpaper,
-                station_command::Message::SetContestUrl(url) => Message::SetContestUrl(url),
+                station_command::Message::SyncContestUrl(()) => Message::SetContestUrl,
                 station_command::Message::Login(_) => Message::Login,
                 station_command::Message::Logout(_) => Message::Logout,
                 station_command::Message::LoginWithCredentials(msg) => {

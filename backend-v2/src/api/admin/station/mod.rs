@@ -97,7 +97,7 @@ impl StationService for StationHandler {
                 .map_err(|e| Status::internal(format!("Failed to batch update teams: {}", e)))?;
         }
         let sync_refs: Vec<&str> = updated_ips.iter().map(|s| s.as_str()).collect();
-        self.orchestrator.sync_wallpaper(&sync_refs);
+        self.orchestrator.sync_stations(&sync_refs);
 
         Ok(Response::new(()))
     }

@@ -1,8 +1,8 @@
 pub mod admin;
 pub mod broadcast;
+pub mod http;
 pub mod map;
 pub mod station;
-pub mod wallpaper;
 
 use axum::http::StatusCode;
 use chrono::{DateTime, Utc};

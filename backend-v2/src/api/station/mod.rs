@@ -9,13 +9,12 @@ use tonic::{Request, Response, Status, Streaming, metadata::MetadataMap};
 use tracing::error;
 
 use crate::{
-    domain::{ContestRepository, Orchestrator, StationRepository, event::station::StationEvent},
+    domain::{Orchestrator, StationRepository, event::station::StationEvent},
     error::AppError,
 };
 
 #[derive(Clone, Constructor)]
 pub struct StationHandler {
-    contests_repo: Arc<dyn ContestRepository>,
     station_repo: Arc<dyn StationRepository>,
     orchestrator: Arc<dyn Orchestrator>,
 }
@@ -33,13 +32,6 @@ impl StationService for StationHandler {
         self.station_repo.upsert(&ip).await?;
 
         let domain_stream = self.orchestrator.register_station(&ip).await?;
-
-        // send state
-        let contest = self.contests_repo.get_next_contest().await?;
-        if let Some(contest) = contest {
-            self.orchestrator.sync_api_url(&[&ip], contest.id);
-        }
-        self.orchestrator.sync_wallpaper(&[&ip]);
 
         // listen to client stream
         let mut stream = request.into_inner();

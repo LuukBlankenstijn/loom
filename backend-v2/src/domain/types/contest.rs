@@ -2,10 +2,11 @@ use std::pin::Pin;
 
 use chrono::{DateTime, Utc};
 use futures::Stream;
+use serde::Serialize;
 
 use crate::error::AppError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Contest {
     pub id: String,
     pub name: String,

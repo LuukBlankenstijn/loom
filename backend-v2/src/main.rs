@@ -53,9 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let station_repo = repositories.get_station();
     let team_repo = repositories.get_team();
 
-    let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new(
-        config.icpc_api.map(|config| config.base_url),
-    ));
+    let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new());
 
     let interceptor = combined_auth_interceptor(config.auth_token);
 
@@ -94,15 +92,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
     let station_stream_service = station_service_server::StationServiceServer::with_interceptor(
-        api::station::StationHandler::new(
-            contest_repo.clone(),
-            station_repo.clone(),
-            orchestrator.clone(),
-        ),
+        api::station::StationHandler::new(station_repo.clone(), orchestrator.clone()),
         interceptor.clone(),
     );
 
-    let wallpaper_handler = api::wallpaper::WallpaperHandler::new(contest_repo, team_repo);
+    let wallpaper_handler = api::http::WallpaperHandler::new(contest_repo, team_repo);
 
     let grpc_router = tonic::service::Routes::builder()
         .add_service(contest_serice)
@@ -117,7 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(tonic_web::GrpcWebLayer::new());
 
     let routes = Router::new()
-        .route("/wallpaper", get(api::wallpaper::wallpaper_handler))
+        .route("/wallpaper", get(api::http::wallpaper_handler))
+        .route("/next-contest", get(api::http::next_contest))
         .with_state(wallpaper_handler)
         .merge(grpc_router)
         .layer(CorsLayer::permissive());

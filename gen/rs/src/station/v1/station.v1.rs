@@ -25,8 +25,8 @@ pub mod station_command {
     pub enum Message {
         #[prost(message, tag="1")]
         SyncWallpaper(()),
-        #[prost(string, tag="2")]
-        SetContestUrl(::prost::alloc::string::String),
+        #[prost(message, tag="2")]
+        SyncContestUrl(()),
         #[prost(message, tag="3")]
         Login(super::super::super::command::v1::LoginCommand),
         #[prost(message, tag="4")]

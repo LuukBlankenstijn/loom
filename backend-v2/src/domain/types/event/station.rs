@@ -16,7 +16,7 @@ pub enum StationEvent {
 #[derive(Debug, Clone)]
 pub enum StationCommand {
     SyncWallpaper,
-    SetContestUrl(String),
+    SyncContestUrl,
     Login,
     Logout,
     LoginWithCredentials { username: String, password: String },

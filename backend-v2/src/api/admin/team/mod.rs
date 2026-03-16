@@ -37,7 +37,7 @@ impl TeamService for TeamHandler {
             .set_ip(&req.team_id, req.ip.as_deref())
             .await?;
         if let Some(ip) = maybe_ip {
-            self.orchestrator.sync_wallpaper(&[&ip]);
+            self.orchestrator.sync_stations(&[&ip]);
         }
         Ok(Response::new(()))
     }
