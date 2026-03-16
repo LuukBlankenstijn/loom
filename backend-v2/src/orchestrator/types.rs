@@ -21,6 +21,19 @@ impl Drop for StationRegistration {
     }
 }
 
+impl StationRegistration {
+    // add extra cleanup. Added will run after currente cleanup
+    pub fn add_cleanup(&mut self, new_cleanup: Box<dyn FnOnce() + Send>) {
+        if let Some(cleanup) = self.cleanup.take() {
+            let replacement = move || {
+                cleanup();
+                new_cleanup();
+            };
+            self.cleanup = Some(Box::new(replacement))
+        }
+    }
+}
+
 pub trait EventHub: Sync + Send {
     // station
     fn register_station(self: &Arc<Self>, ip: &str) -> Result<StationRegistration, AppError>;

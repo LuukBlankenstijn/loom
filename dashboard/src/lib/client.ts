@@ -115,6 +115,7 @@ export const adminClient = {
 
     try {
       for await (const response of stream) {
+        console.log(response);
         yield response;
       }
     } catch (err: unknown) {

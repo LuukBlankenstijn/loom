@@ -99,20 +99,20 @@ impl domain::Orchestrator for Orchestrator {
         &self,
         ip: &str,
     ) -> Result<domain::StationCommandStream, crate::error::AppError> {
-        let registration = self.hub.register_station(ip)?;
-
-        self.state.connect(ip);
-
+        let mut registration = self.hub.register_station(ip)?;
         let state_store = Arc::clone(&self.state);
         let ip_addr = ip.to_string();
+        registration.add_cleanup(Box::new(move || {
+            state_store.disconnect(&ip_addr);
+        }));
+
+        self.state.connect(ip);
 
         let stream = async_stream::stream! {
             let mut registration = registration;
             while let Some(msg) = registration.receiver.recv().await {
                 yield Ok(msg);
             }
-
-            state_store.disconnect(&ip_addr);
         };
 
         Ok(Box::pin(stream))
