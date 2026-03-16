@@ -56,6 +56,22 @@ export const adminClient = {
       create(SetMapRequestSchema, { contestId, mapId }),
     );
   },
+  getWallpaper: async (): Promise<{ url: string; color: string }> => {
+    const response = await fetch("/api/wallpaper");
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Wallpaper fetch failed: ${response.status}`,
+      );
+    }
+
+    const blob = await response.blob();
+    return {
+      url: URL.createObjectURL(blob),
+      color: response.headers.get("X-Wallpaper-Text-Color") || "#ffffff",
+    };
+  },
 
   // teams
   getActiveTeams: async (): Promise<TeamsResponse> => {

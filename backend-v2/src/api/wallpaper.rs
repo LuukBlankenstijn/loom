@@ -65,8 +65,8 @@ pub async fn wallpaper_handler(
     // if teamname, set headers
     if let Some(team_name) = team_name {
         builder = builder.header("X-Wallpaper-Text", team_name);
-        builder = builder.header("X-Wallpaper-Text-Color", wallpaper.text_color);
     }
+    builder = builder.header("X-Wallpaper-Text-Color", wallpaper.text_color);
 
     builder
         .body(Body::from_stream(body_stream))
