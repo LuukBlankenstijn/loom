@@ -83,7 +83,7 @@ pub mod station_service_client {
         ///
         pub async fn subscribe(
             &mut self,
-            request: impl tonic::IntoRequest<()>,
+            request: impl tonic::IntoStreamingRequest<Message = super::StationEvent>,
         ) -> std::result::Result<
             tonic::Response<tonic::codec::Streaming<super::StationCommand>>,
             tonic::Status,
@@ -100,32 +100,10 @@ pub mod station_service_client {
             let path = http::uri::PathAndQuery::from_static(
                 "/station.v1.StationService/Subscribe",
             );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("station.v1.StationService", "Subscribe"));
-            self.inner.server_streaming(req, path, codec).await
-        }
-        ///
-        pub async fn push(
-            &mut self,
-            request: impl tonic::IntoStreamingRequest<Message = super::StationEvent>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/station.v1.StationService/Push",
-            );
             let mut req = request.into_streaming_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("station.v1.StationService", "Push"));
-            self.inner.client_streaming(req, path, codec).await
+                .insert(GrpcMethod::new("station.v1.StationService", "Subscribe"));
+            self.inner.streaming(req, path, codec).await
         }
     }
 }
@@ -151,13 +129,8 @@ pub mod station_service_server {
         ///
         async fn subscribe(
             &self,
-            request: tonic::Request<()>,
-        ) -> std::result::Result<tonic::Response<Self::SubscribeStream>, tonic::Status>;
-        ///
-        async fn push(
-            &self,
             request: tonic::Request<tonic::Streaming<super::StationEvent>>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        ) -> std::result::Result<tonic::Response<Self::SubscribeStream>, tonic::Status>;
     }
     ///
     #[derive(Debug)]
@@ -239,7 +212,9 @@ pub mod station_service_server {
                 "/station.v1.StationService/Subscribe" => {
                     #[allow(non_camel_case_types)]
                     struct SubscribeSvc<T: StationService>(pub Arc<T>);
-                    impl<T: StationService> tonic::server::ServerStreamingService<()>
+                    impl<
+                        T: StationService,
+                    > tonic::server::StreamingService<super::StationEvent>
                     for SubscribeSvc<T> {
                         type Response = super::StationCommand;
                         type ResponseStream = T::SubscribeStream;
@@ -247,7 +222,12 @@ pub mod station_service_server {
                             tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
-                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                tonic::Streaming<super::StationEvent>,
+                            >,
+                        ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
                                 <T as StationService>::subscribe(&inner, request).await
@@ -272,54 +252,7 @@ pub mod station_service_server {
                                 max_decoding_message_size,
                                 max_encoding_message_size,
                             );
-                        let res = grpc.server_streaming(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/station.v1.StationService/Push" => {
-                    #[allow(non_camel_case_types)]
-                    struct PushSvc<T: StationService>(pub Arc<T>);
-                    impl<
-                        T: StationService,
-                    > tonic::server::ClientStreamingService<super::StationEvent>
-                    for PushSvc<T> {
-                        type Response = ();
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<
-                                tonic::Streaming<super::StationEvent>,
-                            >,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as StationService>::push(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = PushSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.client_streaming(method, req).await;
+                        let res = grpc.streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

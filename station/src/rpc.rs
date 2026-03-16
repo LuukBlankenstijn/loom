@@ -151,31 +151,24 @@ impl RpcClient {
 
         let mut client = StationServiceClient::with_interceptor(transport, interceptor);
 
-        // create client-stream request
+        // create streams
         let (tx, rx) = tokio::sync::mpsc::channel(32);
         let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
-        let mut push_request = Request::new(stream);
-        // create server-stream request
-        let mut subscribe_request = Request::new(());
 
-        // add ip to meta data of both requests
+        // add ip to meta data
+        let mut request = Request::new(stream);
+
         let ip = local_ip().context("Could not get local IP")?;
-        let header_value: MetadataValue<Ascii> = ip
+        let header_value = ip
             .to_string()
             .parse()
             .context("Failed to parse local IP into a valid header value")?;
-        push_request
-            .metadata_mut()
-            .insert("x-loom-station-ip", header_value.clone());
-        subscribe_request
+        request
             .metadata_mut()
             .insert("x-loom-station-ip", header_value);
 
-        // call server steam
-        let server_stream = client.subscribe(subscribe_request).await?;
-        // call client stream
-        client.push(push_request).await?;
-        Ok((tx, server_stream.into_inner()))
+        let response = client.subscribe(request).await?;
+        Ok((tx, response.into_inner()))
     }
 
     async fn process_io(

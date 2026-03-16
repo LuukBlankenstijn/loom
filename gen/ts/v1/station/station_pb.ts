@@ -5,7 +5,7 @@
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
-import type { Empty, EmptySchema } from "@bufbuild/protobuf/wkt";
+import type { Empty } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
 import type { CustomCommand, CustomCommandOutput, LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
 import { file_v1_command_command } from "../command/command_pb";
@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/station/station.proto.
  */
 export const file_v1_station_station: GenFile = /*@__PURE__*/
-  fileDesc("Chh2MS9zdGF0aW9uL3N0YXRpb24ucHJvdG8SCnN0YXRpb24udjEiQQobTG9naW5XaXRoQ3JlZGVudGlhbHNNZXNzYWdlEhAKCHVzZXJuYW1lGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIj0KFEN1c3RvbUNvbW1hbmRNZXNzYWdlEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJIsoCCg5TdGF0aW9uQ29tbWFuZBIwCg5zeW5jX3dhbGxwYXBlchgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEiMKD3NldF9jb250ZXN0X3VybBgCIAEoCUIIukgFcgOIAQFIABIpCgVsb2dpbhgDIAEoCzIYLmNvbW1hbmQudjEuTG9naW5Db21tYW5kSAASKwoGbG9nb3V0GAQgASgLMhkuY29tbWFuZC52MS5Mb2dvdXRDb21tYW5kSAASSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgFIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASMwoOY3VzdG9tX2NvbW1hbmQYBiABKAsyGS5jb21tYW5kLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdtZXNzYWdlIq8BCgxTdGF0aW9uRXZlbnQSLAoKbG9nZ2VkX291dBgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEisKCWxvZ2dlZF9pbhgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjkKDmNvbW1hbmRfb3V0cHV0GAMgASgLMh8uY29tbWFuZC52MS5DdXN0b21Db21tYW5kT3V0cHV0SABCCQoHbWVzc2FnZTKTAQoOU3RhdGlvblNlcnZpY2USQwoJU3Vic2NyaWJlEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5Ghouc3RhdGlvbi52MS5TdGF0aW9uQ29tbWFuZCIAMAESPAoEUHVzaBIYLnN0YXRpb24udjEuU3RhdGlvbkV2ZW50GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgAoAUKlAQoOY29tLnN0YXRpb24udjFCDFN0YXRpb25Qcm90b1ABWjxnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vdjEvc3RhdGlvbjtzdGF0aW9udjGiAgNTWFiqAgpTdGF0aW9uLlYxygIKU3RhdGlvblxWMeICFlN0YXRpb25cVjFcR1BCTWV0YWRhdGHqAgtTdGF0aW9uOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("Chh2MS9zdGF0aW9uL3N0YXRpb24ucHJvdG8SCnN0YXRpb24udjEiQQobTG9naW5XaXRoQ3JlZGVudGlhbHNNZXNzYWdlEhAKCHVzZXJuYW1lGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIj0KFEN1c3RvbUNvbW1hbmRNZXNzYWdlEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJIsoCCg5TdGF0aW9uQ29tbWFuZBIwCg5zeW5jX3dhbGxwYXBlchgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEiMKD3NldF9jb250ZXN0X3VybBgCIAEoCUIIukgFcgOIAQFIABIpCgVsb2dpbhgDIAEoCzIYLmNvbW1hbmQudjEuTG9naW5Db21tYW5kSAASKwoGbG9nb3V0GAQgASgLMhkuY29tbWFuZC52MS5Mb2dvdXRDb21tYW5kSAASSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgFIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASMwoOY3VzdG9tX2NvbW1hbmQYBiABKAsyGS5jb21tYW5kLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdtZXNzYWdlIq8BCgxTdGF0aW9uRXZlbnQSLAoKbG9nZ2VkX291dBgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEisKCWxvZ2dlZF9pbhgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjkKDmNvbW1hbmRfb3V0cHV0GAMgASgLMh8uY29tbWFuZC52MS5DdXN0b21Db21tYW5kT3V0cHV0SABCCQoHbWVzc2FnZTJZCg5TdGF0aW9uU2VydmljZRJHCglTdWJzY3JpYmUSGC5zdGF0aW9uLnYxLlN0YXRpb25FdmVudBoaLnN0YXRpb24udjEuU3RhdGlvbkNvbW1hbmQiACgBMAFCpQEKDmNvbS5zdGF0aW9uLnYxQgxTdGF0aW9uUHJvdG9QAVo8Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL3N0YXRpb247c3RhdGlvbnYxogIDU1hYqgIKU3RhdGlvbi5WMcoCClN0YXRpb25cVjHiAhZTdGF0aW9uXFYxXEdQQk1ldGFkYXRh6gILU3RhdGlvbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
 
 /**
  * @generated from message station.v1.LoginWithCredentialsMessage
@@ -157,17 +157,9 @@ export const StationService: GenService<{
    * @generated from rpc station.v1.StationService.Subscribe
    */
   subscribe: {
-    methodKind: "server_streaming";
-    input: typeof EmptySchema;
-    output: typeof StationCommandSchema;
-  },
-  /**
-   * @generated from rpc station.v1.StationService.Push
-   */
-  push: {
-    methodKind: "client_streaming";
+    methodKind: "bidi_streaming";
     input: typeof StationEventSchema;
-    output: typeof EmptySchema;
+    output: typeof StationCommandSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_v1_station_station, 0);

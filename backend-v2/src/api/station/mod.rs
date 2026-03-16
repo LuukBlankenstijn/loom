@@ -26,7 +26,7 @@ impl StationService for StationHandler {
 
     async fn subscribe(
         &self,
-        request: Request<()>,
+        request: Request<Streaming<pb::StationEvent>>,
     ) -> Result<Response<Self::SubscribeStream>, Status> {
         // get ip and save in database
         let ip = get_ip(request.metadata())?;
@@ -41,40 +41,35 @@ impl StationService for StationHandler {
         }
         self.orchestrator.sync_wallpaper(&[&ip]);
 
+        // listen to client stream
+        let mut stream = request.into_inner();
+
+        let orchestrator = self.orchestrator.clone();
+
+        tokio::spawn(async move {
+            while let Some(result) = stream.next().await {
+                let message = match result {
+                    Ok(msg) => msg,
+                    Err(_) => {
+                        break;
+                    }
+                };
+
+                match StationEvent::try_from(message) {
+                    Ok(event) => {
+                        orchestrator.handle_event((ip.clone(), event).into());
+                    }
+                    Err(e) => {
+                        error!(%ip, "station sent a bad message: {}", e);
+                    }
+                }
+            }
+        });
+
         // map stream
         let response_stream =
             domain_stream.map(|res| res.map(pb::StationCommand::from).map_err(Status::from));
         Ok(Response::new(Box::pin(response_stream)))
-    }
-
-    async fn push(
-        &self,
-        request: Request<Streaming<pb::StationEvent>>,
-    ) -> Result<Response<()>, Status> {
-        // get ip and save in database
-        let ip = get_ip(request.metadata())?;
-        self.station_repo.upsert(&ip).await?;
-
-        let mut stream = request.into_inner();
-
-        while let Some(result) = stream.next().await {
-            let message = match result {
-                Ok(msg) => msg,
-                Err(_) => {
-                    break;
-                }
-            };
-
-            match StationEvent::try_from(message) {
-                Ok(event) => {
-                    self.orchestrator.handle_event((ip.clone(), event).into());
-                }
-                Err(e) => {
-                    error!(%ip, "station sent a bad message: {}", e);
-                }
-            }
-        }
-        Ok(Response::new(()))
     }
 }
 

@@ -36,6 +36,5 @@ message StationEvent {
 }
 
 service StationService {
-  rpc Subscribe(google.protobuf.Empty) returns (stream StationCommand) {}
-  rpc Push(stream StationEvent) returns (google.protobuf.Empty) {}
+  rpc Subscribe(stream StationEvent) returns (stream StationCommand) {}
 }
