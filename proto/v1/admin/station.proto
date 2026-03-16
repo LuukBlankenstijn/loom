@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "v1/command/command.proto";
+
+message Station {
+  string ip = 2 [(buf.validate.field).string.ip = true];
+}
+
+message StationsResponse {
+  repeated Station stations = 1;
+}
+
+message DeleteStationRequest {
+  string ip = 1;
+}
+
+message AssignTeamRequest {
+  repeated string ips = 1;
+}
+
+message AdminEvent {
+  repeated string ips = 1;
+  oneof command {
+    command.v1.LoginWithCredentialsCommand login_with_credentials = 2;
+    command.v1.LoginCommand login = 3;
+    command.v1.LogoutCommand logout = 4;
+    command.v1.CustomCommand custom = 5;
+  }
+}
+
+service StationService {
+  // Gets all registered stations
+  rpc GetStations(google.protobuf.Empty) returns (StationsResponse) {}
+  // Delete a station
+  rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
+  // Tries to assign a team to each of the stations
+  rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}
+  // Sends a command to the backend that is sent to one or more stations
+  rpc SendCommand(AdminEvent) returns (google.protobuf.Empty) {}
+}

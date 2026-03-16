@@ -3,8 +3,8 @@ import { useRef, useState, useEffect } from "react";
 import { adminClient } from "../lib/client";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
-import type { Station } from "@client/v1/admin/admin_pb";
 import { useStationState } from "../context/station";
+import type { Station } from "@client/v1/admin/station_pb";
 
 export function ContestPage() {
   const queryClient = useQueryClient();
@@ -106,10 +106,6 @@ export function ContestPage() {
     const station = stations.find((s) => s.ip === team.ip);
     return station && isStationConnected(station);
   }).length;
-
-  const wallpaperUrl = wallpaper?.imageData?.length
-    ? URL.createObjectURL(new Blob([new Uint8Array(wallpaper.imageData)]))
-    : null;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -288,7 +284,7 @@ export function ContestPage() {
               </p>
             )}
 
-            {wallpaperUrl && (
+            {wallpaper?.url && (
               <div className="mt-4 p-4 rounded-lg bg-surface-700 border border-surface-600">
                 <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
                   Text Color
@@ -343,11 +339,11 @@ export function ContestPage() {
       <div className="flex-1 bg-surface-700 flex items-center justify-center relative overflow-hidden">
         {wallpaperLoading ? (
           <p className="text-gray-400 text-lg">Loading wallpaper...</p>
-        ) : wallpaperUrl ? (
+        ) : wallpaper?.url ? (
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div className="relative inline-flex items-center justify-center max-w-full max-h-full">
               <img
-                src={wallpaperUrl}
+                src={wallpaper.url}
                 alt="Contest wallpaper"
                 className="max-w-full max-h-full w-auto h-auto object-contain block"
               />

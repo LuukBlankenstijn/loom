@@ -4,9 +4,9 @@ import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
 import { StationActinoModal } from "../components/StationActionModal";
 import { StationTerminal } from "../components/StationTerminal";
-import type { Station } from "@client/v1/admin/admin_pb";
 import type { StationTarget } from "../lib/actions";
 import { useStationState } from "../context/station";
+import type { Station } from "@client/v1/admin/station_pb";
 
 export function StationsPage() {
   const queryClient = useQueryClient();
@@ -176,7 +176,7 @@ export function StationsPage() {
                 const connectionState = getStationsState(station.ip);
 
                 return (
-                  <Fragment key={station.id}>
+                  <Fragment key={station.ip}>
                     <tr className="hover:bg-surface-700/50 transition-colors">
                       <td className="px-6 py-4">
                         <button
@@ -276,7 +276,9 @@ export function StationsPage() {
                       <td className="px-6 py-4">
                         <div className="flex">
                           <button
-                            onClick={() => setActionTargetStations([{ ...station, team }])}
+                            onClick={() =>
+                              setActionTargetStations([{ ...station, team }])
+                            }
                             className="px-3 py-1.5 bg-surface-600 hover:bg-surface-500 text-gray-300 text-sm rounded-l-lg transition-colors"
                           >
                             Actions

@@ -2,7 +2,7 @@ use iced::Point;
 use loom_map::{Door, MapElement, Rotation, Station, Wall};
 use loom_rpc::map::v1::{
     Door as ProtoDoor, Element as ProtoElement, Location as ProtoLocation,
-    Rotation as ProtoRotation, Table as ProtoTable, Wall as ProtoWall,
+    Rotation as ProtoRotation, Seat as ProtoSeat, Wall as ProtoWall,
     element::Element as InnerElement,
 };
 
@@ -56,8 +56,8 @@ impl ToProto<ProtoDoor> for &Door {
     }
 }
 
-impl FromProto<ProtoTable> for Option<MapElement> {
-    fn from_proto(val: ProtoTable) -> Self {
+impl FromProto<ProtoSeat> for Option<MapElement> {
+    fn from_proto(val: ProtoSeat) -> Self {
         let id = uuid::Uuid::try_parse(&val.id).ok()?;
         Some(
             Station::construct(
@@ -70,9 +70,9 @@ impl FromProto<ProtoTable> for Option<MapElement> {
     }
 }
 
-impl ToProto<ProtoTable> for &Station {
-    fn to_proto(self) -> ProtoTable {
-        ProtoTable {
+impl ToProto<ProtoSeat> for &Station {
+    fn to_proto(self) -> ProtoSeat {
+        ProtoSeat {
             id: self.id.to_string(),
             location: self.position.to_proto().into(),
             rotation: self.rotation.to_proto().into(),
@@ -126,7 +126,7 @@ impl FromProto<ProtoElement> for Option<MapElement> {
         val.element.and_then(|e| match e {
             InnerElement::Wall(wall) => FromProto::from_proto(wall),
             InnerElement::Door(door) => FromProto::from_proto(door),
-            InnerElement::Table(table) => FromProto::from_proto(table),
+            InnerElement::Seat(seat) => FromProto::from_proto(seat),
         })
     }
 }
@@ -136,7 +136,7 @@ impl ToProto<ProtoElement> for &MapElement {
         let inner = match self {
             MapElement::Door(door) => InnerElement::Door(door.to_proto()),
             MapElement::Wall(wall) => InnerElement::Wall(wall.to_proto()),
-            MapElement::Station(station) => InnerElement::Table(station.to_proto()),
+            MapElement::Station(station) => InnerElement::Seat(station.to_proto()),
         };
         ProtoElement {
             element: inner.into(),

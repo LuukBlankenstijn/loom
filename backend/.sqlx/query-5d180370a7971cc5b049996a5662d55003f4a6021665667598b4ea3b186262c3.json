@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO contest_map_contest (contest_id, map_id) VALUES ($1, $2)\n             ON CONFLICT (contest_id) DO UPDATE SET map_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5d180370a7971cc5b049996a5662d55003f4a6021665667598b4ea3b186262c3"
+}

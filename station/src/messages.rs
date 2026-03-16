@@ -3,7 +3,7 @@ pub enum Message {
     LoggedIn,
     LoggedOut,
     SyncWallpaper,
-    SetContestUrl(String),
+    SetContestUrl,
     Login,
     LoginWithCredentials(String, String),
     Logout,

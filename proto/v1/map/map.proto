@@ -3,47 +3,39 @@ syntax = "proto3";
 package map.v1;
 
 import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "v1/map/types.proto";
 
-message Location {
-  int32 x = 1;
-  int32 y = 2;
-}
-
-enum Rotation {
-  ROTATION_UNSPECIFIED = 0;
-  ROTATION_0 = 1;
-  ROTATION_90 = 2;
-  ROTATION_180 = 3;
-  ROTATION_270 = 4;
-}
-
-message Map {
+message GetMapRequest {
   int32 id = 1;
-  string name = 2;
 }
 
-message Door {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  Location location = 2;
-  Rotation rotation = 3;
+message CreateMapRequest {
+  string name = 1;
 }
 
-message Wall {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  Location start = 2;
-  Location end = 3;
+message MapResponse {
+  MapMetadata map = 1;
+  repeated Element elements = 2;
 }
 
-message Table {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  Location location = 2;
-  Rotation rotation = 3;
+message GetAllMapMetadataResponse {
+  repeated MapMetadata maps = 1;
 }
 
-message Element {
-  oneof element {
-    Wall wall = 1;
-    Door door = 2;
-    Table table = 3;
-  }
+message UpdateMapRequest {
+  int32 id = 1;
+  repeated string deleted = 3 [(buf.validate.field).repeated.items.string.uuid = true];
+  repeated Element updated = 4;
+}
+
+service MapService {
+  // Gets all maps in the system
+  rpc GetAllMapMetadata(google.protobuf.Empty) returns (GetAllMapMetadataResponse) {}
+  // Creates a new map
+  rpc CreateMap(CreateMapRequest) returns (MapResponse) {}
+  // Gets a map
+  rpc GetMap(GetMapRequest) returns (MapResponse) {}
+  // Updates a map
+  rpc UpdateMap(UpdateMapRequest) returns (google.protobuf.Empty) {}
 }

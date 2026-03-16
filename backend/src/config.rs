@@ -128,14 +128,15 @@ impl Config {
     }
 
     pub fn database_url(&self) -> String {
+        self.database.database_url()
+    }
+}
+
+impl DatabaseConfig {
+    pub fn database_url(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}?sslmode={}",
-            self.database.user,
-            self.database.password,
-            self.database.host,
-            self.database.port,
-            self.database.name,
-            self.database.sslmode,
+            self.user, self.password, self.host, self.port, self.name, self.sslmode,
         )
     }
 }

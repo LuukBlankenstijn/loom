@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO map_element (id, map_id, element_type, props)\n                 VALUES ($1, $2, $3, $4)\n                 ON CONFLICT (id) DO UPDATE SET\n                    element_type = EXCLUDED.element_type,\n                    props = EXCLUDED.props,\n                    map_id = EXCLUDED.map_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b5674cc6f65b735e3c64cc100519e21652ba2ada61ad42b92cd0293027d011ad"
+}

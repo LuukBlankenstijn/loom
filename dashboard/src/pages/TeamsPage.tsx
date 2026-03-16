@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
-import type { Team } from "@client/v1/admin/admin_pb";
+import type { Team } from "@client/v1/admin/team_pb";
 
 export function TeamsPage() {
   const queryClient = useQueryClient();

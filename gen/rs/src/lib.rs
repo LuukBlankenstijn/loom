@@ -7,6 +7,14 @@ pub mod admin {
         // @@protoc_insertion_point(admin.v1)
     }
 }
+pub mod broadcast {
+    #[cfg(feature = "broadcast-v1")]
+    // @@protoc_insertion_point(attribute:broadcast.v1)
+    pub mod v1 {
+        include!("broadcast/v1/broadcast.v1.rs");
+        // @@protoc_insertion_point(broadcast.v1)
+    }
+}
 pub mod command {
     #[cfg(feature = "command-v1")]
     // @@protoc_insertion_point(attribute:command.v1)
@@ -23,11 +31,11 @@ pub mod map {
         // @@protoc_insertion_point(map.v1)
     }
 }
-pub mod stations {
-    #[cfg(feature = "stations-v1")]
-    // @@protoc_insertion_point(attribute:stations.v1)
+pub mod station {
+    #[cfg(feature = "station-v1")]
+    // @@protoc_insertion_point(attribute:station.v1)
     pub mod v1 {
-        include!("stations/v1/stations.v1.rs");
-        // @@protoc_insertion_point(stations.v1)
+        include!("station/v1/station.v1.rs");
+        // @@protoc_insertion_point(station.v1)
     }
 }

@@ -33,9 +33,9 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
         for await (const update of stream) {
           if (controller.signal.aborted) break;
 
-          if (update.message.case === "statusUpdate") {
+          if (update.message.case === "stationsState") {
             const newUpdates = Object.fromEntries(
-              update.message.value.status.map((s) => [s.ip, s.loggedIn]),
+              update.message.value.state.map((s) => [s.ip, s.loggedIn]),
             );
             setState(newUpdates);
           } else if (update.message.case === "commandOutput") {

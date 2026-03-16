@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminClient } from "../lib/client";
-import type { Station, Team } from "@client/v1/admin/admin_pb";
+import type { Station } from "@client/v1/admin/station_pb";
+import type { Team } from "@client/v1/admin/team_pb";
 
 type AssignModalProps = {
   mode: "team" | "station";
@@ -66,8 +67,8 @@ export function AssignModal({
             <option value="">Choose...</option>
             {mode === "team"
               ? availableStations.map((station) => (
-                  <option key={station.id} value={station.ip}>
-                    Station {station.id} - {station.ip}
+                  <option key={station.ip} value={station.ip}>
+                    Station {station.ip}
                   </option>
                 ))
               : unassignedTeams.map((team) => (

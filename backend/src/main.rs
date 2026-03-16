@@ -1,29 +1,28 @@
-mod api;
-mod config;
-mod convert;
-mod domain;
-mod error;
-mod hub;
-mod repo;
-
-use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::Router;
-use axum::routing::get;
-use loom_rpc::admin::v1::admin_service_server::AdminServiceServer;
-use loom_rpc::stations::v1::station_service_server::StationServiceServer;
+use axum::{Router, routing::get};
+use loom_rpc::{
+    admin::v1::{
+        contest_service_server::ContestServiceServer, station_service_server::StationServiceServer,
+        team_service_server::TeamServiceServer,
+    },
+    broadcast::v1::broadcast_service_server::BroadcastServiceServer,
+    map::v1::map_service_server::MapServiceServer,
+    station::v1::station_service_server,
+};
 use sqlx::postgres::PgPoolOptions;
-use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
-
-use config::Config;
-use hub::StationsHub;
 use tracing::Level;
-use tracing_subscriber::{filter::Targets, fmt, prelude::*};
+use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::api::middleware::check_auth;
-use crate::convert::CommandOutput;
+use crate::{api::combined_auth_interceptor, config::Config, orchestrator::Orchestrator};
+
+mod api;
+mod config;
+mod domain;
+mod error;
+mod orchestrator;
+mod repository;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,84 +40,87 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load();
 
     let pool = PgPoolOptions::new()
-        .max_connections(10)
+        .max_connections(100)
         .connect(&config.database_url())
-        .await?;
+        .await
+        .expect("Failed to build pgPool");
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    // Wire repositories
-    let station_repo: Arc<dyn domain::StationRepository> =
-        Arc::new(repo::PgStationRepo::new(pool.clone()));
-    let wallpaper_repo: Arc<dyn domain::WallpaperRepository> =
-        Arc::new(repo::PgWallpaperRepo::new(pool.clone()));
-    let map_repo: Arc<dyn domain::MapRepository> = Arc::new(repo::PgMapRepo::new(pool.clone()));
+    let repositories = repository::Repositories::new(pool, config.icpc_api.clone()).await;
+    let contest_repo = repositories.get_contest();
+    let map_repo = repositories.get_map();
+    let station_repo = repositories.get_station();
+    let team_repo = repositories.get_team();
 
-    let (contest_repo, team_repo): (
-        Arc<dyn domain::ContestRepository>,
-        Arc<dyn domain::TeamRepository>,
-    ) = if let Some(icpc) = &config.icpc_api {
-        (
-            Arc::new(repo::HttpContestRepo::new(icpc.clone())),
-            Arc::new(repo::HttpTeamRepo::new(icpc.clone())),
-        )
-    } else {
-        (
-            Arc::new(repo::PgContestRepo::new(pool.clone())),
-            Arc::new(repo::PgTeamRepo::new(pool.clone())),
-        )
-    };
+    let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new());
 
-    let hub = StationsHub::new();
+    let interceptor = combined_auth_interceptor(config.auth_token);
 
-    let (client_broadcast, _) = broadcast::channel::<CommandOutput>(32);
-
-    // gRPC services
-    let admin = api::admin::AdminHandler::new(
-        contest_repo.clone(),
-        team_repo.clone(),
-        station_repo.clone(),
-        wallpaper_repo.clone(),
-        map_repo.clone(),
-        hub.clone(),
-        client_broadcast.clone(),
+    let contest_serice = ContestServiceServer::with_interceptor(
+        api::admin::ContestHandler::new(
+            contest_repo.clone(),
+            map_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let station_service = StationServiceServer::with_interceptor(
+        api::admin::StationHandler::new(
+            contest_repo.clone(),
+            station_repo.clone(),
+            team_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let team_service = TeamServiceServer::with_interceptor(
+        api::admin::TeamHandler::new(
+            contest_repo.clone(),
+            team_repo.clone(),
+            orchestrator.clone(),
+        ),
+        interceptor.clone(),
+    );
+    let map_service = MapServiceServer::with_interceptor(
+        api::map::MapHandler::new(map_repo.clone()),
+        interceptor.clone(),
     );
 
-    let stations = api::stations::StationsHandler::new(
-        hub.clone(),
-        contest_repo.clone(),
-        station_repo.clone(),
-        config.icpc_api.as_ref().map(|c| c.base_url.clone()),
-        client_broadcast.clone(),
+    let broadcast_service = BroadcastServiceServer::with_interceptor(
+        api::broadcast::BroadcastHandler::new(orchestrator.clone()),
+        interceptor.clone(),
+    );
+    let station_stream_service = station_service_server::StationServiceServer::with_interceptor(
+        api::station::StationHandler::new(station_repo.clone(), orchestrator.clone()),
+        interceptor.clone(),
     );
 
-    // Wallpaper HTTP handler state
-    let wallpaper_state = Arc::new(api::wallpaper::WallpaperState::new(
-        contest_repo,
-        team_repo,
-        wallpaper_repo,
-    ));
+    let wallpaper_handler = api::http::WallpaperHandler::new(contest_repo, team_repo);
 
-    let grpc_router = tonic::service::Routes::new(StationServiceServer::with_interceptor(
-        stations,
-        move |req| check_auth(req, config.auth_token.clone()),
-    ))
-    .add_service(AdminServiceServer::new(admin))
-    .into_axum_router()
-    .layer(tonic_web::GrpcWebLayer::new());
+    let grpc_router = tonic::service::Routes::builder()
+        .add_service(contest_serice)
+        .add_service(station_service)
+        .add_service(team_service)
+        .add_service(map_service)
+        .add_service(broadcast_service)
+        .add_service(station_stream_service)
+        .clone()
+        .routes()
+        .into_axum_router()
+        .layer(tonic_web::GrpcWebLayer::new());
 
-    // Merge gRPC with axum HTTP routes
-    let app = Router::new()
-        .route("/wallpaper", get(api::wallpaper::wallpaper_handler))
-        .with_state(wallpaper_state)
+    let routes = Router::new()
+        .route("/wallpaper", get(api::http::wallpaper_handler))
+        .route("/next-contest", get(api::http::next_contest))
+        .with_state(wallpaper_handler)
         .merge(grpc_router)
         .layer(CorsLayer::permissive());
 
     tracing::info!(addr = %config.listen, "starting server");
 
     let listener = tokio::net::TcpListener::bind(config.listen).await?;
-    let service = app.into_make_service_with_connect_info::<SocketAddr>();
+    let service = routes.into_make_service();
     axum::serve(listener, service).await?;
-
     Ok(())
 }

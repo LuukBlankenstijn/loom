@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE teams SET team_station = (SELECT id FROM stations WHERE ip = $1) WHERE id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bd0fc3bc78dc60cababbababb6ae1f1dc248541dce0a40487b6b61712f76b015"
+}

@@ -8,7 +8,7 @@ pub struct Location {
     pub y: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Map {
+pub struct MapMetadata {
     #[prost(int32, tag="1")]
     pub id: i32,
     #[prost(string, tag="2")]
@@ -33,7 +33,7 @@ pub struct Wall {
     pub end: ::core::option::Option<Location>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Table {
+pub struct Seat {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     #[prost(message, optional, tag="2")]
@@ -55,7 +55,7 @@ pub mod element {
         #[prost(message, tag="2")]
         Door(super::Door),
         #[prost(message, tag="3")]
-        Table(super::Table),
+        Seat(super::Seat),
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -93,4 +93,36 @@ impl Rotation {
         }
     }
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetMapRequest {
+    #[prost(int32, tag="1")]
+    pub id: i32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreateMapRequest {
+    #[prost(string, tag="1")]
+    pub name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MapResponse {
+    #[prost(message, optional, tag="1")]
+    pub map: ::core::option::Option<MapMetadata>,
+    #[prost(message, repeated, tag="2")]
+    pub elements: ::prost::alloc::vec::Vec<Element>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetAllMapMetadataResponse {
+    #[prost(message, repeated, tag="1")]
+    pub maps: ::prost::alloc::vec::Vec<MapMetadata>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdateMapRequest {
+    #[prost(int32, tag="1")]
+    pub id: i32,
+    #[prost(string, repeated, tag="3")]
+    pub deleted: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, repeated, tag="4")]
+    pub updated: ::prost::alloc::vec::Vec<Element>,
+}
+include!("map.v1.tonic.rs");
 // @@protoc_insertion_point(module)

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+
+message Team {
+  string id = 1;
+  optional string ip = 2 [(buf.validate.field).string.ip = true];
+  string name = 3;
+}
+
+message TeamsResponse {
+  repeated Team teams = 1;
+}
+
+message SetIpRequest {
+  string team_id = 1;
+  optional string ip = 2;
+}
+
+service TeamService {
+  // Gets all teams in the current or next active contest
+  rpc GetActiveTeams(google.protobuf.Empty) returns (TeamsResponse) {}
+  // Sets the ip for some team. Only allows ips that are not used by a different team yet
+  rpc SetIp(SetIpRequest) returns (google.protobuf.Empty) {}
+}
