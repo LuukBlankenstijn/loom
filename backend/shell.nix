@@ -9,5 +9,7 @@ pkgs.mkShell {
     rustfmt
     clippy
     rust-analyzer
+
+    sqlx-cli
   ];
 }

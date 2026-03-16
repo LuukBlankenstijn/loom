@@ -1,5 +1,7 @@
 FROM rust:1.94-bookworm AS builder
 
+ENV SQLX_OFFLINE=true
+
 WORKDIR /src
 
 # Cargo dep caching with dummy sources
@@ -16,6 +18,7 @@ RUN cd backend && cargo build --release 2>/dev/null || true
 COPY gen/rs/ gen/rs/
 COPY backend/src/ backend/src/
 COPY backend/migrations/ backend/migrations/
+COPY backend/.sqlx/ backend/.sqlx/
 
 RUN touch gen/rs/src/lib.rs backend/src/main.rs
 RUN cd backend && cargo build --release
