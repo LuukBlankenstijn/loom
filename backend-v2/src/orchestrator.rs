@@ -14,6 +14,7 @@ use crate::{
         event::{
             LoomEvent,
             admin::AdminEvent,
+            broadcast::StationsState,
             station::{StationCommand, StationEvent},
         },
     },
@@ -116,5 +117,9 @@ impl domain::Orchestrator for Orchestrator {
         };
 
         Ok(Box::pin(stream))
+    }
+
+    fn get_state(&self) -> StationsState {
+        self.state.get_state()
     }
 }
