@@ -2,39 +2,12 @@ use iced::{
     Color, Point,
     widget::canvas::{Path, Stroke},
 };
+use loom_map_types::wall::Wall;
 use uuid::Uuid;
 
+use crate::types::prelude::{AddIcedVector, IntoIced};
+
 use super::Drawable;
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Wall {
-    pub id: Uuid,
-    pub start: Point,
-    pub end: Point,
-}
-
-impl Wall {
-    pub fn new(start: Point, end: Point) -> Self {
-        Self {
-            id: Uuid::now_v7(),
-            start,
-            end,
-        }
-    }
-    pub fn construct(id: Uuid, start: impl Into<Point>, end: impl Into<Point>) -> Self {
-        Self {
-            id,
-            start: start.into(),
-            end: end.into(),
-        }
-    }
-    pub fn get_test() -> Vec<Self> {
-        vec![
-            Self::new(Point::new(50.0, 0.0), Point::new(200.0, 0.0)),
-            Self::new(Point::new(200.0, 0.0), Point::new(200.0, 150.0)),
-        ]
-    }
-}
 
 impl Drawable for Wall {
     fn draw(&self, frame: &mut iced::widget::canvas::Frame, scale: f32, selected: bool) {
@@ -44,14 +17,14 @@ impl Drawable for Wall {
 
         // 1. Draw the snap-point dots (Frame/Jambs)
         // We create a path for a circle and fill it
-        let left_dot = Path::circle(self.start, dot_radius);
-        let right_dot = Path::circle(self.end, dot_radius);
+        let left_dot = Path::circle(self.start.to_iced(), dot_radius);
+        let right_dot = Path::circle(self.end.to_iced(), dot_radius);
 
         frame.fill(&left_dot, wall_color);
         frame.fill(&right_dot, wall_color);
 
         frame.stroke(
-            &Path::line(self.start, self.end),
+            &Path::line(self.start.to_iced(), self.end.to_iced()),
             Stroke::default()
                 .with_width(stroke_width)
                 .with_color(wall_color),
@@ -62,7 +35,7 @@ impl Drawable for Wall {
             let halo_width = 10.0;
 
             frame.stroke(
-                &Path::line(self.start, self.end),
+                &Path::line(self.start.to_iced(), self.end.to_iced()),
                 Stroke::default()
                     .with_width(halo_width)
                     .with_color(selection_color),
@@ -91,7 +64,7 @@ impl Drawable for Wall {
 
         // If the segment is just a point (start == end)
         if l2 == 0.0 {
-            return point.distance(self.start) < threshold;
+            return point.distance(self.start.to_iced()) < threshold;
         }
 
         // Calculate the t parameter of the projection
@@ -112,8 +85,8 @@ impl Drawable for Wall {
     }
 
     fn move_by(&mut self, delta: iced::Vector) {
-        self.start += delta;
-        self.end += delta;
+        self.start.add_vector(delta);
+        self.end.add_vector(delta);
     }
 
     fn duplicate(&self) -> Self {

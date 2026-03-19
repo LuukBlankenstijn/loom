@@ -1,5 +1,4 @@
-use iced::Point;
-use loom_map::{Door, MapElement, Rotation, Station, Wall};
+use loom_map::loom_map_types::{MapElement, Point, Rotation, door::Door, seat::Seat, wall::Wall};
 use loom_rpc::map::v1::{
     Door as ProtoDoor, Element as ProtoElement, Location as ProtoLocation,
     Rotation as ProtoRotation, Seat as ProtoSeat, Wall as ProtoWall,
@@ -60,7 +59,7 @@ impl FromProto<ProtoSeat> for Option<MapElement> {
     fn from_proto(val: ProtoSeat) -> Self {
         let id = uuid::Uuid::try_parse(&val.id).ok()?;
         Some(
-            Station::construct(
+            Seat::construct(
                 id,
                 Point::from_proto(val.location),
                 Rotation::from_proto(val.rotation()),
@@ -70,7 +69,7 @@ impl FromProto<ProtoSeat> for Option<MapElement> {
     }
 }
 
-impl ToProto<ProtoSeat> for &Station {
+impl ToProto<ProtoSeat> for &Seat {
     fn to_proto(self) -> ProtoSeat {
         ProtoSeat {
             id: self.id.to_string(),
@@ -136,7 +135,7 @@ impl ToProto<ProtoElement> for &MapElement {
         let inner = match self {
             MapElement::Door(door) => InnerElement::Door(door.to_proto()),
             MapElement::Wall(wall) => InnerElement::Wall(wall.to_proto()),
-            MapElement::Station(station) => InnerElement::Seat(station.to_proto()),
+            MapElement::Seat(seat) => InnerElement::Seat(seat.to_proto()),
         };
         ProtoElement {
             element: inner.into(),

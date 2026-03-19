@@ -1,61 +1,54 @@
-use enum_dispatch::enum_dispatch;
-use iced::{Point, Vector, widget::canvas::Frame};
+use iced::{Vector, widget::canvas::Frame};
+pub use loom_map_types;
+use loom_map_types::{MapElement, Rotation};
 use uuid::Uuid;
 
 mod door;
-mod station;
+pub mod prelude;
+mod seat;
 mod wall;
 
-pub use door::Door;
-pub use station::Station;
-pub use wall::Wall;
-
-#[derive(Clone, Debug, PartialEq)]
-#[enum_dispatch(Drawable, MapElement)]
-pub enum MapElement {
-    Door(Door),
-    Wall(Wall),
-    Station(Station),
+macro_rules! dispatch_on_map_element {
+    ($target:expr, $inner:ident => $exec:expr) => {
+        match $target {
+            MapElement::Door($inner) => $exec,
+            MapElement::Wall($inner) => $exec,
+            MapElement::Seat($inner) => $exec,
+        }
+    };
 }
 
-#[enum_dispatch]
 pub trait Drawable {
     fn draw(&self, frame: &mut Frame, scale: f32, selected: bool);
     fn get_id(&self) -> Uuid;
-    fn is_hit(&self, point: Point) -> bool;
+    fn is_hit(&self, point: iced::Point) -> bool;
     fn move_by(&mut self, delta: Vector);
     fn duplicate(&self) -> Self;
     fn rotate(&mut self, _rotation: Option<Rotation>) {}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[repr(u16)]
-pub enum Rotation {
-    #[default]
-    Deg0 = 0,
-    Deg90 = 90,
-    Deg180 = 180,
-    Deg270 = 270,
-}
-
-impl Rotation {
-    fn rotate_cw(self) -> Self {
-        match self {
-            Self::Deg0 => Self::Deg90,
-            Self::Deg90 => Self::Deg180,
-            Self::Deg180 => Self::Deg270,
-            Self::Deg270 => Self::Deg0,
-        }
+impl Drawable for MapElement {
+    fn draw(&self, frame: &mut Frame, scale: f32, selected: bool) {
+        dispatch_on_map_element!(self, x => x.draw(frame, scale, selected))
     }
-}
 
-impl From<Rotation> for iced::Radians {
-    fn from(value: Rotation) -> Self {
-        match value {
-            Rotation::Deg0 => 0.0 * iced::Radians::PI,
-            Rotation::Deg90 => 0.5 * iced::Radians::PI,
-            Rotation::Deg180 => 1.0 * iced::Radians::PI,
-            Rotation::Deg270 => 1.5 * iced::Radians::PI,
-        }
+    fn get_id(&self) -> Uuid {
+        dispatch_on_map_element!(self, x => x.get_id())
+    }
+
+    fn is_hit(&self, point: iced::Point) -> bool {
+        dispatch_on_map_element!(self, x => x.is_hit(point))
+    }
+
+    fn move_by(&mut self, delta: Vector) {
+        dispatch_on_map_element!(self, x => x.move_by(delta))
+    }
+
+    fn duplicate(&self) -> Self {
+        dispatch_on_map_element!(self, x => x.duplicate().into())
+    }
+
+    fn rotate(&mut self, rotation: Option<Rotation>) {
+        dispatch_on_map_element!(self, x => x.rotate(rotation))
     }
 }

@@ -1,51 +1,14 @@
-use super::{Drawable, Rotation};
+use crate::types::prelude::AddIcedVector;
+
+use super::Drawable;
 use iced::{
     Color, Point, Radians, Size, Vector,
     widget::canvas::{Frame, Path, Stroke},
 };
+use loom_map_types::seat::Seat;
 use uuid::Uuid;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Station {
-    pub id: Uuid,
-    pub position: Point,
-    pub rotation: Rotation,
-}
-
-impl Station {
-    const TABLE_W: f32 = 200.0;
-    const TABLE_H: f32 = 90.0;
-    const CHAIR_ARC_RADIUS: f32 = 20.0;
-    const CHAIR_PROTRUSION: f32 = 25.0;
-
-    pub fn new(position: Point, rotation: Option<Rotation>) -> Self {
-        Self {
-            id: Uuid::now_v7(),
-            position,
-            rotation: rotation.unwrap_or_default(),
-        }
-    }
-
-    pub fn construct(id: Uuid, position: impl Into<Point>, rotation: impl Into<Rotation>) -> Self {
-        Self {
-            id,
-            position: position.into(),
-            rotation: rotation.into(),
-        }
-    }
-
-    fn get_total_bounds(&self) -> (f32, f32) {
-        let total_w = Self::TABLE_W;
-        let total_h = Self::TABLE_H + Self::CHAIR_PROTRUSION;
-
-        match self.rotation {
-            Rotation::Deg0 | Rotation::Deg180 => (total_w, total_h),
-            Rotation::Deg90 | Rotation::Deg270 => (total_h, total_w),
-        }
-    }
-}
-
-impl Drawable for Station {
+impl Drawable for Seat {
     fn draw(&self, frame: &mut Frame, scale: f32, selected: bool) {
         let (total_w, total_h) = self.get_total_bounds();
 
@@ -146,7 +109,7 @@ impl Drawable for Station {
     }
 
     fn move_by(&mut self, delta: Vector) {
-        self.position += delta;
+        self.position.add_vector(delta);
     }
 
     fn duplicate(&self) -> Self {

@@ -4,13 +4,14 @@ use iced::{
     Event, Rectangle, Renderer, Theme, mouse,
     widget::canvas::{self, Frame, Geometry, Path, Program, Stroke},
 };
+use loom_map_types::MapElement;
 use ordermap::OrderMap;
 use uuid::Uuid;
 
 use crate::{MapMode, Message};
 
 use super::grid::{Grid, Interaction};
-use super::types::{Drawable, MapElement};
+use super::types::Drawable;
 
 pub struct MapCanvas<'a> {
     grid: &'a Grid,

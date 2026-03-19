@@ -11,7 +11,10 @@ use iced::{
         space, stack, text,
     },
 };
-use loom_map::{Door, MapElement, MapMode, Station};
+use loom_map::{
+    MapMode,
+    loom_map_types::{MapElement, Point, door::Door, seat::Seat},
+};
 use loom_rpc::map::v1::{GetMapRequest, UpdateMapRequest, map_service_client::MapServiceClient};
 use tonic_web_wasm_client::Client;
 
@@ -130,14 +133,28 @@ impl Map {
                             "New Door",
                             Color::from_rgb(0.0, 1.0, 0.0),
                             Message::Map(loom_map::Message::AddElement(|point| {
-                                Door::new(point, None).into()
+                                Door::new(
+                                    Point {
+                                        x: point.x,
+                                        y: point.y,
+                                    },
+                                    None,
+                                )
+                                .into()
                             }))
                         ),
                         self.view_hud_button(
-                            "New Station",
+                            "New Seat",
                             Color::from_rgb(0.0, 1.0, 0.0),
                             Message::Map(loom_map::Message::AddElement(|point| {
-                                Station::new(point, None).into()
+                                Seat::new(
+                                    Point {
+                                        x: point.x,
+                                        y: point.y,
+                                    },
+                                    None,
+                                )
+                                .into()
                             }))
                         ),
                         rule::horizontal(1).style(|t| {

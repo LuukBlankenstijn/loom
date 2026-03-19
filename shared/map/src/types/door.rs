@@ -2,43 +2,19 @@ use iced::{
     Color, Point, Radians, Vector,
     widget::canvas::{self, Frame, LineDash, Path, Stroke},
 };
+use loom_map_types::door::Door;
 use uuid::Uuid;
 
-use crate::types::Rotation;
+use crate::types::prelude::{AddIcedVector, IntoIced};
 
 use super::Drawable;
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Door {
-    pub id: Uuid,
-    pub position: Point,
-    pub rotation: Rotation,
-}
-
-impl Door {
-    const WIDTH: f32 = 100.0;
-    pub fn new(position: Point, rotation: Option<Rotation>) -> Self {
-        Self {
-            id: Uuid::now_v7(),
-            position,
-            rotation: rotation.unwrap_or_default(),
-        }
-    }
-    pub fn construct(id: Uuid, position: impl Into<Point>, rotation: impl Into<Rotation>) -> Self {
-        Self {
-            id,
-            position: position.into(),
-            rotation: rotation.into(),
-        }
-    }
-}
 
 impl Drawable for Door {
     fn draw(&self, frame: &mut Frame, scale: f32, selected: bool) {
         frame.with_save(|frame| {
             frame.translate(Vector::new(self.position.x, self.position.y));
 
-            frame.rotate(self.rotation);
+            frame.rotate(self.rotation.to_iced());
 
             let dot_radius = 3.0;
             let stroke_width = 2.0 * scale;
@@ -123,7 +99,7 @@ impl Drawable for Door {
         let mut p = point - Vector::new(self.position.x, self.position.y);
 
         // undo rotation (inverse of what draw() applies)
-        let (sin, cos) = (-(iced::Radians::from(self.rotation).0)).sin_cos();
+        let (sin, cos) = (-(self.rotation.to_iced().0)).sin_cos();
         p = Point::new(p.x * cos - p.y * sin, p.x * sin + p.y * cos);
 
         // now run your existing local-space checks unchanged
@@ -148,7 +124,7 @@ impl Drawable for Door {
     }
 
     fn move_by(&mut self, delta: Vector) {
-        self.position += delta
+        self.position.add_vector(delta);
     }
 
     fn duplicate(&self) -> Self {

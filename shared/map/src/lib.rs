@@ -1,12 +1,14 @@
 mod canvas;
 mod grid;
 mod messsage;
-mod types;
+pub mod types;
 
 use grid::Grid;
+pub use loom_map_types;
+use loom_map_types::wall::Wall;
+use loom_map_types::{MapElement, Point};
 pub use messsage::Message;
 use ordermap::OrderMap;
-pub use types::{Door, Drawable, MapElement, Rotation, Station, Wall};
 
 use std::collections::HashSet;
 
@@ -16,6 +18,7 @@ use iced::{Element, Task, Vector};
 use uuid::Uuid;
 
 use crate::messsage::{GridMessage, SystemMessage};
+use crate::types::{Drawable, prelude::FromIced};
 
 #[derive(Default, Debug, Clone)]
 pub enum MapMode {
@@ -75,7 +78,10 @@ impl Map {
             Message::Grid(msg) => match msg {
                 GridMessage::DrawFinish(start, end) => {
                     return Task::done(
-                        SystemMessage::AddElement(Wall::new(start, end).into()).into(),
+                        SystemMessage::AddElement(
+                            Wall::new(Point::from_iced(start), Point::from_iced(end)).into(),
+                        )
+                        .into(),
                     );
                 }
                 GridMessage::RequestSelect(point) => {
