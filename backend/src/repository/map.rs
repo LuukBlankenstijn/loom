@@ -4,7 +4,9 @@ use sqlx::PgPool;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::domain::{Door, Map, MapElement, MapMetadata, MapRepository, Rotation, Seat, Wall};
+use crate::domain::{
+    Door, Map, MapElement, MapMetadata, MapRepository, Rotation, Seat, StationAssignment, Wall,
+};
 use crate::error::AppError;
 
 pub struct MapRepo(PgPool);
@@ -230,5 +232,59 @@ impl MapRepository for MapRepo {
             name: row.name,
             elements: vec![],
         })
+    }
+
+    async fn assign_station_to_seat(
+        &self,
+        station_ip: String,
+        seat_id: Uuid,
+    ) -> Result<(), AppError> {
+        // check if the elment exists and is of the correct type
+        let element = sqlx::query!("SELECT * FROM map_element WHERE id = ($1)", seat_id)
+            .fetch_one(&self.0)
+            .await?;
+        if element.element_type != "Seat" {
+            return Err(AppError::InvalidArgument(
+                "Element is not of type seat".to_string(),
+            ));
+        }
+        // check if station exists
+        let station = sqlx::query!("SELECT * FROM stations WHERE ip = ($1)", station_ip)
+            .fetch_one(&self.0)
+            .await?;
+        // assign station
+        sqlx::query!(
+            "UPDATE map_element SET station_id = ($2) WHERE id = ($1)",
+            element.id,
+            station.id
+        )
+        .execute(&self.0)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn get_all_station_assignments(
+        &self,
+        map_id: i32,
+    ) -> Result<Vec<StationAssignment>, AppError> {
+        let rows = sqlx::query!(
+            "
+            SELECT s.ip, e.id FROM map_element AS e 
+            INNER JOIN stations AS s ON e.station_id = s.id 
+            WHERE e.map_id = ($1)
+            ",
+            map_id
+        )
+        .fetch_all(&self.0)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| StationAssignment {
+                seat_id: r.id,
+                station_ip: r.ip,
+            })
+            .collect())
     }
 }

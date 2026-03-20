@@ -46,6 +46,12 @@ pub struct Seat {
     pub rotation: Rotation,
 }
 
+#[derive(Debug, Clone)]
+pub struct StationAssignment {
+    pub station_ip: String,
+    pub seat_id: Uuid,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Rotation {
     R0,

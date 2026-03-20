@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
+use crate::domain::StationAssignment;
 use crate::domain::types::{Map, MapElement, MapMetadata};
 use crate::error::AppError;
 
@@ -16,4 +17,14 @@ pub trait MapRepository: Send + Sync {
     async fn delete_elements(&self, element_ids: &[Uuid]) -> Result<(), AppError>;
     async fn upsert_elements(&self, map_id: i32, elements: Vec<MapElement>)
     -> Result<(), AppError>;
+
+    async fn assign_station_to_seat(
+        &self,
+        station_ip: String,
+        seat_id: Uuid,
+    ) -> Result<(), AppError>;
+    async fn get_all_station_assignments(
+        &self,
+        map_id: i32,
+    ) -> Result<Vec<StationAssignment>, AppError>;
 }

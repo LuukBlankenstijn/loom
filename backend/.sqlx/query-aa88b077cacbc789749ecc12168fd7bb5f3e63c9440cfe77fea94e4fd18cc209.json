@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM map_element WHERE id = ($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "map_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "element_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "props",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "station_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "aa88b077cacbc789749ecc12168fd7bb5f3e63c9440cfe77fea94e4fd18cc209"
+}
