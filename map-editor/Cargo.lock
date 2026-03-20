@@ -1772,6 +1772,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "loom-map-client"
+version = "0.1.0"
+dependencies = [
+ "loom-map-types",
+ "loom-rpc",
+ "tonic",
+ "tonic-web-wasm-client",
+ "uuid",
+]
+
+[[package]]
 name = "loom-map-editor"
 version = "0.1.0"
 dependencies = [
@@ -1780,7 +1791,7 @@ dependencies = [
  "console_error_panic_hook",
  "iced",
  "loom-map",
- "loom-rpc",
+ "loom-map-client",
  "tonic-web-wasm-client",
  "uuid",
  "web-sys",

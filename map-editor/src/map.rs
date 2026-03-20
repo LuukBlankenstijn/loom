@@ -15,14 +15,11 @@ use loom_map::{
     MapMode,
     loom_map_types::{MapElement, Point, door::Door, seat::Seat},
 };
-use loom_rpc::map::v1::{GetMapRequest, UpdateMapRequest, map_service_client::MapServiceClient};
-use tonic_web_wasm_client::Client;
-
-use crate::client::{FromProto, ToProto};
+use loom_map_client::client::{MapClient, MapClientExt};
 
 #[derive(Debug)]
 pub struct Map {
-    client: Arc<MapServiceClient<Client>>,
+    client: Arc<MapClient>,
     map_id: i32,
     map_mode: MapMode,
     map: loom_map::Map,
@@ -43,7 +40,7 @@ pub enum Message {
 }
 
 impl Map {
-    pub fn new(client: Arc<MapServiceClient<Client>>, map_id: i32) -> (Self, Task<Message>) {
+    pub fn new(client: Arc<MapClient>, map_id: i32) -> (Self, Task<Message>) {
         (
             Self {
                 client,
@@ -213,23 +210,11 @@ impl Map {
             Message::FetchMap => {
                 return Task::perform(
                     async move {
-                        let mut client = (*client).clone();
-                        let inner = client
-                            .get_map(GetMapRequest { id: map_id })
+                        let elements = client
+                            .get_map_elements(map_id)
                             .boxed_local()
                             .await
-                            .map_err(|e| e.to_string())?
-                            .into_inner();
-
-                        if inner.map.is_none() {
-                            return Err("No map found".to_string());
-                        }
-
-                        let elements: Vec<MapElement> = inner
-                            .elements
-                            .into_iter()
-                            .filter_map(FromProto::from_proto)
-                            .collect();
+                            .map_err(|e| e.to_string())?;
 
                         Ok(elements)
                     },
@@ -244,16 +229,11 @@ impl Map {
                 Err(error) => self.error = Some(error),
             },
             Message::UpdateMap => {
-                let (mut deleted, mut updated) = self.map.get_changes();
+                let (deleted, updated) = self.map.get_changes();
                 return Task::perform(
                     async move {
-                        let mut client = (*client).clone();
                         let result = client
-                            .update_map(UpdateMapRequest {
-                                id: map_id,
-                                deleted: deleted.iter_mut().map(|d| d.to_string()).collect(),
-                                updated: updated.iter_mut().map(|u| u.to_proto()).collect(),
-                            })
+                            .update_map(map_id, deleted, updated)
                             .boxed_local()
                             .await;
                         match result {
