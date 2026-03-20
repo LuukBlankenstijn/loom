@@ -9,8 +9,10 @@ import {
 } from "@client/v1/admin/contest_pb";
 import {
   AdminEventSchema,
+  CommandOutputRequestSchema,
   StationService,
   type AdminEvent,
+  type CustomCommandOutput,
   type StationsResponse,
 } from "@client/v1/admin/station_pb";
 import { TeamService, type TeamsResponse } from "@client/v1/admin/team_pb";
@@ -23,6 +25,7 @@ import {
   BroadcastService,
   type BroadcastEvent,
 } from "@client/v1/broadcast/broadcast_pb";
+import { SESSION_ID } from "../session";
 
 const transport = createGrpcWebTransport({
   baseUrl: "/api",
@@ -91,10 +94,14 @@ export const adminClient = {
   assignTeam: async (ips: string[]): Promise<void> => {
     await station_client.assignTeam({ ips });
   },
-  sendCommand: async (
+  sendEvent: async (
     ips: string[],
     command: AdminEvent["command"],
   ): Promise<void> => {
+    // inject the session id for the custom command
+    if (command.case === "custom") {
+      command.value.adminId = SESSION_ID;
+    }
     await station_client.sendCommand(
       create(AdminEventSchema, { ips, command }),
     );
@@ -115,7 +122,38 @@ export const adminClient = {
 
     try {
       for await (const response of stream) {
-        console.log(response);
+        yield response;
+      }
+    } catch (err: unknown) {
+      const isGrpcCanceled =
+        err instanceof ConnectError && err.code === Code.Canceled;
+      const isBrowserAbort = err instanceof Error && err.name === "AbortError";
+      const isStreamAbort =
+        err instanceof Error && err.message.includes("input stream");
+
+      if (
+        isGrpcCanceled ||
+        isBrowserAbort ||
+        isStreamAbort ||
+        signal?.aborted
+      ) {
+        return;
+      }
+
+      throw err;
+    }
+  },
+
+  commandOutput: async function* (
+    signal?: AbortSignal,
+  ): AsyncIterable<CustomCommandOutput> {
+    const stream = station_client.commandOutput(
+      create(CommandOutputRequestSchema, { adminId: SESSION_ID }),
+      { signal },
+    );
+
+    try {
+      for await (const response of stream) {
         yield response;
       }
     } catch (err: unknown) {

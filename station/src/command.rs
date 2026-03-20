@@ -27,12 +27,25 @@ impl CommandRunner {
             };
 
             match msg {
-                Message::RunCommand { id, command } => {
-                    let output = run_with_timeout(&command).await;
-                    let _ = self.sender.send(Message::CommandOutput { id, output });
+                Message::RunCommand {
+                    id,
+                    command,
+                    admin_id,
+                } => {
+                    let tx = self.sender.clone();
+                    tokio::spawn(async move {
+                        let output = run_with_timeout(&command).await;
+                        let _ = tx.send(Message::CommandOutput {
+                            id,
+                            output,
+                            admin_id,
+                        });
+                    });
                 }
                 Message::Logout => {
-                    run_with_timeout("systemctl restart greetd").await;
+                    tokio::spawn(async move {
+                        run_with_timeout("systemctl restart greetd").await;
+                    });
                 }
                 _ => {}
             }

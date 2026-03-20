@@ -687,6 +687,32 @@ pub mod station_service_client {
                 .insert(GrpcMethod::new("admin.v1.StationService", "SendCommand"));
             self.inner.unary(req, path, codec).await
         }
+        /** Stream to receive custom command outputs
+*/
+        pub async fn command_output(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CommandOutputRequest>,
+        ) -> std::result::Result<
+            tonic::Response<tonic::codec::Streaming<super::CustomCommandOutput>>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.StationService/CommandOutput",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.StationService", "CommandOutput"));
+            self.inner.server_streaming(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -729,6 +755,21 @@ pub mod station_service_server {
             &self,
             request: tonic::Request<super::AdminEvent>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        /// Server streaming response type for the CommandOutput method.
+        type CommandOutputStream: tonic::codegen::tokio_stream::Stream<
+                Item = std::result::Result<super::CustomCommandOutput, tonic::Status>,
+            >
+            + std::marker::Send
+            + 'static;
+        /** Stream to receive custom command outputs
+*/
+        async fn command_output(
+            &self,
+            request: tonic::Request<super::CommandOutputRequest>,
+        ) -> std::result::Result<
+            tonic::Response<Self::CommandOutputStream>,
+            tonic::Status,
+        >;
     }
     ///
     #[derive(Debug)]
@@ -978,6 +1019,52 @@ pub mod station_service_server {
                                 max_encoding_message_size,
                             );
                         let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/admin.v1.StationService/CommandOutput" => {
+                    #[allow(non_camel_case_types)]
+                    struct CommandOutputSvc<T: StationService>(pub Arc<T>);
+                    impl<
+                        T: StationService,
+                    > tonic::server::ServerStreamingService<super::CommandOutputRequest>
+                    for CommandOutputSvc<T> {
+                        type Response = super::CustomCommandOutput;
+                        type ResponseStream = T::CommandOutputStream;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::ResponseStream>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::CommandOutputRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as StationService>::command_output(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = CommandOutputSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.server_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

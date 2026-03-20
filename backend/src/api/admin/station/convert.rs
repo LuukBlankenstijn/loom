@@ -1,7 +1,10 @@
 use crate::{
     domain::{
         self,
-        event::{admin::AdminEvent, station::StationCommand},
+        event::{
+            admin::{AdminCommand, AdminEvent},
+            station::{Command, StationCommand},
+        },
     },
     error::AppError,
 };
@@ -29,12 +32,25 @@ impl TryFrom<pb::AdminEvent> for AdminEvent {
             }
             pb::admin_event::Command::Login(_) => StationCommand::Login,
             pb::admin_event::Command::Logout(_) => StationCommand::Logout,
-            pb::admin_event::Command::Custom(custom_command) => StationCommand::CustomCommand {
+            pb::admin_event::Command::Custom(custom_command) => Command {
                 id: custom_command.id,
+                admin_id: custom_command.admin_id,
                 command: custom_command.command,
-            },
+            }
+            .into(),
         };
 
         Ok((value.ips, event).into())
+    }
+}
+
+impl From<AdminCommand> for pb::CustomCommandOutput {
+    fn from(value: AdminCommand) -> Self {
+        match value {
+            AdminCommand::Command(command_output) => pb::CustomCommandOutput {
+                id: command_output.id,
+                output: command_output.output,
+            },
+        }
     }
 }

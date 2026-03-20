@@ -3,17 +3,18 @@ use std::sync::Arc;
 use derive_more::derive::Constructor;
 use tokio::sync::{broadcast, mpsc};
 
-use crate::domain::event::broadcast::StationsState;
+use crate::domain::event::admin::AdminCommand;
+use crate::domain::event::broadcast::StationConnectionState;
 use crate::domain::event::{broadcast::BroadcastEvent, station::StationCommand};
 use crate::error::AppError;
 
 #[derive(Constructor)]
-pub struct StationRegistration {
-    pub receiver: mpsc::UnboundedReceiver<StationCommand>,
+pub struct Registration<T> {
+    pub receiver: mpsc::UnboundedReceiver<T>,
     cleanup: Option<Box<dyn FnOnce() + Send>>,
 }
 
-impl Drop for StationRegistration {
+impl<T> Drop for Registration<T> {
     fn drop(&mut self) {
         if let Some(cleanup) = self.cleanup.take() {
             cleanup();
@@ -21,7 +22,7 @@ impl Drop for StationRegistration {
     }
 }
 
-impl StationRegistration {
+impl<T> Registration<T> {
     // add extra cleanup. Added will run after currente cleanup
     pub fn add_cleanup(&mut self, new_cleanup: Box<dyn FnOnce() + Send>) {
         if let Some(cleanup) = self.cleanup.take() {
@@ -36,18 +37,25 @@ impl StationRegistration {
 
 pub trait EventHub: Sync + Send {
     // station
-    fn register_station(self: &Arc<Self>, ip: &str) -> Result<StationRegistration, AppError>;
+    fn register_station(
+        self: &Arc<Self>,
+        ip: &str,
+    ) -> Result<Registration<StationCommand>, AppError>;
     fn publish_station_command(&self, command: StationCommand, ips: &[&str]);
+
+    // admin
+    fn register_admin(self: &Arc<Self>, ip: &str) -> Result<Registration<AdminCommand>, AppError>;
+    fn publish_admin_command(&self, command: AdminCommand, ips: &[&str]);
 
     // broadcast
     fn subscribe_broadcast(&self) -> broadcast::Receiver<BroadcastEvent>;
     fn broadcast(&self, event: BroadcastEvent);
 }
 
-pub type StateChangeHook = Box<dyn Fn(StationsState) + Send + Sync>;
+pub type StateChangeHook = Box<dyn Fn(StationConnectionState) + Send + Sync>;
 
 pub trait StationStateStore: Send + Sync {
-    fn get_state(&self) -> StationsState;
+    fn get_state(&self) -> Vec<StationConnectionState>;
 
     fn connect(&self, ip: &str);
     fn disconnect(&self, ip: &str);

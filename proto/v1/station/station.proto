@@ -6,14 +6,21 @@ import "buf/validate/validate.proto";
 import "google/protobuf/empty.proto";
 import "v1/command/command.proto";
 
+message CustomCommandOutput {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string output = 2;
+  string admin_id = 3;
+}
+
 message LoginWithCredentialsMessage {
   string username = 1;
   string password = 2;
 }
 
-message CustomCommandMessage {
+message CustomCommand {
   string id = 1 [(buf.validate.field).string.uuid = true];
   string command = 2;
+  string admin_id = 3;
 }
 
 message StationCommand {
@@ -23,7 +30,7 @@ message StationCommand {
     command.v1.LoginCommand login = 3;
     command.v1.LogoutCommand logout = 4;
     command.v1.LoginWithCredentialsCommand login_with_credentials = 5;
-    command.v1.CustomCommand custom_command = 6;
+    CustomCommand custom_command = 6;
   }
 }
 
@@ -31,7 +38,7 @@ message StationEvent {
   oneof message {
     google.protobuf.Empty logged_out = 1;
     google.protobuf.Empty logged_in = 2;
-    command.v1.CustomCommandOutput command_output = 3;
+    CustomCommandOutput command_output = 3;
   }
 }
 

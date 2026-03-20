@@ -7,24 +7,10 @@ pub struct LoginWithCredentialsCommand {
     #[prost(string, tag="2")]
     pub password: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct CustomCommand {
-    #[prost(string, tag="1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub command: ::prost::alloc::string::String,
-}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct LoginCommand {
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct LogoutCommand {
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct CustomCommandOutput {
-    #[prost(string, tag="1")]
-    pub id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub output: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

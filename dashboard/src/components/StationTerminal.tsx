@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { create } from "@bufbuild/protobuf";
-import { CustomCommandSchema } from "@client/v1/command/command_pb";
 import { adminClient } from "../lib/client";
 import { useCommandStore } from "../context/command";
+import { CustomCommandSchema } from "@client/v1/admin/station_pb";
 
 type StationTerminalProps = {
   ip: string;
@@ -26,7 +26,7 @@ export function StationTerminal({ ip }: StationTerminalProps) {
 
     const id = crypto.randomUUID();
     register(id, [ip], command);
-    adminClient.sendCommand([ip], {
+    adminClient.sendEvent([ip], {
       case: "custom",
       value: create(CustomCommandSchema, { id, command }),
     });
@@ -35,10 +35,7 @@ export function StationTerminal({ ip }: StationTerminalProps) {
 
   return (
     <div className="bg-surface-900 border-t border-surface-700 font-mono text-sm">
-      <div
-        ref={scrollRef}
-        className="max-h-64 overflow-y-auto p-4 space-y-2"
-      >
+      <div ref={scrollRef} className="max-h-64 overflow-y-auto p-4 space-y-2">
         {history.length === 0 && (
           <p className="text-gray-600">No commands yet</p>
         )}

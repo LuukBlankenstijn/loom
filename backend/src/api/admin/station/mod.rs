@@ -1,9 +1,11 @@
 use derive_more::derive::Constructor;
-use futures::future::try_join_all;
+use futures::{Stream, future::try_join_all};
 use loom_rpc::admin::v1::{
-    self as pb, AssignTeamRequest, DeleteStationRequest, station_service_server::StationService,
+    self as pb, AssignTeamRequest, CommandOutputRequest, DeleteStationRequest,
+    station_service_server::StationService,
 };
-use std::sync::Arc;
+use std::{pin::Pin, sync::Arc};
+use tokio_stream::StreamExt as _;
 use tonic::{Request, Response, Status};
 
 use crate::domain::{
@@ -107,5 +109,20 @@ impl StationService for StationHandler {
         let event: AdminEvent = req.try_into()?;
         self.orchestrator.handle_event(event.into());
         Ok(().into())
+    }
+
+    type CommandOutputStream =
+        Pin<Box<dyn Stream<Item = Result<pb::CustomCommandOutput, Status>> + Send>>;
+
+    async fn command_output(
+        &self,
+        request: Request<CommandOutputRequest>,
+    ) -> Result<Response<Self::CommandOutputStream>, Status> {
+        let req = request.into_inner();
+        let domain_stream = self.orchestrator.register_admin(&req.admin_id).await?;
+
+        let response_stream =
+            domain_stream.map(|res| res.map(pb::CustomCommandOutput::from).map_err(Status::from));
+        Ok(Response::new(Box::pin(response_stream)))
     }
 }

@@ -28,8 +28,23 @@ message AdminEvent {
     command.v1.LoginWithCredentialsCommand login_with_credentials = 2;
     command.v1.LoginCommand login = 3;
     command.v1.LogoutCommand logout = 4;
-    command.v1.CustomCommand custom = 5;
+    CustomCommand custom = 5;
   }
+}
+
+message CustomCommandOutput {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string output = 2;
+}
+
+message CustomCommand {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string command = 2;
+  string admin_id = 3;
+}
+
+message CommandOutputRequest {
+  string admin_id = 1;
 }
 
 service StationService {
@@ -41,4 +56,6 @@ service StationService {
   rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}
   // Sends a command to the backend that is sent to one or more stations
   rpc SendCommand(AdminEvent) returns (google.protobuf.Empty) {}
+  // Stream to receive custom command outputs
+  rpc CommandOutput(CommandOutputRequest) returns (stream CustomCommandOutput) {}
 }

@@ -2,12 +2,9 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use local_ip_address::linux::local_ip;
-use loom_rpc::{
-    command::v1::CustomCommandOutput,
-    station::v1::{
-        StationCommand, StationEvent, station_command, station_event,
-        station_service_client::StationServiceClient,
-    },
+use loom_rpc::station::v1::{
+    CustomCommandOutput, StationCommand, StationEvent, station_command, station_event,
+    station_service_client::StationServiceClient,
 };
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
@@ -44,9 +41,15 @@ impl TryFrom<Message> for StationEvent {
         let message = match value {
             Message::LoggedIn => station_event::Message::LoggedIn(()),
             Message::LoggedOut => station_event::Message::LoggedOut(()),
-            Message::CommandOutput { id, output } => {
-                station_event::Message::CommandOutput(CustomCommandOutput { id, output })
-            }
+            Message::CommandOutput {
+                id,
+                output,
+                admin_id,
+            } => station_event::Message::CommandOutput(CustomCommandOutput {
+                id,
+                output,
+                admin_id,
+            }),
             _ => return Err(()),
         };
         Ok(Self {
@@ -71,6 +74,7 @@ impl TryFrom<StationCommand> for Message {
                 station_command::Message::CustomCommand(msg) => Message::RunCommand {
                     id: msg.id,
                     command: msg.command,
+                    admin_id: msg.admin_id,
                 },
             },
             None => return Err(anyhow::anyhow!("Message is none")),

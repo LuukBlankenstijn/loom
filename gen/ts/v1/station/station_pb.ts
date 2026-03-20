@@ -7,7 +7,7 @@ import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
 import type { Empty } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
-import type { CustomCommand, CustomCommandOutput, LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
+import type { LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
 import { file_v1_command_command } from "../command/command_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -15,7 +15,34 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/station/station.proto.
  */
 export const file_v1_station_station: GenFile = /*@__PURE__*/
-  fileDesc("Chh2MS9zdGF0aW9uL3N0YXRpb24ucHJvdG8SCnN0YXRpb24udjEiQQobTG9naW5XaXRoQ3JlZGVudGlhbHNNZXNzYWdlEhAKCHVzZXJuYW1lGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIj0KFEN1c3RvbUNvbW1hbmRNZXNzYWdlEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJItkCCg5TdGF0aW9uQ29tbWFuZBIwCg5zeW5jX3dhbGxwYXBlchgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjIKEHN5bmNfY29udGVzdF91cmwYAiABKAsyFi5nb29nbGUucHJvdG9idWYuRW1wdHlIABIpCgVsb2dpbhgDIAEoCzIYLmNvbW1hbmQudjEuTG9naW5Db21tYW5kSAASKwoGbG9nb3V0GAQgASgLMhkuY29tbWFuZC52MS5Mb2dvdXRDb21tYW5kSAASSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgFIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASMwoOY3VzdG9tX2NvbW1hbmQYBiABKAsyGS5jb21tYW5kLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdtZXNzYWdlIq8BCgxTdGF0aW9uRXZlbnQSLAoKbG9nZ2VkX291dBgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEisKCWxvZ2dlZF9pbhgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjkKDmNvbW1hbmRfb3V0cHV0GAMgASgLMh8uY29tbWFuZC52MS5DdXN0b21Db21tYW5kT3V0cHV0SABCCQoHbWVzc2FnZTJZCg5TdGF0aW9uU2VydmljZRJHCglTdWJzY3JpYmUSGC5zdGF0aW9uLnYxLlN0YXRpb25FdmVudBoaLnN0YXRpb24udjEuU3RhdGlvbkNvbW1hbmQiACgBMAFCpQEKDmNvbS5zdGF0aW9uLnYxQgxTdGF0aW9uUHJvdG9QAVo8Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL3N0YXRpb247c3RhdGlvbnYxogIDU1hYqgIKU3RhdGlvbi5WMcoCClN0YXRpb25cVjHiAhZTdGF0aW9uXFYxXEdQQk1ldGFkYXRh6gILU3RhdGlvbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("Chh2MS9zdGF0aW9uL3N0YXRpb24ucHJvdG8SCnN0YXRpb24udjEiTQoTQ3VzdG9tQ29tbWFuZE91dHB1dBIUCgJpZBgBIAEoCUIIukgFcgOwAQESDgoGb3V0cHV0GAIgASgJEhAKCGFkbWluX2lkGAMgASgJIkEKG0xvZ2luV2l0aENyZWRlbnRpYWxzTWVzc2FnZRIQCgh1c2VybmFtZRgBIAEoCRIQCghwYXNzd29yZBgCIAEoCSJICg1DdXN0b21Db21tYW5kEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJEhAKCGFkbWluX2lkGAMgASgJItkCCg5TdGF0aW9uQ29tbWFuZBIwCg5zeW5jX3dhbGxwYXBlchgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjIKEHN5bmNfY29udGVzdF91cmwYAiABKAsyFi5nb29nbGUucHJvdG9idWYuRW1wdHlIABIpCgVsb2dpbhgDIAEoCzIYLmNvbW1hbmQudjEuTG9naW5Db21tYW5kSAASKwoGbG9nb3V0GAQgASgLMhkuY29tbWFuZC52MS5Mb2dvdXRDb21tYW5kSAASSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgFIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASMwoOY3VzdG9tX2NvbW1hbmQYBiABKAsyGS5zdGF0aW9uLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdtZXNzYWdlIq8BCgxTdGF0aW9uRXZlbnQSLAoKbG9nZ2VkX291dBgBIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEisKCWxvZ2dlZF9pbhgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjkKDmNvbW1hbmRfb3V0cHV0GAMgASgLMh8uc3RhdGlvbi52MS5DdXN0b21Db21tYW5kT3V0cHV0SABCCQoHbWVzc2FnZTJZCg5TdGF0aW9uU2VydmljZRJHCglTdWJzY3JpYmUSGC5zdGF0aW9uLnYxLlN0YXRpb25FdmVudBoaLnN0YXRpb24udjEuU3RhdGlvbkNvbW1hbmQiACgBMAFCpQEKDmNvbS5zdGF0aW9uLnYxQgxTdGF0aW9uUHJvdG9QAVo8Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL3N0YXRpb247c3RhdGlvbnYxogIDU1hYqgIKU3RhdGlvbi5WMcoCClN0YXRpb25cVjHiAhZTdGF0aW9uXFYxXEdQQk1ldGFkYXRh6gILU3RhdGlvbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+
+/**
+ * @generated from message station.v1.CustomCommandOutput
+ */
+export type CustomCommandOutput = Message<"station.v1.CustomCommandOutput"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string output = 2;
+   */
+  output: string;
+
+  /**
+   * @generated from field: string admin_id = 3;
+   */
+  adminId: string;
+};
+
+/**
+ * Describes the message station.v1.CustomCommandOutput.
+ * Use `create(CustomCommandOutputSchema)` to create a new message.
+ */
+export const CustomCommandOutputSchema: GenMessage<CustomCommandOutput> = /*@__PURE__*/
+  messageDesc(file_v1_station_station, 0);
 
 /**
  * @generated from message station.v1.LoginWithCredentialsMessage
@@ -37,12 +64,12 @@ export type LoginWithCredentialsMessage = Message<"station.v1.LoginWithCredentia
  * Use `create(LoginWithCredentialsMessageSchema)` to create a new message.
  */
 export const LoginWithCredentialsMessageSchema: GenMessage<LoginWithCredentialsMessage> = /*@__PURE__*/
-  messageDesc(file_v1_station_station, 0);
+  messageDesc(file_v1_station_station, 1);
 
 /**
- * @generated from message station.v1.CustomCommandMessage
+ * @generated from message station.v1.CustomCommand
  */
-export type CustomCommandMessage = Message<"station.v1.CustomCommandMessage"> & {
+export type CustomCommand = Message<"station.v1.CustomCommand"> & {
   /**
    * @generated from field: string id = 1;
    */
@@ -52,14 +79,19 @@ export type CustomCommandMessage = Message<"station.v1.CustomCommandMessage"> & 
    * @generated from field: string command = 2;
    */
   command: string;
+
+  /**
+   * @generated from field: string admin_id = 3;
+   */
+  adminId: string;
 };
 
 /**
- * Describes the message station.v1.CustomCommandMessage.
- * Use `create(CustomCommandMessageSchema)` to create a new message.
+ * Describes the message station.v1.CustomCommand.
+ * Use `create(CustomCommandSchema)` to create a new message.
  */
-export const CustomCommandMessageSchema: GenMessage<CustomCommandMessage> = /*@__PURE__*/
-  messageDesc(file_v1_station_station, 1);
+export const CustomCommandSchema: GenMessage<CustomCommand> = /*@__PURE__*/
+  messageDesc(file_v1_station_station, 2);
 
 /**
  * @generated from message station.v1.StationCommand
@@ -100,7 +132,7 @@ export type StationCommand = Message<"station.v1.StationCommand"> & {
     case: "loginWithCredentials";
   } | {
     /**
-     * @generated from field: command.v1.CustomCommand custom_command = 6;
+     * @generated from field: station.v1.CustomCommand custom_command = 6;
      */
     value: CustomCommand;
     case: "customCommand";
@@ -112,7 +144,7 @@ export type StationCommand = Message<"station.v1.StationCommand"> & {
  * Use `create(StationCommandSchema)` to create a new message.
  */
 export const StationCommandSchema: GenMessage<StationCommand> = /*@__PURE__*/
-  messageDesc(file_v1_station_station, 2);
+  messageDesc(file_v1_station_station, 3);
 
 /**
  * @generated from message station.v1.StationEvent
@@ -135,7 +167,7 @@ export type StationEvent = Message<"station.v1.StationEvent"> & {
     case: "loggedIn";
   } | {
     /**
-     * @generated from field: command.v1.CustomCommandOutput command_output = 3;
+     * @generated from field: station.v1.CustomCommandOutput command_output = 3;
      */
     value: CustomCommandOutput;
     case: "commandOutput";
@@ -147,7 +179,7 @@ export type StationEvent = Message<"station.v1.StationEvent"> & {
  * Use `create(StationEventSchema)` to create a new message.
  */
 export const StationEventSchema: GenMessage<StationEvent> = /*@__PURE__*/
-  messageDesc(file_v1_station_station, 3);
+  messageDesc(file_v1_station_station, 4);
 
 /**
  * @generated from service station.v1.StationService

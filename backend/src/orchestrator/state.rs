@@ -1,8 +1,7 @@
 use std::{collections::HashMap, sync::RwLock};
 
 use crate::{
-    domain::event::broadcast::{StationConnectionState, StationsState},
-    orchestrator::types::{StateChangeHook, StationStateStore},
+    domain::event::broadcast::StationConnectionState, orchestrator::types::StateChangeHook,
 };
 
 pub struct MemoryStationState {
@@ -18,25 +17,24 @@ impl MemoryStationState {
         }
     }
 
-    fn on_change(&self) {
-        let state = self.get_state();
+    fn on_change(&self, update: StationConnectionState) {
         if let Some(hook) = &self.on_change {
-            hook(state);
+            hook(update);
         }
     }
 }
 
 impl crate::orchestrator::types::StationStateStore for MemoryStationState {
-    fn get_state(&self) -> StationsState {
+    fn get_state(&self) -> Vec<StationConnectionState> {
         let state = self.state.read().unwrap();
-        let state = state
+        state
             .iter()
             .map(|(ip, logged_in)| StationConnectionState {
                 ip: ip.clone(),
+                connected: true,
                 logged_in: *logged_in,
             })
-            .collect();
-        StationsState(state)
+            .collect()
     }
 
     fn connect(&self, ip: &str) {
@@ -50,7 +48,7 @@ impl crate::orchestrator::types::StationStateStore for MemoryStationState {
         }
 
         if changed {
-            self.on_change();
+            self.on_change((ip.to_string(), true, false).into());
         }
     }
 
@@ -61,7 +59,7 @@ impl crate::orchestrator::types::StationStateStore for MemoryStationState {
         };
 
         if changed {
-            self.on_change();
+            self.on_change((ip.to_string(), false, false).into());
         }
     }
 
@@ -81,7 +79,7 @@ impl crate::orchestrator::types::StationStateStore for MemoryStationState {
         };
 
         if changed {
-            self.on_change();
+            self.on_change((ip.to_string(), true, true).into());
         }
     }
 
@@ -101,7 +99,7 @@ impl crate::orchestrator::types::StationStateStore for MemoryStationState {
         };
 
         if changed {
-            self.on_change();
+            self.on_change((ip.to_string(), true, false).into());
         }
     }
 

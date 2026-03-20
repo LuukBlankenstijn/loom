@@ -1,18 +1,23 @@
 use derive_more::derive::From;
 
-use crate::domain::event::station::CommandOutput;
-
 #[derive(Debug, Clone)]
 pub struct StationConnectionState {
     pub ip: String,
+    pub connected: bool,
     pub logged_in: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct StationsState(pub Vec<StationConnectionState>);
+impl From<(String, bool, bool)> for StationConnectionState {
+    fn from(value: (String, bool, bool)) -> Self {
+        Self {
+            ip: value.0,
+            connected: value.1,
+            logged_in: value.2,
+        }
+    }
+}
 
 #[derive(Debug, Clone, From)]
 pub enum BroadcastEvent {
-    State(StationsState),
-    Command(CommandOutput),
+    State(Vec<StationConnectionState>),
 }

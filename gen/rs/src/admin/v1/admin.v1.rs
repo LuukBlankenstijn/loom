@@ -72,8 +72,29 @@ pub mod admin_event {
         #[prost(message, tag="4")]
         Logout(super::super::super::command::v1::LogoutCommand),
         #[prost(message, tag="5")]
-        Custom(super::super::super::command::v1::CustomCommand),
+        Custom(super::CustomCommand),
     }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CustomCommandOutput {
+    #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub output: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CustomCommand {
+    #[prost(string, tag="1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub command: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub admin_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CommandOutputRequest {
+    #[prost(string, tag="1")]
+    pub admin_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Team {

@@ -11,20 +11,20 @@ import { StationsProvider } from "./context/station";
 function App() {
   return (
     <CommandProvider>
-    <StationsProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<ContestPage />} />
-            <Route path="teams" element={<TeamsPage />} />
-            <Route path="stations" element={<StationsPage />} />
-            <Route path="maps" element={<MapsPage />} />
-          </Route>
-          {/* Editor is outside layout - needs full screen for WASM canvas */}
-          <Route path="/maps/:mapId/edit" element={<MapEditorPage />} />
-        </Routes>
-      </BrowserRouter>
-    </StationsProvider>
+      <StationsProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<ContestPage />} />
+              <Route path="teams" element={<TeamsPage />} />
+              <Route path="stations" element={<StationsPage />} />
+              <Route path="maps" element={<MapsPage />} />
+            </Route>
+            {/* Editor is outside layout - needs full screen for WASM canvas */}
+            <Route path="/maps/:mapId/edit" element={<MapEditorPage />} />
+          </Routes>
+        </BrowserRouter>
+      </StationsProvider>
     </CommandProvider>
   );
 }

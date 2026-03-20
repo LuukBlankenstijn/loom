@@ -13,8 +13,8 @@ use crate::{
         self, BroadcastEventStream,
         event::{
             LoomEvent,
-            admin::AdminEvent,
-            broadcast::StationsState,
+            admin::{AdminCommand, AdminEvent, CommandOutput},
+            broadcast::StationConnectionState,
             station::{StationCommand, StationEvent},
         },
     },
@@ -39,7 +39,7 @@ impl Orchestrator {
         // we get a new refernce to hub to move into the hook
         let hub_for_hook = hub.clone();
         state.set_on_change_hook(Box::new(move |state| {
-            hub_for_hook.broadcast(state.into());
+            hub_for_hook.broadcast(vec![state.into()].into());
         }));
 
         Self {
@@ -60,7 +60,17 @@ impl domain::Orchestrator for Orchestrator {
                     self.state.logout(&ip);
                     self.sync_stations(&ips);
                 }
-                StationEvent::Command(command_output) => self.hub.broadcast(command_output.into()),
+                StationEvent::Command(command_output) => {
+                    let ids = [command_output.admin_id.as_str()];
+                    self.hub.publish_admin_command(
+                        CommandOutput {
+                            id: command_output.id,
+                            output: command_output.output,
+                        }
+                        .into(),
+                        &ids,
+                    );
+                }
             },
             LoomEvent::Admin(admin_event) => match admin_event {
                 AdminEvent::Station((ips, command)) => {
@@ -94,7 +104,7 @@ impl domain::Orchestrator for Orchestrator {
     async fn register_station(
         &self,
         ip: &str,
-    ) -> Result<domain::StationCommandStream, crate::error::AppError> {
+    ) -> Result<domain::CommandStream<StationCommand>, crate::error::AppError> {
         let mut registration = self.hub.register_station(ip)?;
         let state_store = Arc::clone(&self.state);
         let ip_addr = ip.to_string();
@@ -114,7 +124,30 @@ impl domain::Orchestrator for Orchestrator {
         Ok(Box::pin(stream))
     }
 
-    fn get_state(&self) -> StationsState {
+    async fn register_admin(
+        &self,
+        id: &str,
+    ) -> Result<domain::CommandStream<AdminCommand>, crate::error::AppError> {
+        let mut registration = self.hub.register_admin(id)?;
+        let state_store = Arc::clone(&self.state);
+        let id_clone = id.to_string();
+        registration.add_cleanup(Box::new(move || {
+            state_store.disconnect(&id_clone);
+        }));
+
+        self.state.connect(id);
+
+        let stream = async_stream::stream! {
+            let mut registration = registration;
+            while let Some(msg) = registration.receiver.recv().await {
+                yield Ok(msg);
+            }
+        };
+
+        Ok(Box::pin(stream))
+    }
+
+    fn get_state(&self) -> Vec<StationConnectionState> {
         self.state.get_state()
     }
 }

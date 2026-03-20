@@ -1,4 +1,12 @@
-import { createContext, useCallback, use, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  use,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
+import { adminClient } from "../lib/client";
 
 export type CommandEntry = {
   id: string;
@@ -19,25 +27,22 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
   const [history, setHistory] = useState<Record<string, CommandEntry[]>>({});
   const idToIps = useRef(new Map<string, string[]>());
 
-  const register = useCallback(
-    (id: string, ips: string[], command: string) => {
-      idToIps.current.set(id, ips);
-      const entry: CommandEntry = {
-        id,
-        command,
-        timestamp: Date.now(),
-        output: null,
-      };
-      setHistory((prev) => {
-        const next = { ...prev };
-        for (const ip of ips) {
-          next[ip] = [...(prev[ip] ?? []), entry];
-        }
-        return next;
-      });
-    },
-    [],
-  );
+  const register = useCallback((id: string, ips: string[], command: string) => {
+    idToIps.current.set(id, ips);
+    const entry: CommandEntry = {
+      id,
+      command,
+      timestamp: Date.now(),
+      output: null,
+    };
+    setHistory((prev) => {
+      const next = { ...prev };
+      for (const ip of ips) {
+        next[ip] = [...(prev[ip] ?? []), entry];
+      }
+      return next;
+    });
+  }, []);
 
   const setOutput = useCallback((id: string, output: string) => {
     const ips = idToIps.current.get(id);
@@ -52,6 +57,30 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const stream = adminClient.commandOutput(controller.signal);
+
+    async function processStream() {
+      try {
+        for await (const commandOutput of stream) {
+          if (controller.signal.aborted) break;
+
+          setOutput(commandOutput.id, commandOutput.output);
+        }
+      } catch (error) {
+        console.error("Station Stream Error:", error);
+      }
+    }
+
+    processStream();
+
+    return () => {
+      controller.abort();
+    };
+  }, [setOutput]);
 
   const getHistory = useCallback(
     (ip: string): CommandEntry[] => history[ip] ?? [],

@@ -5,10 +5,13 @@ import {
   useCallback,
   use,
   useMemo,
-  useRef,
 } from "react";
 import { adminClient } from "../lib/client";
-import { useCommandStore } from "./command";
+
+type ConnectionStatus = {
+  connected: boolean;
+  loggedIn: boolean;
+};
 
 type State = {
   getState: (ip: string) => { connected: boolean; loggedIn: boolean };
@@ -18,10 +21,7 @@ type State = {
 const StationsContext = createContext<State | undefined>(undefined);
 
 export function StationsProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<Record<string, boolean>>({});
-  const { setOutput } = useCommandStore();
-  const setOutputRef = useRef(setOutput);
-  setOutputRef.current = setOutput;
+  const [state, setState] = useState<Record<string, ConnectionStatus>>({});
 
   useEffect(() => {
     const controller = new AbortController();
@@ -34,15 +34,16 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
           if (controller.signal.aborted) break;
 
           if (update.message.case === "stationsState") {
-            const newUpdates = Object.fromEntries(
-              update.message.value.state.map((s) => [s.ip, s.loggedIn]),
-            );
-            setState(newUpdates);
-          } else if (update.message.case === "commandOutput") {
-            setOutputRef.current(
-              update.message.value.id,
-              update.message.value.output,
-            );
+            setState((old) => {
+              const nextState = { ...old };
+              update.message.value?.state.forEach((value) => {
+                nextState[value.ip] = {
+                  connected: value.connected,
+                  loggedIn: value.loggedIn,
+                };
+              });
+              return nextState;
+            });
           }
         }
       } catch (error) {
@@ -63,7 +64,7 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
       if (logged_in === undefined) {
         return { connected: false, loggedIn: false };
       }
-      return { connected: true, loggedIn: logged_in };
+      return { connected: logged_in.connected, loggedIn: logged_in.loggedIn };
     },
     [state],
   );

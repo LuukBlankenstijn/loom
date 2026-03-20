@@ -1,13 +1,12 @@
 import { create } from "@bufbuild/protobuf";
 import {
-  CustomCommandSchema,
   LoginCommandSchema,
   LoginWithCredentialsCommandSchema,
   LogoutCommandSchema,
 } from "@client/v1/command/command_pb";
 import { adminClient } from "./client";
 import { queryClient } from "../main";
-import type { Station } from "@client/v1/admin/station_pb";
+import { CustomCommandSchema, type Station } from "@client/v1/admin/station_pb";
 import type { Team } from "@client/v1/admin/team_pb";
 
 type ActionField = {
@@ -58,7 +57,7 @@ export const STATION_ACTIONS: StationAction[] = [
       },
     ],
     execute: (stations, values) =>
-      adminClient.sendCommand(
+      adminClient.sendEvent(
         stations.map((s) => s.ip),
         {
           case: "loginWithCredentials",
@@ -76,7 +75,7 @@ export const STATION_ACTIONS: StationAction[] = [
     description: "Send a login command to the selected stations.",
     fields: [],
     execute: (stations) =>
-      adminClient.sendCommand(
+      adminClient.sendEvent(
         stations.map((s) => s.ip),
         {
           case: "login",
@@ -91,7 +90,7 @@ export const STATION_ACTIONS: StationAction[] = [
     description: "Send a logout command to the selected stations.",
     fields: [],
     execute: (stations) =>
-      adminClient.sendCommand(
+      adminClient.sendEvent(
         stations.map((s) => s.ip),
         {
           case: "logout",
@@ -121,10 +120,11 @@ export const STATION_ACTIONS: StationAction[] = [
       const ips = stations.map((s) => s.ip);
       const id = crypto.randomUUID();
       register?.(id, ips, values.command);
-      return adminClient.sendCommand(ips, {
+      return adminClient.sendEvent(ips, {
         case: "custom",
         value: create(CustomCommandSchema, {
           id,
+          adminId: "dikke test jonge",
           command: values.command,
         }),
       });

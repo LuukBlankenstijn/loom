@@ -1,7 +1,17 @@
+use derive_more::derive::From;
+
 #[derive(Clone, Debug)]
 pub struct CommandOutput {
     pub id: String,
+    pub admin_id: String,
     pub output: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct Command {
+    pub id: String,
+    pub admin_id: String,
+    pub command: String,
 }
 
 // Events comming from a statino
@@ -13,12 +23,12 @@ pub enum StationEvent {
 }
 
 // Command going to a station
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, From)]
 pub enum StationCommand {
     SyncWallpaper,
     SyncContestUrl,
     Login,
     Logout,
     LoginWithCredentials { username: String, password: String },
-    CustomCommand { id: String, command: String },
+    CustomCommand(Command),
 }

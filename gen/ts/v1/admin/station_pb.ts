@@ -7,7 +7,7 @@ import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
 import type { EmptySchema } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
-import type { CustomCommand, LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
+import type { LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
 import { file_v1_command_command } from "../command/command_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/station.proto.
  */
 export const file_v1_admin_station: GenFile = /*@__PURE__*/
-  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSIeCgdTdGF0aW9uEhMKAmlwGAIgASgJQge6SARyAnABIjcKEFN0YXRpb25zUmVzcG9uc2USIwoIc3RhdGlvbnMYASADKAsyES5hZG1pbi52MS5TdGF0aW9uIiIKFERlbGV0ZVN0YXRpb25SZXF1ZXN0EgoKAmlwGAEgASgJIiAKEUFzc2lnblRlYW1SZXF1ZXN0EgsKA2lwcxgBIAMoCSL0AQoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEisKBmN1c3RvbRgFIAEoCzIZLmNvbW1hbmQudjEuQ3VzdG9tQ29tbWFuZEgAQgkKB2NvbW1hbmQypAIKDlN0YXRpb25TZXJ2aWNlEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEkkKDURlbGV0ZVN0YXRpb24SHi5hZG1pbi52MS5EZWxldGVTdGF0aW9uUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkMKCkFzc2lnblRlYW0SGy5hZG1pbi52MS5Bc3NpZ25UZWFtUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEj0KC1NlbmRDb21tYW5kEhQuYWRtaW4udjEuQWRtaW5FdmVudBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpcBCgxjb20uYWRtaW4udjFCDFN0YXRpb25Qcm90b1ABWjhnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vdjEvYWRtaW47YWRtaW52MaICA0FYWKoCCEFkbWluLlYxygIIQWRtaW5cVjHiAhRBZG1pblxWMVxHUEJNZXRhZGF0YeoCCUFkbWluOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSIeCgdTdGF0aW9uEhMKAmlwGAIgASgJQge6SARyAnABIjcKEFN0YXRpb25zUmVzcG9uc2USIwoIc3RhdGlvbnMYASADKAsyES5hZG1pbi52MS5TdGF0aW9uIiIKFERlbGV0ZVN0YXRpb25SZXF1ZXN0EgoKAmlwGAEgASgJIiAKEUFzc2lnblRlYW1SZXF1ZXN0EgsKA2lwcxgBIAMoCSLyAQoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEikKBmN1c3RvbRgFIAEoCzIXLmFkbWluLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdjb21tYW5kIjsKE0N1c3RvbUNvbW1hbmRPdXRwdXQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg4KBm91dHB1dBgCIAEoCSJICg1DdXN0b21Db21tYW5kEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJEhAKCGFkbWluX2lkGAMgASgJIigKFENvbW1hbmRPdXRwdXRSZXF1ZXN0EhAKCGFkbWluX2lkGAEgASgJMvgCCg5TdGF0aW9uU2VydmljZRJDCgtHZXRTdGF0aW9ucxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoaLmFkbWluLnYxLlN0YXRpb25zUmVzcG9uc2UiABJJCg1EZWxldGVTdGF0aW9uEh4uYWRtaW4udjEuRGVsZXRlU3RhdGlvblJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJDCgpBc3NpZ25UZWFtEhsuYWRtaW4udjEuQXNzaWduVGVhbVJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI9CgtTZW5kQ29tbWFuZBIULmFkbWluLnYxLkFkbWluRXZlbnQaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJSCg1Db21tYW5kT3V0cHV0Eh4uYWRtaW4udjEuQ29tbWFuZE91dHB1dFJlcXVlc3QaHS5hZG1pbi52MS5DdXN0b21Db21tYW5kT3V0cHV0IgAwAUKXAQoMY29tLmFkbWluLnYxQgxTdGF0aW9uUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
 
 /**
  * @generated from message admin.v1.Station
@@ -117,7 +117,7 @@ export type AdminEvent = Message<"admin.v1.AdminEvent"> & {
     case: "logout";
   } | {
     /**
-     * @generated from field: command.v1.CustomCommand custom = 5;
+     * @generated from field: admin.v1.CustomCommand custom = 5;
      */
     value: CustomCommand;
     case: "custom";
@@ -130,6 +130,72 @@ export type AdminEvent = Message<"admin.v1.AdminEvent"> & {
  */
 export const AdminEventSchema: GenMessage<AdminEvent> = /*@__PURE__*/
   messageDesc(file_v1_admin_station, 4);
+
+/**
+ * @generated from message admin.v1.CustomCommandOutput
+ */
+export type CustomCommandOutput = Message<"admin.v1.CustomCommandOutput"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string output = 2;
+   */
+  output: string;
+};
+
+/**
+ * Describes the message admin.v1.CustomCommandOutput.
+ * Use `create(CustomCommandOutputSchema)` to create a new message.
+ */
+export const CustomCommandOutputSchema: GenMessage<CustomCommandOutput> = /*@__PURE__*/
+  messageDesc(file_v1_admin_station, 5);
+
+/**
+ * @generated from message admin.v1.CustomCommand
+ */
+export type CustomCommand = Message<"admin.v1.CustomCommand"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string command = 2;
+   */
+  command: string;
+
+  /**
+   * @generated from field: string admin_id = 3;
+   */
+  adminId: string;
+};
+
+/**
+ * Describes the message admin.v1.CustomCommand.
+ * Use `create(CustomCommandSchema)` to create a new message.
+ */
+export const CustomCommandSchema: GenMessage<CustomCommand> = /*@__PURE__*/
+  messageDesc(file_v1_admin_station, 6);
+
+/**
+ * @generated from message admin.v1.CommandOutputRequest
+ */
+export type CommandOutputRequest = Message<"admin.v1.CommandOutputRequest"> & {
+  /**
+   * @generated from field: string admin_id = 1;
+   */
+  adminId: string;
+};
+
+/**
+ * Describes the message admin.v1.CommandOutputRequest.
+ * Use `create(CommandOutputRequestSchema)` to create a new message.
+ */
+export const CommandOutputRequestSchema: GenMessage<CommandOutputRequest> = /*@__PURE__*/
+  messageDesc(file_v1_admin_station, 7);
 
 /**
  * @generated from service admin.v1.StationService
@@ -174,6 +240,16 @@ export const StationService: GenService<{
     methodKind: "unary";
     input: typeof AdminEventSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * Stream to receive custom command outputs
+   *
+   * @generated from rpc admin.v1.StationService.CommandOutput
+   */
+  commandOutput: {
+    methodKind: "server_streaming";
+    input: typeof CommandOutputRequestSchema;
+    output: typeof CustomCommandOutputSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_v1_admin_station, 0);

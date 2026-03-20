@@ -4,14 +4,13 @@
 
 import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file v1/command/command.proto.
  */
 export const file_v1_command_command: GenFile = /*@__PURE__*/
-  fileDesc("Chh2MS9jb21tYW5kL2NvbW1hbmQucHJvdG8SCmNvbW1hbmQudjEiQQobTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kEhAKCHVzZXJuYW1lGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIjYKDUN1c3RvbUNvbW1hbmQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg8KB2NvbW1hbmQYAiABKAkiDgoMTG9naW5Db21tYW5kIg8KDUxvZ291dENvbW1hbmQiOwoTQ3VzdG9tQ29tbWFuZE91dHB1dBIUCgJpZBgBIAEoCUIIukgFcgOwAQESDgoGb3V0cHV0GAIgASgJQqUBCg5jb20uY29tbWFuZC52MUIMQ29tbWFuZFByb3RvUAFaPGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9jb21tYW5kO2NvbW1hbmR2MaICA0NYWKoCCkNvbW1hbmQuVjHKAgpDb21tYW5kXFYx4gIWQ29tbWFuZFxWMVxHUEJNZXRhZGF0YeoCC0NvbW1hbmQ6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
+  fileDesc("Chh2MS9jb21tYW5kL2NvbW1hbmQucHJvdG8SCmNvbW1hbmQudjEiQQobTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kEhAKCHVzZXJuYW1lGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIg4KDExvZ2luQ29tbWFuZCIPCg1Mb2dvdXRDb21tYW5kQqUBCg5jb20uY29tbWFuZC52MUIMQ29tbWFuZFByb3RvUAFaPGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9jb21tYW5kO2NvbW1hbmR2MaICA0NYWKoCCkNvbW1hbmQuVjHKAgpDb21tYW5kXFYx4gIWQ29tbWFuZFxWMVxHUEJNZXRhZGF0YeoCC0NvbW1hbmQ6OlYxYgZwcm90bzM");
 
 /**
  * @generated from message command.v1.LoginWithCredentialsCommand
@@ -36,28 +35,6 @@ export const LoginWithCredentialsCommandSchema: GenMessage<LoginWithCredentialsC
   messageDesc(file_v1_command_command, 0);
 
 /**
- * @generated from message command.v1.CustomCommand
- */
-export type CustomCommand = Message<"command.v1.CustomCommand"> & {
-  /**
-   * @generated from field: string id = 1;
-   */
-  id: string;
-
-  /**
-   * @generated from field: string command = 2;
-   */
-  command: string;
-};
-
-/**
- * Describes the message command.v1.CustomCommand.
- * Use `create(CustomCommandSchema)` to create a new message.
- */
-export const CustomCommandSchema: GenMessage<CustomCommand> = /*@__PURE__*/
-  messageDesc(file_v1_command_command, 1);
-
-/**
  * @generated from message command.v1.LoginCommand
  */
 export type LoginCommand = Message<"command.v1.LoginCommand"> & {
@@ -68,7 +45,7 @@ export type LoginCommand = Message<"command.v1.LoginCommand"> & {
  * Use `create(LoginCommandSchema)` to create a new message.
  */
 export const LoginCommandSchema: GenMessage<LoginCommand> = /*@__PURE__*/
-  messageDesc(file_v1_command_command, 2);
+  messageDesc(file_v1_command_command, 1);
 
 /**
  * @generated from message command.v1.LogoutCommand
@@ -81,27 +58,5 @@ export type LogoutCommand = Message<"command.v1.LogoutCommand"> & {
  * Use `create(LogoutCommandSchema)` to create a new message.
  */
 export const LogoutCommandSchema: GenMessage<LogoutCommand> = /*@__PURE__*/
-  messageDesc(file_v1_command_command, 3);
-
-/**
- * @generated from message command.v1.CustomCommandOutput
- */
-export type CustomCommandOutput = Message<"command.v1.CustomCommandOutput"> & {
-  /**
-   * @generated from field: string id = 1;
-   */
-  id: string;
-
-  /**
-   * @generated from field: string output = 2;
-   */
-  output: string;
-};
-
-/**
- * Describes the message command.v1.CustomCommandOutput.
- * Use `create(CustomCommandOutputSchema)` to create a new message.
- */
-export const CustomCommandOutputSchema: GenMessage<CustomCommandOutput> = /*@__PURE__*/
-  messageDesc(file_v1_command_command, 4);
+  messageDesc(file_v1_command_command, 2);
 

@@ -4,7 +4,8 @@ use std::{collections::HashMap, sync::RwLock};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
 
-use crate::orchestrator::types::StationRegistration;
+use crate::domain::event::admin::AdminCommand;
+use crate::orchestrator::types::Registration;
 use crate::{
     domain::{
         self,
@@ -15,6 +16,7 @@ use crate::{
 
 pub struct EventHub {
     stations: RwLock<HashMap<String, mpsc::UnboundedSender<StationCommand>>>,
+    admins: RwLock<HashMap<String, mpsc::UnboundedSender<AdminCommand>>>,
 
     broadcast: broadcast::Sender<BroadcastEvent>,
 }
@@ -25,12 +27,53 @@ impl EventHub {
         Self {
             broadcast: sender,
             stations: Default::default(),
+            admins: Default::default(),
         }
     }
 }
 
 impl crate::orchestrator::types::EventHub for EventHub {
-    fn register_station(self: &Arc<Self>, ip: &str) -> Result<StationRegistration, AppError> {
+    fn register_admin(self: &Arc<Self>, id: &str) -> Result<Registration<AdminCommand>, AppError> {
+        let mut admins = self.admins.write().unwrap();
+        if admins.contains_key(id) {
+            return Err(crate::error::AppError::FailedPrecondition(
+                "admin already connected".into(),
+            ));
+        }
+        let (command_tx, command_rx) = mpsc::unbounded_channel();
+
+        admins.insert(id.to_string(), command_tx);
+        tracing::debug!(id, "[HUB] registered admin");
+
+        let hub = Arc::clone(self);
+        let id_owned = id.to_string();
+        let cleanup = move || {
+            let mut admins = hub.admins.write().unwrap();
+            admins.remove(&id_owned);
+            tracing::debug!(id = %id_owned, "[HUB] deregistered admin");
+        };
+
+        Ok(Registration::new(command_rx, Some(Box::new(cleanup))))
+    }
+
+    fn publish_admin_command(&self, command: AdminCommand, ids: &[&str]) {
+        let admins = self.admins.read().unwrap();
+        let id_iter: Box<dyn Iterator<Item = &str>> = if !ids.is_empty() {
+            Box::new(ids.iter().copied())
+        } else {
+            Box::new(admins.keys().map(|s| s.as_str()))
+        };
+        for id in id_iter {
+            if let Some(sender) = admins.get(id) {
+                // Ignore error
+                let _ = sender.send(command.clone());
+            }
+        }
+    }
+    fn register_station(
+        self: &Arc<Self>,
+        ip: &str,
+    ) -> Result<Registration<StationCommand>, AppError> {
         let mut stations = self.stations.write().unwrap();
         if stations.contains_key(ip) {
             return Err(crate::error::AppError::FailedPrecondition(
@@ -50,10 +93,7 @@ impl crate::orchestrator::types::EventHub for EventHub {
             tracing::debug!(ip = %ip_owned, "[HUB] deregistered station");
         };
 
-        Ok(StationRegistration::new(
-            command_rx,
-            Some(Box::new(cleanup)),
-        ))
+        Ok(Registration::new(command_rx, Some(Box::new(cleanup))))
     }
 
     fn publish_station_command(&self, command: StationCommand, ips: &[&str]) {

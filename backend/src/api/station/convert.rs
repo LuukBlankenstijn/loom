@@ -19,6 +19,7 @@ impl TryFrom<pb::StationEvent> for StationEvent {
             pb::station_event::Message::CommandOutput(custom_command_output) => {
                 Self::Command(CommandOutput {
                     id: custom_command_output.id,
+                    admin_id: custom_command_output.admin_id,
                     output: custom_command_output.output,
                 })
             }
@@ -43,10 +44,11 @@ impl From<StationCommand> for pb::StationCommand {
                     command_pb::LoginWithCredentialsCommand { username, password },
                 )
             }
-            StationCommand::CustomCommand { id, command } => {
-                pb::station_command::Message::CustomCommand(command_pb::CustomCommand {
-                    id,
-                    command,
+            StationCommand::CustomCommand(command) => {
+                pb::station_command::Message::CustomCommand(pb::CustomCommand {
+                    id: command.id,
+                    admin_id: command.admin_id,
+                    command: command.command,
                 })
             }
         };

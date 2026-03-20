@@ -2,23 +2,11 @@ syntax = "proto3";
 
 package command.v1;
 
-import "buf/validate/validate.proto";
-
 message LoginWithCredentialsCommand {
   string username = 1;
   string password = 2;
 }
 
-message CustomCommand {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  string command = 2;
-}
-
 message LoginCommand {}
 
 message LogoutCommand {}
-
-message CustomCommandOutput {
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  string output = 2;
-}

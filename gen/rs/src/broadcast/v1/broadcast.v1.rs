@@ -5,26 +5,26 @@ pub struct StationState {
     #[prost(string, tag="1")]
     pub ip: ::prost::alloc::string::String,
     #[prost(bool, tag="2")]
+    pub connected: bool,
+    #[prost(bool, tag="3")]
     pub logged_in: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StationsState {
+pub struct StationStateUpdate {
     #[prost(message, repeated, tag="1")]
     pub state: ::prost::alloc::vec::Vec<StationState>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BroadcastEvent {
-    #[prost(oneof="broadcast_event::Message", tags="1, 2")]
+    #[prost(oneof="broadcast_event::Message", tags="2")]
     pub message: ::core::option::Option<broadcast_event::Message>,
 }
 /// Nested message and enum types in `BroadcastEvent`.
 pub mod broadcast_event {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Message {
-        #[prost(message, tag="1")]
-        CommandOutput(super::super::super::command::v1::CustomCommandOutput),
         #[prost(message, tag="2")]
-        StationsState(super::StationsState),
+        StationsState(super::StationStateUpdate),
     }
 }
 include!("broadcast.v1.tonic.rs");
