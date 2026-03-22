@@ -1,8 +1,5 @@
 use loom_core::map::{
-    MapElement, MapMetadata, Point, Rotation,
-    door::Door,
-    seat::Seat,
-    wall::Wall,
+    MapElement, MapMetadata, Point, Rotation, door::Door, seat::Seat, wall::Wall,
 };
 use loom_rpc::map::v1 as pb;
 use tonic::Status;
@@ -14,15 +11,15 @@ use crate::{FromProto, IntoProto, TryIntoCore};
 
 impl FromProto<pb::Location> for Point {
     fn from_proto(val: pb::Location) -> Self {
-        Point::new(val.x as f32, val.y as f32)
+        Point::new(val.x, val.y)
     }
 }
 
 impl IntoProto<pb::Location> for Point {
     fn into_proto(self) -> pb::Location {
         pb::Location {
-            x: self.x as i32,
-            y: self.y as i32,
+            x: self.x,
+            y: self.y,
         }
     }
 }
@@ -220,25 +217,28 @@ impl TryIntoCore<MapElement> for pb::Element {
             pb::element::Element::Wall(w) => {
                 let id = Uuid::parse_str(&w.id)
                     .map_err(|_| Status::invalid_argument("invalid wall uuid"))?;
-                let start = w.start.as_ref().unwrap_or(&pb::Location { x: 0, y: 0 });
-                let end = w.end.as_ref().unwrap_or(&pb::Location { x: 0, y: 0 });
+                let start = w.start.as_ref().unwrap_or(&pb::Location { x: 0.0, y: 0.0 });
+                let end = w.end.as_ref().unwrap_or(&pb::Location { x: 0.0, y: 0.0 });
                 Ok(Wall {
                     id,
-                    start: Point::new(start.x as f32, start.y as f32),
-                    end: Point::new(end.x as f32, end.y as f32),
+                    start: Point::new(start.x, start.y),
+                    end: Point::new(end.x, end.y),
                 }
                 .into())
             }
             pb::element::Element::Door(d) => {
                 let id = Uuid::parse_str(&d.id)
                     .map_err(|_| Status::invalid_argument("invalid door uuid"))?;
-                let loc = d.location.as_ref().unwrap_or(&pb::Location { x: 0, y: 0 });
+                let loc = d
+                    .location
+                    .as_ref()
+                    .unwrap_or(&pb::Location { x: 0.0, y: 0.0 });
                 let rotation = Rotation::from_proto(
                     pb::Rotation::try_from(d.rotation).unwrap_or(pb::Rotation::Rotation0),
                 );
                 Ok(Door {
                     id,
-                    position: Point::new(loc.x as f32, loc.y as f32),
+                    position: Point::new(loc.x, loc.y),
                     rotation,
                 }
                 .into())
@@ -246,13 +246,16 @@ impl TryIntoCore<MapElement> for pb::Element {
             pb::element::Element::Seat(s) => {
                 let id = Uuid::parse_str(&s.id)
                     .map_err(|_| Status::invalid_argument("invalid table uuid"))?;
-                let loc = s.location.as_ref().unwrap_or(&pb::Location { x: 0, y: 0 });
+                let loc = s
+                    .location
+                    .as_ref()
+                    .unwrap_or(&pb::Location { x: 0.0, y: 0.0 });
                 let rotation = Rotation::from_proto(
                     pb::Rotation::try_from(s.rotation).unwrap_or(pb::Rotation::Rotation0),
                 );
                 Ok(Seat {
                     id,
-                    position: Point::new(loc.x as f32, loc.y as f32),
+                    position: Point::new(loc.x, loc.y),
                     rotation,
                 }
                 .into())

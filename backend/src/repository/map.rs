@@ -23,15 +23,15 @@ impl MapRepo {
 // Intermediate helper structs for JSON conversion
 #[derive(Serialize, Deserialize)]
 struct WallProps {
-    x_start: i32,
-    y_start: i32,
-    x_end: i32,
-    y_end: i32,
+    x_start: f32,
+    y_start: f32,
+    x_end: f32,
+    y_end: f32,
 }
 #[derive(Serialize, Deserialize)]
 struct PointProps {
-    x: i32,
-    y: i32,
+    x: f32,
+    y: f32,
     rotation: String,
 }
 
@@ -67,8 +67,8 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Wall(Wall {
                         id,
-                        start: Point::new(p.x_start as f32, p.x_end as f32),
-                        end: Point::new(p.y_start as f32, p.y_end as f32),
+                        start: Point::new(p.x_start, p.x_end),
+                        end: Point::new(p.y_start, p.y_end),
                     })
                 }
                 "Door" => {
@@ -78,7 +78,7 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Door(Door {
                         id,
-                        position: Point::new(p.x as f32, p.y as f32),
+                        position: Point::new(p.x, p.y),
                         rotation: Rotation::parse(&p.rotation),
                     })
                 }
@@ -89,7 +89,7 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Seat(Seat {
                         id,
-                        position: Point::new(p.x as f32, p.y as f32),
+                        position: Point::new(p.x, p.y),
                         rotation: Rotation::parse(&p.rotation),
                     })
                 }
@@ -119,10 +119,10 @@ impl MapRepository for MapRepo {
                     w.id,
                     "Wall",
                     serde_json::to_value(WallProps {
-                        x_start: w.start.x as i32,
-                        y_start: w.start.y as i32,
-                        x_end: w.end.x as i32,
-                        y_end: w.end.y as i32,
+                        x_start: w.start.x,
+                        y_start: w.start.y,
+                        x_end: w.end.x,
+                        y_end: w.end.y,
                     })
                     .map_err(|e| {
                         error!("{e}");
@@ -133,8 +133,8 @@ impl MapRepository for MapRepo {
                     d.id,
                     "Door",
                     serde_json::to_value(PointProps {
-                        x: d.position.x as i32,
-                        y: d.position.y as i32,
+                        x: d.position.x,
+                        y: d.position.y,
                         rotation: d.rotation.as_str().to_string(),
                     })
                     .map_err(|e| {
@@ -146,8 +146,8 @@ impl MapRepository for MapRepo {
                     s.id,
                     "Seat",
                     serde_json::to_value(PointProps {
-                        x: s.position.x as i32,
-                        y: s.position.y as i32,
+                        x: s.position.x,
+                        y: s.position.y,
                         rotation: s.rotation.as_str().to_string(),
                     })
                     .map_err(|e| {
