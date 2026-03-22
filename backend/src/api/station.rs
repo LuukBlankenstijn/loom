@@ -1,15 +1,14 @@
-mod convert;
-
 use std::{pin::Pin, sync::Arc};
 
 use derive_more::derive::Constructor;
 use futures::{Stream, StreamExt};
+use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::station::v1::{self as pb, station_service_server::StationService};
 use tonic::{Request, Response, Status, Streaming, metadata::MetadataMap};
 use tracing::error;
 
 use crate::{
-    domain::{Orchestrator, StationRepository, event::station::StationEvent},
+    domain::{Orchestrator, StationRepository},
     error::AppError,
 };
 
@@ -47,7 +46,7 @@ impl StationService for StationHandler {
                     }
                 };
 
-                match StationEvent::try_from(message) {
+                match message.try_into_core() {
                     Ok(event) => {
                         orchestrator.handle_event((ip.clone(), event).into());
                     }
@@ -60,7 +59,7 @@ impl StationService for StationHandler {
 
         // map stream
         let response_stream =
-            domain_stream.map(|res| res.map(pb::StationCommand::from).map_err(Status::from));
+            domain_stream.map(|res| res.map(IntoProto::into_proto).map_err(Status::from));
         Ok(Response::new(Box::pin(response_stream)))
     }
 }

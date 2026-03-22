@@ -1,12 +1,15 @@
 use async_trait::async_trait;
+use loom_core::event::broadcast::StationAssignment;
+use loom_core::map::door::Door;
+use loom_core::map::seat::Seat;
+use loom_core::map::wall::Wall;
+use loom_core::map::{Map, MapElement, MapMetadata, Point, Rotation};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::domain::{
-    Door, Map, MapElement, MapMetadata, MapRepository, Rotation, Seat, StationAssignment, Wall,
-};
+use crate::domain::MapRepository;
 use crate::error::AppError;
 
 pub struct MapRepo(PgPool);
@@ -64,10 +67,8 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Wall(Wall {
                         id,
-                        x_start: p.x_start,
-                        y_start: p.y_start,
-                        x_end: p.x_end,
-                        y_end: p.y_end,
+                        start: Point::new(p.x_start as f32, p.x_end as f32),
+                        end: Point::new(p.y_start as f32, p.y_end as f32),
                     })
                 }
                 "Door" => {
@@ -77,8 +78,7 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Door(Door {
                         id,
-                        x: p.x,
-                        y: p.y,
+                        position: Point::new(p.x as f32, p.y as f32),
                         rotation: Rotation::parse(&p.rotation),
                     })
                 }
@@ -89,8 +89,7 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Seat(Seat {
                         id,
-                        x: p.x,
-                        y: p.y,
+                        position: Point::new(p.x as f32, p.y as f32),
                         rotation: Rotation::parse(&p.rotation),
                     })
                 }
@@ -120,10 +119,10 @@ impl MapRepository for MapRepo {
                     w.id,
                     "Wall",
                     serde_json::to_value(WallProps {
-                        x_start: w.x_start,
-                        y_start: w.y_start,
-                        x_end: w.x_end,
-                        y_end: w.y_end,
+                        x_start: w.start.x as i32,
+                        y_start: w.start.y as i32,
+                        x_end: w.end.x as i32,
+                        y_end: w.end.y as i32,
                     })
                     .map_err(|e| {
                         error!("{e}");
@@ -134,8 +133,8 @@ impl MapRepository for MapRepo {
                     d.id,
                     "Door",
                     serde_json::to_value(PointProps {
-                        x: d.x,
-                        y: d.y,
+                        x: d.position.x as i32,
+                        y: d.position.y as i32,
                         rotation: d.rotation.as_str().to_string(),
                     })
                     .map_err(|e| {
@@ -147,8 +146,8 @@ impl MapRepository for MapRepo {
                     s.id,
                     "Seat",
                     serde_json::to_value(PointProps {
-                        x: s.x,
-                        y: s.y,
+                        x: s.position.x as i32,
+                        y: s.position.y as i32,
                         rotation: s.rotation.as_str().to_string(),
                     })
                     .map_err(|e| {
@@ -291,8 +290,8 @@ impl MapRepository for MapRepo {
         Ok(rows
             .into_iter()
             .map(|r| StationAssignment {
-                seat_id: Some(r.id),
                 station_ip: r.ip,
+                seat_id: Some(r.id),
             })
             .collect())
     }

@@ -1,17 +1,15 @@
 use async_trait::async_trait;
+use loom_core::event::{
+    LoomEvent,
+    admin::AdminCommand,
+    broadcast::{BroadcastEvent, StationConnectionState},
+    station::StationCommand,
+};
 use std::pin::Pin;
 
 use futures::Stream;
 
-use crate::{
-    domain::event::{
-        LoomEvent,
-        admin::AdminCommand,
-        broadcast::{BroadcastEvent, StationConnectionState},
-        station::StationCommand,
-    },
-    error::AppError,
-};
+use crate::error::AppError;
 
 pub type CommandStream<T> = Pin<Box<dyn Stream<Item = Result<T, AppError>> + Send>>;
 pub type BroadcastEventStream =

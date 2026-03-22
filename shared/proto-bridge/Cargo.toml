@@ -1,0 +1,20 @@
+[package]
+name = "loom-proto-bridge"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+loom-core = { path = "../core" }
+loom-rpc = { path = "../../gen/rs", default-features = false }
+tonic = { version = "0.14", default-features = false }
+prost-types = "0.14"
+chrono = "0.4"
+uuid = "1"
+
+[features]
+default = ["all"]
+all = ["admin-v1", "station-v1", "map-v1", "broadcast-v1"]
+admin-v1 = ["loom-rpc/admin-v1"]
+station-v1 = ["loom-rpc/station-v1"]
+map-v1 = ["loom-rpc/map-v1"]
+broadcast-v1 = ["loom-rpc/broadcast-v1"]

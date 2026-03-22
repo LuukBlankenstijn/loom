@@ -1,12 +1,9 @@
 mod http;
 mod pg;
 
-use crate::{
-    config::IcpcApiConfig,
-    domain::{Team, TeamRepository},
-    error::AppError,
-};
+use crate::{config::IcpcApiConfig, domain::TeamRepository, error::AppError};
 use async_trait::async_trait;
+use loom_core::team::Team;
 use sqlx::PgPool;
 
 pub struct TeamRepo {

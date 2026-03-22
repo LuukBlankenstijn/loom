@@ -1,7 +1,8 @@
 use async_trait::async_trait;
+use loom_core::station::Station;
 use sqlx::PgPool;
 
-use crate::domain::{Station, StationRepository};
+use crate::domain::StationRepository;
 use crate::error::AppError;
 
 #[derive(sqlx::FromRow)]

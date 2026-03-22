@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::RwLock};
 
-use crate::{
-    domain::event::broadcast::StationConnectionState, orchestrator::types::StateChangeHook,
-};
+use loom_core::event::broadcast::StationConnectionState;
+
+use crate::orchestrator::types::StateChangeHook;
 
 pub struct MemoryStationState {
     state: RwLock<HashMap<String, bool>>,

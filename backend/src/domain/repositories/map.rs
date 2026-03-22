@@ -1,8 +1,10 @@
 use async_trait::async_trait;
+use loom_core::{
+    event::broadcast::StationAssignment,
+    map::{Map, MapElement, MapMetadata},
+};
 use uuid::Uuid;
 
-use crate::domain::StationAssignment;
-use crate::domain::types::{Map, MapElement, MapMetadata};
 use crate::error::AppError;
 
 #[async_trait]

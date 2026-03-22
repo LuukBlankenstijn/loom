@@ -1,8 +1,7 @@
-mod convert;
-
 use std::sync::Arc;
 
 use derive_more::derive::Constructor;
+use loom_proto_bridge::IntoProto;
 use loom_rpc::admin::v1::{self as pb, team_service_server::TeamService};
 use tonic::{Request, Response, Status};
 
@@ -26,7 +25,7 @@ impl TeamService for TeamHandler {
             None => vec![],
         };
         Ok(Response::new(pb::TeamsResponse {
-            teams: teams.into_iter().map(Into::into).collect(),
+            teams: teams.into_iter().map(IntoProto::into_proto).collect(),
         }))
     }
 

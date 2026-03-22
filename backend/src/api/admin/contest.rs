@@ -1,11 +1,10 @@
 use derive_more::derive::Constructor;
+use loom_proto_bridge::IntoProto;
 use loom_rpc::admin::v1::{self as pb, contest_service_server::ContestService};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 use crate::domain::{ContestRepository, MapRepository, Orchestrator};
-
-mod convert;
 
 #[derive(Constructor)]
 pub struct ContestHandler {
@@ -34,7 +33,7 @@ impl ContestService for ContestHandler {
             .flatten()
             .map(|m| m.id);
 
-        let mut pb_contest: pb::Contest = contest.into();
+        let mut pb_contest: pb::Contest = contest.into_proto();
         pb_contest.map_id = map_id;
         Ok(Response::new(pb_contest))
     }

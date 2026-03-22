@@ -1,5 +1,7 @@
 use derive_more::derive::Constructor;
 use futures::{Stream, future::try_join_all};
+use loom_core::event::admin::AdminEvent;
+use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::admin::v1::{
     self as pb, AssignTeamRequest, CommandOutputRequest, DeleteStationRequest,
     station_service_server::StationService,
@@ -8,11 +10,7 @@ use std::{pin::Pin, sync::Arc};
 use tokio_stream::StreamExt as _;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{
-    ContestRepository, Orchestrator, StationRepository, TeamRepository, event::admin::AdminEvent,
-};
-
-mod convert;
+use crate::domain::{ContestRepository, Orchestrator, StationRepository, TeamRepository};
 
 #[derive(Constructor)]
 pub struct StationHandler {
@@ -30,7 +28,7 @@ impl StationService for StationHandler {
     ) -> Result<Response<pb::StationsResponse>, Status> {
         let stations = self.station_repo.get_all().await?;
         Ok(Response::new(pb::StationsResponse {
-            stations: stations.into_iter().map(Into::into).collect(),
+            stations: stations.into_iter().map(IntoProto::into_proto).collect(),
         }))
     }
 
@@ -106,7 +104,7 @@ impl StationService for StationHandler {
 
     async fn send_command(&self, request: Request<pb::AdminEvent>) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let event: AdminEvent = req.try_into()?;
+        let event: AdminEvent = req.try_into_core()?;
         self.orchestrator.handle_event(event.into());
         Ok(().into())
     }
@@ -122,7 +120,7 @@ impl StationService for StationHandler {
         let domain_stream = self.orchestrator.register_admin(&req.admin_id).await?;
 
         let response_stream =
-            domain_stream.map(|res| res.map(pb::CustomCommandOutput::from).map_err(Status::from));
+            domain_stream.map(|res| res.map(IntoProto::into_proto).map_err(Status::from));
         Ok(Response::new(Box::pin(response_stream)))
     }
 }

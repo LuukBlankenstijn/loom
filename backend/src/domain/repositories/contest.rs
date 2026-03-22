@@ -1,7 +1,18 @@
-use async_trait::async_trait;
+use std::pin::Pin;
 
-use crate::domain::types::{Contest, WallpaperStream};
+use async_trait::async_trait;
+use futures::Stream;
+use loom_core::contest::Contest;
+
 use crate::error::AppError;
+
+pub type ByteStream = Pin<Box<dyn Stream<Item = Result<Vec<u8>, AppError>> + Send>>;
+
+pub struct WallpaperStream {
+    pub mime_type: String,
+    pub text_color: String,
+    pub stream: ByteStream,
+}
 
 #[async_trait]
 pub trait ContestRepository: Send + Sync {

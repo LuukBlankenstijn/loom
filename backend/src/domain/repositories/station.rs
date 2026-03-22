@@ -1,6 +1,6 @@
 use async_trait::async_trait;
+use loom_core::station::Station;
 
-use crate::domain::types::Station;
 use crate::error::AppError;
 
 #[async_trait]

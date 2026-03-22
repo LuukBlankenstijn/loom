@@ -1,10 +1,11 @@
 use async_trait::async_trait;
 use futures::stream;
+use loom_core::contest::Contest;
 use sqlx::{FromRow, PgPool};
 
 use crate::{
     config::IcpcApiConfig,
-    domain::{Contest, ContestRepository, WallpaperStream},
+    domain::{ContestRepository, WallpaperStream},
     error::AppError,
 };
 

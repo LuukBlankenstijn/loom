@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use loom_core::contest::Contest;
 use sqlx::PgPool;
 
 use super::InnerRepo;
-use crate::domain::Contest;
 use crate::error::AppError;
 
 #[derive(sqlx::FromRow)]

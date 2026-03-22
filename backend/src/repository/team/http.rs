@@ -1,8 +1,9 @@
 use async_trait::async_trait;
+use loom_core::team::Team;
 use serde::Deserialize;
 
 use crate::config::IcpcApiConfig;
-use crate::domain::{Team, TeamRepository};
+use crate::domain::TeamRepository;
 use crate::error::AppError;
 
 pub struct HttpTeamRepo {

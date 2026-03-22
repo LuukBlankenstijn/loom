@@ -1,15 +1,15 @@
-mod convert;
-
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use derive_more::derive::Constructor;
+use loom_core::{event::broadcast::StationAssignment, map::MapElement};
+use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::map::v1::{self as pb, map_service_server::MapService};
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
 use crate::{
-    domain::{MapElement, MapRepository, Orchestrator, StationAssignment},
+    domain::{MapRepository, Orchestrator},
     error::AppError,
 };
 
@@ -27,7 +27,7 @@ impl MapService for MapHandler {
     ) -> Result<Response<pb::GetAllMapMetadataResponse>, Status> {
         let maps = self.map_repo.get_all_metadata().await?;
         Ok(Response::new(pb::GetAllMapMetadataResponse {
-            maps: maps.into_iter().map(Into::into).collect(),
+            maps: maps.into_iter().map(IntoProto::into_proto).collect(),
         }))
     }
 
@@ -55,7 +55,7 @@ impl MapService for MapHandler {
                     id: map.id,
                     name: map.name,
                 }),
-                elements: map.elements.iter().map(Into::into).collect(),
+                elements: map.elements.iter().map(IntoProto::into_proto).collect(),
             })),
             None => todo!(),
         }
@@ -81,7 +81,7 @@ impl MapService for MapHandler {
             let elements = req
                 .updated
                 .into_iter()
-                .map(MapElement::try_from)
+                .map(TryIntoCore::try_into_core)
                 .collect::<Result<Vec<MapElement>, _>>()?;
             self.map_repo.upsert_elements(req.id, elements).await?;
         }

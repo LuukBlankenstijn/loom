@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use loom_core::contest::Contest;
 use serde::Deserialize;
 
 use super::InnerRepo;
 use crate::config::IcpcApiConfig;
-use crate::domain::Contest;
 use crate::error::AppError;
 
 pub struct HttpContestRepo {

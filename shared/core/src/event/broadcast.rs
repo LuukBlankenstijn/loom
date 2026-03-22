@@ -1,13 +1,17 @@
 use derive_more::derive::From;
 use uuid::Uuid;
 
-use crate::domain::StationAssignment;
-
 #[derive(Debug, Clone)]
 pub struct StationConnectionState {
     pub ip: String,
     pub connected: bool,
     pub logged_in: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct StationAssignment {
+    pub station_ip: String,
+    pub seat_id: Option<Uuid>,
 }
 
 impl From<(String, bool, bool)> for StationConnectionState {

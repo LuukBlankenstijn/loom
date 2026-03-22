@@ -1,18 +1,12 @@
-use std::sync::Arc;
-use std::{collections::HashMap, sync::RwLock};
-
-use tokio::sync::broadcast;
-use tokio::sync::mpsc;
-
-use crate::domain::event::admin::AdminCommand;
-use crate::orchestrator::types::Registration;
-use crate::{
-    domain::{
-        self,
-        event::{broadcast::BroadcastEvent, station::StationCommand},
-    },
-    error::AppError,
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
 };
+
+use loom_core::event::{admin::AdminCommand, broadcast::BroadcastEvent, station::StationCommand};
+use tokio::sync::{broadcast, mpsc};
+
+use crate::{error::AppError, orchestrator::types::Registration};
 
 pub struct EventHub {
     stations: RwLock<HashMap<String, mpsc::UnboundedSender<StationCommand>>>,
@@ -111,13 +105,11 @@ impl crate::orchestrator::types::EventHub for EventHub {
         }
     }
 
-    fn subscribe_broadcast(
-        &self,
-    ) -> tokio::sync::broadcast::Receiver<domain::event::broadcast::BroadcastEvent> {
+    fn subscribe_broadcast(&self) -> tokio::sync::broadcast::Receiver<BroadcastEvent> {
         self.broadcast.subscribe()
     }
 
-    fn broadcast(&self, event: domain::event::broadcast::BroadcastEvent) {
+    fn broadcast(&self, event: BroadcastEvent) {
         let _ = self.broadcast.send(event);
     }
 }

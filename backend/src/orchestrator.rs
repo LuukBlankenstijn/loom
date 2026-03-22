@@ -6,18 +6,16 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use futures::StreamExt;
+use loom_core::event::{
+    LoomEvent,
+    admin::{AdminCommand, AdminEvent, CommandOutput},
+    broadcast::{BroadcastEvent, StationConnectionState},
+    station::{StationCommand, StationEvent},
+};
 use tokio_stream::wrappers::BroadcastStream;
 
 use crate::{
-    domain::{
-        self, BroadcastEventStream,
-        event::{
-            LoomEvent,
-            admin::{AdminCommand, AdminEvent, CommandOutput},
-            broadcast::{BroadcastEvent, StationConnectionState},
-            station::{StationCommand, StationEvent},
-        },
-    },
+    domain::{self, BroadcastEventStream},
     error::AppError,
     orchestrator::{
         event_hub::EventHub,
@@ -51,7 +49,7 @@ impl Orchestrator {
 
 #[async_trait]
 impl domain::Orchestrator for Orchestrator {
-    fn handle_event(&self, event: domain::event::LoomEvent) {
+    fn handle_event(&self, event: LoomEvent) {
         match event {
             LoomEvent::Station((ip, event)) => match event {
                 StationEvent::LoggedIn => self.state.login(&ip),
@@ -60,7 +58,7 @@ impl domain::Orchestrator for Orchestrator {
                     self.state.logout(&ip);
                     self.sync_stations(&ips);
                 }
-                StationEvent::Command(command_output) => {
+                StationEvent::CustomCommand(command_output) => {
                     let ids = [command_output.admin_id.as_str()];
                     self.hub.publish_admin_command(
                         CommandOutput {
