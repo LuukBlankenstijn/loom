@@ -5,8 +5,6 @@ pub mod map;
 pub mod station;
 
 use axum::http::StatusCode;
-use chrono::{DateTime, Utc};
-use prost_types::Timestamp;
 use tonic::{Request, Status};
 
 use crate::error::AppError;
@@ -61,13 +59,6 @@ impl From<AppError> for Status {
                 Status::internal("internal database error")
             }
         }
-    }
-}
-
-pub fn to_timestamp(dt: DateTime<Utc>) -> Timestamp {
-    Timestamp {
-        seconds: dt.timestamp(),
-        nanos: dt.timestamp_subsec_nanos() as i32,
     }
 }
 

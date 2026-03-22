@@ -1,11 +1,8 @@
-use crate::{
-    client::Client,
-    convert::map::prelude::{ToProto, TryFromProto},
-};
-
-use loom_map_types::MapElement;
+use loom_proto_bridge::{IntoProto, MapElement, TryIntoCore};
 use loom_rpc::map::v1::{AssignStationRequest, GetMapRequest, UpdateMapRequest};
 use uuid::Uuid;
+
+use crate::client::Client;
 
 pub trait MapClient {
     fn get_map_elements(
@@ -36,7 +33,7 @@ impl MapClient for Client {
             .into_inner()
             .elements
             .into_iter()
-            .filter_map(|e| MapElement::try_from_proto(e.element?).ok())
+            .filter_map(|e| e.element?.try_into_core().ok())
             .collect())
     }
 
@@ -51,7 +48,7 @@ impl MapClient for Client {
             .update_map(UpdateMapRequest {
                 id: map_id,
                 deleted: deleted.iter().map(|uuid| uuid.to_string()).collect(),
-                updated: updated.into_iter().map(|u| u.to_proto()).collect(),
+                updated: updated.into_iter().map(IntoProto::into_proto).collect(),
             })
             .await
             .map_err(|e| e.to_string())

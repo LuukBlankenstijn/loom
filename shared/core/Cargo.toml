@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-uuid = { version = "1", features = ["v7"] }
+uuid = { version = "1", features = ["v7", "js"] }
 chrono = { version = "0.4", features = ["std", "serde"] }
 derive_more = { version = "2.1.1", features = ["from", "constructor"] }
 serde = { version = "1", features = ["derive"] }

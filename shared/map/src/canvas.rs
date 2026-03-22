@@ -4,7 +4,7 @@ use iced::{
     Event, Rectangle, Renderer, Theme, mouse,
     widget::canvas::{self, Frame, Geometry, Path, Program, Stroke},
 };
-use loom_map_types::MapElement;
+use loom_core::map::MapElement;
 use ordermap::OrderMap;
 use uuid::Uuid;
 

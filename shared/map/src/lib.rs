@@ -4,9 +4,8 @@ mod messsage;
 pub mod types;
 
 use grid::Grid;
-pub use loom_map_types;
-use loom_map_types::wall::Wall;
-use loom_map_types::{MapElement, Point};
+use loom_core::map::wall::Wall;
+use loom_core::map::{MapElement, Point};
 pub use messsage::Message;
 use ordermap::OrderMap;
 

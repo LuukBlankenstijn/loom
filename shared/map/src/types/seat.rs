@@ -5,7 +5,7 @@ use iced::{
     Color, Point, Radians, Size, Vector,
     widget::canvas::{Frame, Path, Stroke},
 };
-use loom_map_types::seat::Seat;
+use loom_core::map::seat::Seat;
 use uuid::Uuid;
 
 impl Drawable for Seat {

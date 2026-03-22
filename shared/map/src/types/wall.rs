@@ -2,7 +2,7 @@ use iced::{
     Color, Point,
     widget::canvas::{Path, Stroke},
 };
-use loom_map_types::wall::Wall;
+use loom_core::map::wall::Wall;
 use uuid::Uuid;
 
 use crate::types::prelude::{AddIcedVector, IntoIced};

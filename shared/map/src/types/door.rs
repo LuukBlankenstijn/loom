@@ -2,7 +2,7 @@ use iced::{
     Color, Point, Radians, Vector,
     widget::canvas::{self, Frame, LineDash, Path, Stroke},
 };
-use loom_map_types::door::Door;
+use loom_core::map::door::Door;
 use uuid::Uuid;
 
 use crate::types::prelude::{AddIcedVector, IntoIced};

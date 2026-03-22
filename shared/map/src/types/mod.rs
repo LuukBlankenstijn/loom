@@ -1,6 +1,5 @@
 use iced::{Vector, widget::canvas::Frame};
-pub use loom_map_types;
-use loom_map_types::{MapElement, Rotation};
+use loom_core::map::{MapElement, Rotation};
 use uuid::Uuid;
 
 mod door;

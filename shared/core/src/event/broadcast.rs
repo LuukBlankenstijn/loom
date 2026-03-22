@@ -38,3 +38,10 @@ pub enum BroadcastEvent {
     Connection(Vec<StationConnectionState>),
     Assignment(Vec<StationAssignment>),
 }
+
+/// Subscribe filter — which event types to receive.
+#[derive(Debug, Clone, Copy)]
+pub enum BroadcastType {
+    ConnectionState,
+    AssignmentState,
+}

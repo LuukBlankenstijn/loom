@@ -1,5 +1,4 @@
-pub use loom_map_types;
-use loom_map_types::{Point, Rotation};
+use loom_core::map::{Point, Rotation};
 
 pub trait IntoIced<T>: Sized {
     fn to_iced(&self) -> T;

@@ -1,11 +1,8 @@
 use futures::{StreamExt, stream::BoxStream};
+use loom_proto_bridge::{BroadcastEvent, BroadcastType, IntoProto, TryIntoCore};
 use loom_rpc::broadcast::v1::SubscribeBroadcastRequest;
 
-use crate::{
-    client::Client,
-    convert::broadcast::types::{BroadcastEvent, BroadcastType},
-};
-use loom_rpc::broadcast::v1 as pb;
+use crate::client::Client;
 
 pub trait BroadcastClient {
     fn subscribe(
@@ -22,7 +19,7 @@ impl BroadcastClient for Client {
         let request = SubscribeBroadcastRequest {
             types: event_types
                 .iter()
-                .map(|&t| pb::BroadcastType::from(t) as i32)
+                .map(|&t| t.into_proto() as i32)
                 .collect(),
         };
 
@@ -33,10 +30,9 @@ impl BroadcastClient for Client {
             .await
             .map_err(|e| e.to_string())?;
 
-        let stream = response.into_inner().filter_map(|res| async move {
-            res.ok()
-                .and_then(|proto| BroadcastEvent::try_from(proto).ok())
-        });
+        let stream = response
+            .into_inner()
+            .filter_map(|res| async move { res.ok().and_then(|p| p.try_into_core().ok()) });
 
         Ok(Box::pin(stream))
     }
