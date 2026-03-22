@@ -23,6 +23,8 @@ import {
 } from "@client/v1/map/map_pb";
 import {
   BroadcastService,
+  BroadcastType,
+  SubscribeBroadcastRequestSchema,
   type BroadcastEvent,
 } from "@client/v1/broadcast/broadcast_pb";
 import { SESSION_ID } from "../session";
@@ -118,7 +120,12 @@ export const adminClient = {
   subscribe: async function* (
     signal?: AbortSignal,
   ): AsyncIterable<BroadcastEvent> {
-    const stream = broadcast_client.subscribe(create(EmptySchema), { signal });
+    const stream = broadcast_client.subscribe(
+      create(SubscribeBroadcastRequestSchema, {
+        types: [BroadcastType.CONNECTION_STATE],
+      }),
+      { signal },
+    );
 
     try {
       for await (const response of stream) {

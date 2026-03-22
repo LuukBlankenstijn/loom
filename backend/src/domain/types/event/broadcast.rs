@@ -1,4 +1,7 @@
 use derive_more::derive::From;
+use uuid::Uuid;
+
+use crate::domain::StationAssignment;
 
 #[derive(Debug, Clone)]
 pub struct StationConnectionState {
@@ -17,7 +20,17 @@ impl From<(String, bool, bool)> for StationConnectionState {
     }
 }
 
+impl From<(String, Option<Uuid>)> for StationAssignment {
+    fn from(value: (String, Option<Uuid>)) -> Self {
+        Self {
+            station_ip: value.0,
+            seat_id: value.1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, From)]
 pub enum BroadcastEvent {
-    State(Vec<StationConnectionState>),
+    Connection(Vec<StationConnectionState>),
+    Assignment(Vec<StationAssignment>),
 }

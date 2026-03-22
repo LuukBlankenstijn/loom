@@ -49,7 +49,7 @@ pub struct Seat {
 #[derive(Debug, Clone)]
 pub struct StationAssignment {
     pub station_ip: String,
-    pub seat_id: Uuid,
+    pub seat_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -14,7 +14,7 @@ use crate::{
         event::{
             LoomEvent,
             admin::{AdminCommand, AdminEvent, CommandOutput},
-            broadcast::StationConnectionState,
+            broadcast::{BroadcastEvent, StationConnectionState},
             station::{StationCommand, StationEvent},
         },
     },
@@ -39,7 +39,7 @@ impl Orchestrator {
         // we get a new refernce to hub to move into the hook
         let hub_for_hook = hub.clone();
         state.set_on_change_hook(Box::new(move |state| {
-            hub_for_hook.broadcast(vec![state.into()].into());
+            hub_for_hook.broadcast(vec![state].into());
         }));
 
         Self {
@@ -135,8 +135,6 @@ impl domain::Orchestrator for Orchestrator {
             state_store.disconnect(&id_clone);
         }));
 
-        self.state.connect(id);
-
         let stream = async_stream::stream! {
             let mut registration = registration;
             while let Some(msg) = registration.receiver.recv().await {
@@ -149,5 +147,9 @@ impl domain::Orchestrator for Orchestrator {
 
     fn get_state(&self) -> Vec<StationConnectionState> {
         self.state.get_state()
+    }
+
+    fn broadcast(&self, event: BroadcastEvent) {
+        self.hub.broadcast(event);
     }
 }

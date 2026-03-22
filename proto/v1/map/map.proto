@@ -29,6 +29,11 @@ message UpdateMapRequest {
   repeated Element updated = 4;
 }
 
+message AssignStationRequest {
+  string station_ip = 1;
+  optional string seat_id = 2;
+}
+
 service MapService {
   // Gets all maps in the system
   rpc GetAllMapMetadata(google.protobuf.Empty) returns (GetAllMapMetadataResponse) {}
@@ -38,4 +43,6 @@ service MapService {
   rpc GetMap(GetMapRequest) returns (MapResponse) {}
   // Updates a map
   rpc UpdateMap(UpdateMapRequest) returns (google.protobuf.Empty) {}
+  // Assigns a station to a seat
+  rpc AssignStationToSeat(AssignStationRequest) returns (google.protobuf.Empty) {}
 }

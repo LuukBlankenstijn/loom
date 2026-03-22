@@ -84,7 +84,7 @@ pub mod broadcast_service_client {
 */
         pub async fn subscribe(
             &mut self,
-            request: impl tonic::IntoRequest<()>,
+            request: impl tonic::IntoRequest<super::SubscribeBroadcastRequest>,
         ) -> std::result::Result<
             tonic::Response<tonic::codec::Streaming<super::BroadcastEvent>>,
             tonic::Status,
@@ -131,7 +131,7 @@ pub mod broadcast_service_server {
 */
         async fn subscribe(
             &self,
-            request: tonic::Request<()>,
+            request: tonic::Request<super::SubscribeBroadcastRequest>,
         ) -> std::result::Result<tonic::Response<Self::SubscribeStream>, tonic::Status>;
     }
     ///
@@ -214,15 +214,21 @@ pub mod broadcast_service_server {
                 "/broadcast.v1.BroadcastService/Subscribe" => {
                     #[allow(non_camel_case_types)]
                     struct SubscribeSvc<T: BroadcastService>(pub Arc<T>);
-                    impl<T: BroadcastService> tonic::server::ServerStreamingService<()>
-                    for SubscribeSvc<T> {
+                    impl<
+                        T: BroadcastService,
+                    > tonic::server::ServerStreamingService<
+                        super::SubscribeBroadcastRequest,
+                    > for SubscribeSvc<T> {
                         type Response = super::BroadcastEvent;
                         type ResponseStream = T::SubscribeStream;
                         type Future = BoxFuture<
                             tonic::Response<Self::ResponseStream>,
                             tonic::Status,
                         >;
-                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::SubscribeBroadcastRequest>,
+                        ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
                                 <T as BroadcastService>::subscribe(&inner, request).await

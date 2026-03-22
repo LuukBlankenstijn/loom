@@ -8,10 +8,14 @@ use loom_rpc::map::v1::{self as pb, map_service_server::MapService};
 use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
-use crate::domain::{MapElement, MapRepository};
+use crate::{
+    domain::{MapElement, MapRepository, Orchestrator, StationAssignment},
+    error::AppError,
+};
 
 #[derive(Constructor)]
 pub struct MapHandler {
+    orchestrator: Arc<dyn Orchestrator>,
     map_repo: Arc<dyn MapRepository>,
 }
 
@@ -83,5 +87,27 @@ impl MapService for MapHandler {
         }
 
         Ok(Response::new(()))
+    }
+
+    async fn assign_station_to_seat(
+        &self,
+        request: Request<pb::AssignStationRequest>,
+    ) -> Result<Response<()>, Status> {
+        let req = request.into_inner();
+        let seat_id = req
+            .seat_id
+            .map(|id| {
+                Uuid::try_parse(id.as_ref())
+                    .map_err(|_| AppError::InvalidArgument("invalid seat id".to_string()))
+            })
+            .transpose()?;
+        self.map_repo
+            .assign_station_to_seat(req.station_ip.clone(), seat_id)
+            .await?;
+
+        self.orchestrator
+            .broadcast(vec![StationAssignment::from((req.station_ip, seat_id))].into());
+
+        Ok(().into())
     }
 }

@@ -36,6 +36,10 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
           if (update.message.case === "stationsState") {
             setState((old) => {
               const nextState = { ...old };
+              if (update.message.case !== "stationsState") {
+                // this will never happen, but the lsp server has trouble seeing that
+                return nextState;
+              }
               update.message.value?.state.forEach((value) => {
                 nextState[value.ip] = {
                   connected: value.connected,

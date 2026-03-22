@@ -21,10 +21,10 @@ pub trait MapRepository: Send + Sync {
     async fn assign_station_to_seat(
         &self,
         station_ip: String,
-        seat_id: Uuid,
+        seat_id: Option<Uuid>,
     ) -> Result<(), AppError>;
     async fn get_all_station_assignments(
         &self,
-        map_id: i32,
+        map_id: Option<i32>,
     ) -> Result<Vec<StationAssignment>, AppError>;
 }

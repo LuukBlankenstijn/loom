@@ -2,25 +2,44 @@ syntax = "proto3";
 
 package broadcast.v1;
 
-import "google/protobuf/empty.proto";
-
 message StationState {
   string ip = 1;
   bool connected = 2;
   bool logged_in = 3;
 }
 
+message StationAssignment {
+  string ip = 1;
+  optional string seat_id = 2;
+}
+
 message StationStateUpdate {
   repeated StationState state = 1;
 }
 
+message StationAssignmentUpdate {
+  repeated StationAssignment updates = 1;
+}
+
 message BroadcastEvent {
   oneof message {
-    StationStateUpdate stations_state = 2;
+    StationStateUpdate stations_state = 1;
+    StationAssignmentUpdate station_assignments = 2;
   }
+}
+
+enum BroadcastType {
+  TYPE_UNSPECIFIED = 0;
+  CONNECTION_STATE = 1;
+  STATION_ASSIGNMENTS = 2;
+}
+
+message SubscribeBroadcastRequest {
+  // indicates which message types the client want initial state of
+  repeated BroadcastType types = 1;
 }
 
 service BroadcastService {
   // Subscribes to the event broadcast
-  rpc Subscribe(google.protobuf.Empty) returns (stream BroadcastEvent) {}
+  rpc Subscribe(SubscribeBroadcastRequest) returns (stream BroadcastEvent) {}
 }

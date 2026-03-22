@@ -2,17 +2,15 @@
 // @generated from file v1/broadcast/broadcast.proto (package broadcast.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { EmptySchema } from "@bufbuild/protobuf/wkt";
-import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file v1/broadcast/broadcast.proto.
  */
 export const file_v1_broadcast_broadcast: GenFile = /*@__PURE__*/
-  fileDesc("Chx2MS9icm9hZGNhc3QvYnJvYWRjYXN0LnByb3RvEgxicm9hZGNhc3QudjEiQAoMU3RhdGlvblN0YXRlEgoKAmlwGAEgASgJEhEKCWNvbm5lY3RlZBgCIAEoCBIRCglsb2dnZWRfaW4YAyABKAgiPwoSU3RhdGlvblN0YXRlVXBkYXRlEikKBXN0YXRlGAEgAygLMhouYnJvYWRjYXN0LnYxLlN0YXRpb25TdGF0ZSJXCg5Ccm9hZGNhc3RFdmVudBI6Cg5zdGF0aW9uc19zdGF0ZRgCIAEoCzIgLmJyb2FkY2FzdC52MS5TdGF0aW9uU3RhdGVVcGRhdGVIAEIJCgdtZXNzYWdlMlkKEEJyb2FkY2FzdFNlcnZpY2USRQoJU3Vic2NyaWJlEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhwuYnJvYWRjYXN0LnYxLkJyb2FkY2FzdEV2ZW50IgAwAUK1AQoQY29tLmJyb2FkY2FzdC52MUIOQnJvYWRjYXN0UHJvdG9QAVpAZ2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2Jyb2FkY2FzdDticm9hZGNhc3R2MaICA0JYWKoCDEJyb2FkY2FzdC5WMcoCDEJyb2FkY2FzdFxWMeICGEJyb2FkY2FzdFxWMVxHUEJNZXRhZGF0YeoCDUJyb2FkY2FzdDo6VjFiBnByb3RvMw", [file_google_protobuf_empty]);
+  fileDesc("Chx2MS9icm9hZGNhc3QvYnJvYWRjYXN0LnByb3RvEgxicm9hZGNhc3QudjEiQAoMU3RhdGlvblN0YXRlEgoKAmlwGAEgASgJEhEKCWNvbm5lY3RlZBgCIAEoCBIRCglsb2dnZWRfaW4YAyABKAgiQQoRU3RhdGlvbkFzc2lnbm1lbnQSCgoCaXAYASABKAkSFAoHc2VhdF9pZBgCIAEoCUgAiAEBQgoKCF9zZWF0X2lkIj8KElN0YXRpb25TdGF0ZVVwZGF0ZRIpCgVzdGF0ZRgBIAMoCzIaLmJyb2FkY2FzdC52MS5TdGF0aW9uU3RhdGUiSwoXU3RhdGlvbkFzc2lnbm1lbnRVcGRhdGUSMAoHdXBkYXRlcxgBIAMoCzIfLmJyb2FkY2FzdC52MS5TdGF0aW9uQXNzaWdubWVudCKdAQoOQnJvYWRjYXN0RXZlbnQSOgoOc3RhdGlvbnNfc3RhdGUYASABKAsyIC5icm9hZGNhc3QudjEuU3RhdGlvblN0YXRlVXBkYXRlSAASRAoTc3RhdGlvbl9hc3NpZ25tZW50cxgCIAEoCzIlLmJyb2FkY2FzdC52MS5TdGF0aW9uQXNzaWdubWVudFVwZGF0ZUgAQgkKB21lc3NhZ2UiRwoZU3Vic2NyaWJlQnJvYWRjYXN0UmVxdWVzdBIqCgV0eXBlcxgBIAMoDjIbLmJyb2FkY2FzdC52MS5Ccm9hZGNhc3RUeXBlKlQKDUJyb2FkY2FzdFR5cGUSFAoQVFlQRV9VTlNQRUNJRklFRBAAEhQKEENPTk5FQ1RJT05fU1RBVEUQARIXChNTVEFUSU9OX0FTU0lHTk1FTlRTEAIyagoQQnJvYWRjYXN0U2VydmljZRJWCglTdWJzY3JpYmUSJy5icm9hZGNhc3QudjEuU3Vic2NyaWJlQnJvYWRjYXN0UmVxdWVzdBocLmJyb2FkY2FzdC52MS5Ccm9hZGNhc3RFdmVudCIAMAFCtQEKEGNvbS5icm9hZGNhc3QudjFCDkJyb2FkY2FzdFByb3RvUAFaQGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9icm9hZGNhc3Q7YnJvYWRjYXN0djGiAgNCWFiqAgxCcm9hZGNhc3QuVjHKAgxCcm9hZGNhc3RcVjHiAhhCcm9hZGNhc3RcVjFcR1BCTWV0YWRhdGHqAg1Ccm9hZGNhc3Q6OlYxYgZwcm90bzM");
 
 /**
  * @generated from message broadcast.v1.StationState
@@ -42,6 +40,28 @@ export const StationStateSchema: GenMessage<StationState> = /*@__PURE__*/
   messageDesc(file_v1_broadcast_broadcast, 0);
 
 /**
+ * @generated from message broadcast.v1.StationAssignment
+ */
+export type StationAssignment = Message<"broadcast.v1.StationAssignment"> & {
+  /**
+   * @generated from field: string ip = 1;
+   */
+  ip: string;
+
+  /**
+   * @generated from field: optional string seat_id = 2;
+   */
+  seatId?: string;
+};
+
+/**
+ * Describes the message broadcast.v1.StationAssignment.
+ * Use `create(StationAssignmentSchema)` to create a new message.
+ */
+export const StationAssignmentSchema: GenMessage<StationAssignment> = /*@__PURE__*/
+  messageDesc(file_v1_broadcast_broadcast, 1);
+
+/**
  * @generated from message broadcast.v1.StationStateUpdate
  */
 export type StationStateUpdate = Message<"broadcast.v1.StationStateUpdate"> & {
@@ -56,7 +76,24 @@ export type StationStateUpdate = Message<"broadcast.v1.StationStateUpdate"> & {
  * Use `create(StationStateUpdateSchema)` to create a new message.
  */
 export const StationStateUpdateSchema: GenMessage<StationStateUpdate> = /*@__PURE__*/
-  messageDesc(file_v1_broadcast_broadcast, 1);
+  messageDesc(file_v1_broadcast_broadcast, 2);
+
+/**
+ * @generated from message broadcast.v1.StationAssignmentUpdate
+ */
+export type StationAssignmentUpdate = Message<"broadcast.v1.StationAssignmentUpdate"> & {
+  /**
+   * @generated from field: repeated broadcast.v1.StationAssignment updates = 1;
+   */
+  updates: StationAssignment[];
+};
+
+/**
+ * Describes the message broadcast.v1.StationAssignmentUpdate.
+ * Use `create(StationAssignmentUpdateSchema)` to create a new message.
+ */
+export const StationAssignmentUpdateSchema: GenMessage<StationAssignmentUpdate> = /*@__PURE__*/
+  messageDesc(file_v1_broadcast_broadcast, 3);
 
 /**
  * @generated from message broadcast.v1.BroadcastEvent
@@ -67,10 +104,16 @@ export type BroadcastEvent = Message<"broadcast.v1.BroadcastEvent"> & {
    */
   message: {
     /**
-     * @generated from field: broadcast.v1.StationStateUpdate stations_state = 2;
+     * @generated from field: broadcast.v1.StationStateUpdate stations_state = 1;
      */
     value: StationStateUpdate;
     case: "stationsState";
+  } | {
+    /**
+     * @generated from field: broadcast.v1.StationAssignmentUpdate station_assignments = 2;
+     */
+    value: StationAssignmentUpdate;
+    case: "stationAssignments";
   } | { case: undefined; value?: undefined };
 };
 
@@ -79,7 +122,52 @@ export type BroadcastEvent = Message<"broadcast.v1.BroadcastEvent"> & {
  * Use `create(BroadcastEventSchema)` to create a new message.
  */
 export const BroadcastEventSchema: GenMessage<BroadcastEvent> = /*@__PURE__*/
-  messageDesc(file_v1_broadcast_broadcast, 2);
+  messageDesc(file_v1_broadcast_broadcast, 4);
+
+/**
+ * @generated from message broadcast.v1.SubscribeBroadcastRequest
+ */
+export type SubscribeBroadcastRequest = Message<"broadcast.v1.SubscribeBroadcastRequest"> & {
+  /**
+   * indicates which message types the client want initial state of
+   *
+   * @generated from field: repeated broadcast.v1.BroadcastType types = 1;
+   */
+  types: BroadcastType[];
+};
+
+/**
+ * Describes the message broadcast.v1.SubscribeBroadcastRequest.
+ * Use `create(SubscribeBroadcastRequestSchema)` to create a new message.
+ */
+export const SubscribeBroadcastRequestSchema: GenMessage<SubscribeBroadcastRequest> = /*@__PURE__*/
+  messageDesc(file_v1_broadcast_broadcast, 5);
+
+/**
+ * @generated from enum broadcast.v1.BroadcastType
+ */
+export enum BroadcastType {
+  /**
+   * @generated from enum value: TYPE_UNSPECIFIED = 0;
+   */
+  TYPE_UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CONNECTION_STATE = 1;
+   */
+  CONNECTION_STATE = 1,
+
+  /**
+   * @generated from enum value: STATION_ASSIGNMENTS = 2;
+   */
+  STATION_ASSIGNMENTS = 2,
+}
+
+/**
+ * Describes the enum broadcast.v1.BroadcastType.
+ */
+export const BroadcastTypeSchema: GenEnum<BroadcastType> = /*@__PURE__*/
+  enumDesc(file_v1_broadcast_broadcast, 0);
 
 /**
  * @generated from service broadcast.v1.BroadcastService
@@ -92,7 +180,7 @@ export const BroadcastService: GenService<{
    */
   subscribe: {
     methodKind: "server_streaming";
-    input: typeof EmptySchema;
+    input: typeof SubscribeBroadcastRequestSchema;
     output: typeof BroadcastEventSchema;
   },
 }> = /*@__PURE__*/

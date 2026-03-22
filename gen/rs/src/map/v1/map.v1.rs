@@ -124,5 +124,12 @@ pub struct UpdateMapRequest {
     #[prost(message, repeated, tag="4")]
     pub updated: ::prost::alloc::vec::Vec<Element>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AssignStationRequest {
+    #[prost(string, tag="1")]
+    pub station_ip: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="2")]
+    pub seat_id: ::core::option::Option<::prost::alloc::string::String>,
+}
 include!("map.v1.tonic.rs");
 // @@protoc_insertion_point(module)

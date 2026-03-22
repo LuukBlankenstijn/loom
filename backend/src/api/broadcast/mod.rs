@@ -4,35 +4,54 @@ use std::{pin::Pin, sync::Arc};
 
 use derive_more::derive::Constructor;
 use futures::{Stream, StreamExt};
-use loom_rpc::broadcast::v1 as pb;
 use loom_rpc::broadcast::v1::broadcast_service_server::BroadcastService;
-use tokio_stream::{self as stream};
+use loom_rpc::broadcast::v1::{self as pb, SubscribeBroadcastRequest};
 use tonic::{Request, Response, Status, async_trait};
 
-use crate::domain::{Orchestrator, event::broadcast::BroadcastEvent};
+use crate::domain::event::broadcast::BroadcastEvent;
+use crate::domain::{MapRepository, Orchestrator};
 
 #[derive(Constructor)]
 pub struct BroadcastHandler {
     orchestrator: Arc<dyn Orchestrator>,
+    map_repo: Arc<dyn MapRepository>,
 }
 
 #[async_trait]
 impl BroadcastService for BroadcastHandler {
     type SubscribeStream = Pin<Box<dyn Stream<Item = Result<pb::BroadcastEvent, Status>> + Send>>;
 
-    async fn subscribe(&self, _: Request<()>) -> Result<Response<Self::SubscribeStream>, Status> {
-        let state = self.orchestrator.get_state();
-        let initial_stream = stream::once(Ok(BroadcastEvent::State(state).into()));
-
-        let broadcast_stream = self
+    async fn subscribe(
+        &self,
+        request: Request<SubscribeBroadcastRequest>,
+    ) -> Result<Response<Self::SubscribeStream>, Status> {
+        let mut broadcast_stream: Self::SubscribeStream = self
             .orchestrator
             .subscribe_broadcast()
             .map(|result| match result {
                 Ok(event) => Ok(event.into()),
                 Err(e) => Err(Status::from(e)),
-            });
+            })
+            .boxed();
 
-        let response_stream = initial_stream.chain(broadcast_stream);
-        Ok(Response::new(Box::pin(response_stream)))
+        let req = request.into_inner();
+        if req
+            .types
+            .contains(&(pb::BroadcastType::ConnectionState as i32))
+        {
+            let state = self.orchestrator.get_state();
+            let stream = tokio_stream::once(Ok(BroadcastEvent::Connection(state).into()));
+            broadcast_stream = stream.chain(broadcast_stream).boxed();
+        }
+        if req
+            .types
+            .contains(&(pb::BroadcastType::StationAssignments as i32))
+        {
+            let state = self.map_repo.get_all_station_assignments(None).await?;
+            let stream = tokio_stream::once(Ok(BroadcastEvent::Assignment(state).into()));
+            broadcast_stream = stream.chain(broadcast_stream).boxed();
+        }
+
+        Ok(Response::new(broadcast_stream))
     }
 }

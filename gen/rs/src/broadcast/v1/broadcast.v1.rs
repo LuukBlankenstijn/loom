@@ -9,22 +9,71 @@ pub struct StationState {
     #[prost(bool, tag="3")]
     pub logged_in: bool,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StationAssignment {
+    #[prost(string, tag="1")]
+    pub ip: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="2")]
+    pub seat_id: ::core::option::Option<::prost::alloc::string::String>,
+}
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StationStateUpdate {
     #[prost(message, repeated, tag="1")]
     pub state: ::prost::alloc::vec::Vec<StationState>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StationAssignmentUpdate {
+    #[prost(message, repeated, tag="1")]
+    pub updates: ::prost::alloc::vec::Vec<StationAssignment>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BroadcastEvent {
-    #[prost(oneof="broadcast_event::Message", tags="2")]
+    #[prost(oneof="broadcast_event::Message", tags="1, 2")]
     pub message: ::core::option::Option<broadcast_event::Message>,
 }
 /// Nested message and enum types in `BroadcastEvent`.
 pub mod broadcast_event {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Message {
-        #[prost(message, tag="2")]
+        #[prost(message, tag="1")]
         StationsState(super::StationStateUpdate),
+        #[prost(message, tag="2")]
+        StationAssignments(super::StationAssignmentUpdate),
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SubscribeBroadcastRequest {
+    /// indicates which message types the client want initial state of
+    #[prost(enumeration="BroadcastType", repeated, tag="1")]
+    pub types: ::prost::alloc::vec::Vec<i32>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum BroadcastType {
+    TypeUnspecified = 0,
+    ConnectionState = 1,
+    StationAssignments = 2,
+}
+impl BroadcastType {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::TypeUnspecified => "TYPE_UNSPECIFIED",
+            Self::ConnectionState => "CONNECTION_STATE",
+            Self::StationAssignments => "STATION_ASSIGNMENTS",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TYPE_UNSPECIFIED" => Some(Self::TypeUnspecified),
+            "CONNECTION_STATE" => Some(Self::ConnectionState),
+            "STATION_ASSIGNMENTS" => Some(Self::StationAssignments),
+            _ => None,
+        }
     }
 }
 include!("broadcast.v1.tonic.rs");

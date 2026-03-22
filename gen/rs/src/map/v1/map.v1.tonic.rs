@@ -172,6 +172,29 @@ pub mod map_service_client {
                 .insert(GrpcMethod::new("map.v1.MapService", "UpdateMap"));
             self.inner.unary(req, path, codec).await
         }
+        /** Assigns a station to a seat
+*/
+        pub async fn assign_station_to_seat(
+            &mut self,
+            request: impl tonic::IntoRequest<super::AssignStationRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/map.v1.MapService/AssignStationToSeat",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("map.v1.MapService", "AssignStationToSeat"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -213,6 +236,12 @@ pub mod map_service_server {
         async fn update_map(
             &self,
             request: tonic::Request<super::UpdateMapRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        /** Assigns a station to a seat
+*/
+        async fn assign_station_to_seat(
+            &self,
+            request: tonic::Request<super::AssignStationRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
     }
     ///
@@ -451,6 +480,52 @@ pub mod map_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = UpdateMapSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/map.v1.MapService/AssignStationToSeat" => {
+                    #[allow(non_camel_case_types)]
+                    struct AssignStationToSeatSvc<T: MapService>(pub Arc<T>);
+                    impl<
+                        T: MapService,
+                    > tonic::server::UnaryService<super::AssignStationRequest>
+                    for AssignStationToSeatSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::AssignStationRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as MapService>::assign_station_to_seat(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = AssignStationToSeatSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

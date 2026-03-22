@@ -25,4 +25,5 @@ pub trait Orchestrator: Send + Sync {
     async fn register_admin(&self, ip: &str) -> Result<CommandStream<AdminCommand>, AppError>;
     fn subscribe_broadcast(&self) -> BroadcastEventStream;
     fn get_state(&self) -> Vec<StationConnectionState>;
+    fn broadcast(&self, event: BroadcastEvent);
 }

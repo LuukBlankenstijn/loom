@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/map/map.proto.
  */
 export const file_v1_map_map: GenFile = /*@__PURE__*/
-  fileDesc("ChB2MS9tYXAvbWFwLnByb3RvEgZtYXAudjEiGwoNR2V0TWFwUmVxdWVzdBIKCgJpZBgBIAEoBSIgChBDcmVhdGVNYXBSZXF1ZXN0EgwKBG5hbWUYASABKAkiUgoLTWFwUmVzcG9uc2USIAoDbWFwGAEgASgLMhMubWFwLnYxLk1hcE1ldGFkYXRhEiEKCGVsZW1lbnRzGAIgAygLMg8ubWFwLnYxLkVsZW1lbnQiPgoZR2V0QWxsTWFwTWV0YWRhdGFSZXNwb25zZRIhCgRtYXBzGAEgAygLMhMubWFwLnYxLk1hcE1ldGFkYXRhImAKEFVwZGF0ZU1hcFJlcXVlc3QSCgoCaWQYASABKAUSHgoHZGVsZXRlZBgDIAMoCUINukgKkgEHIgVyA7ABARIgCgd1cGRhdGVkGAQgAygLMg8ubWFwLnYxLkVsZW1lbnQylQIKCk1hcFNlcnZpY2USUAoRR2V0QWxsTWFwTWV0YWRhdGESFi5nb29nbGUucHJvdG9idWYuRW1wdHkaIS5tYXAudjEuR2V0QWxsTWFwTWV0YWRhdGFSZXNwb25zZSIAEjwKCUNyZWF0ZU1hcBIYLm1hcC52MS5DcmVhdGVNYXBSZXF1ZXN0GhMubWFwLnYxLk1hcFJlc3BvbnNlIgASNgoGR2V0TWFwEhUubWFwLnYxLkdldE1hcFJlcXVlc3QaEy5tYXAudjEuTWFwUmVzcG9uc2UiABI/CglVcGRhdGVNYXASGC5tYXAudjEuVXBkYXRlTWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQoUBCgpjb20ubWFwLnYxQghNYXBQcm90b1ABWjRnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vdjEvbWFwO21hcHYxogIDTVhYqgIGTWFwLlYxygIGTWFwXFYx4gISTWFwXFYxXEdQQk1ldGFkYXRh6gIHTWFwOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_map_types]);
+  fileDesc("ChB2MS9tYXAvbWFwLnByb3RvEgZtYXAudjEiGwoNR2V0TWFwUmVxdWVzdBIKCgJpZBgBIAEoBSIgChBDcmVhdGVNYXBSZXF1ZXN0EgwKBG5hbWUYASABKAkiUgoLTWFwUmVzcG9uc2USIAoDbWFwGAEgASgLMhMubWFwLnYxLk1hcE1ldGFkYXRhEiEKCGVsZW1lbnRzGAIgAygLMg8ubWFwLnYxLkVsZW1lbnQiPgoZR2V0QWxsTWFwTWV0YWRhdGFSZXNwb25zZRIhCgRtYXBzGAEgAygLMhMubWFwLnYxLk1hcE1ldGFkYXRhImAKEFVwZGF0ZU1hcFJlcXVlc3QSCgoCaWQYASABKAUSHgoHZGVsZXRlZBgDIAMoCUINukgKkgEHIgVyA7ABARIgCgd1cGRhdGVkGAQgAygLMg8ubWFwLnYxLkVsZW1lbnQiTAoUQXNzaWduU3RhdGlvblJlcXVlc3QSEgoKc3RhdGlvbl9pcBgBIAEoCRIUCgdzZWF0X2lkGAIgASgJSACIAQFCCgoIX3NlYXRfaWQy5AIKCk1hcFNlcnZpY2USUAoRR2V0QWxsTWFwTWV0YWRhdGESFi5nb29nbGUucHJvdG9idWYuRW1wdHkaIS5tYXAudjEuR2V0QWxsTWFwTWV0YWRhdGFSZXNwb25zZSIAEjwKCUNyZWF0ZU1hcBIYLm1hcC52MS5DcmVhdGVNYXBSZXF1ZXN0GhMubWFwLnYxLk1hcFJlc3BvbnNlIgASNgoGR2V0TWFwEhUubWFwLnYxLkdldE1hcFJlcXVlc3QaEy5tYXAudjEuTWFwUmVzcG9uc2UiABI/CglVcGRhdGVNYXASGC5tYXAudjEuVXBkYXRlTWFwUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEk0KE0Fzc2lnblN0YXRpb25Ub1NlYXQSHC5tYXAudjEuQXNzaWduU3RhdGlvblJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiAEKFAQoKY29tLm1hcC52MUIITWFwUHJvdG9QAVo0Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL21hcDttYXB2MaICA01YWKoCBk1hcC5WMcoCBk1hcFxWMeICEk1hcFxWMVxHUEJNZXRhZGF0YeoCB01hcDo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_map_types]);
 
 /**
  * @generated from message map.v1.GetMapRequest
@@ -118,6 +118,28 @@ export const UpdateMapRequestSchema: GenMessage<UpdateMapRequest> = /*@__PURE__*
   messageDesc(file_v1_map_map, 4);
 
 /**
+ * @generated from message map.v1.AssignStationRequest
+ */
+export type AssignStationRequest = Message<"map.v1.AssignStationRequest"> & {
+  /**
+   * @generated from field: string station_ip = 1;
+   */
+  stationIp: string;
+
+  /**
+   * @generated from field: optional string seat_id = 2;
+   */
+  seatId?: string;
+};
+
+/**
+ * Describes the message map.v1.AssignStationRequest.
+ * Use `create(AssignStationRequestSchema)` to create a new message.
+ */
+export const AssignStationRequestSchema: GenMessage<AssignStationRequest> = /*@__PURE__*/
+  messageDesc(file_v1_map_map, 5);
+
+/**
  * @generated from service map.v1.MapService
  */
 export const MapService: GenService<{
@@ -159,6 +181,16 @@ export const MapService: GenService<{
   updateMap: {
     methodKind: "unary";
     input: typeof UpdateMapRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * Assigns a station to a seat
+   *
+   * @generated from rpc map.v1.MapService.AssignStationToSeat
+   */
+  assignStationToSeat: {
+    methodKind: "unary";
+    input: typeof AssignStationRequestSchema;
     output: typeof EmptySchema;
   },
 }> = /*@__PURE__*/
