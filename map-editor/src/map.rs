@@ -1,3 +1,4 @@
+use loom_client::client::map::MapClient;
 use std::sync::Arc;
 
 use iced::{
@@ -11,15 +12,15 @@ use iced::{
         space, stack, text,
     },
 };
+use loom_client::client::Client;
 use loom_map::{
     MapMode,
     loom_map_types::{MapElement, Point, door::Door, seat::Seat},
 };
-use loom_map_client::client::{MapClient, MapClientExt};
 
 #[derive(Debug)]
 pub struct Map {
-    client: Arc<MapClient>,
+    client: Arc<Client>,
     map_id: i32,
     map_mode: MapMode,
     map: loom_map::Map,
@@ -40,7 +41,7 @@ pub enum Message {
 }
 
 impl Map {
-    pub fn new(client: Arc<MapClient>, map_id: i32) -> (Self, Task<Message>) {
+    pub fn new(client: Arc<Client>, map_id: i32) -> (Self, Task<Message>) {
         (
             Self {
                 client,

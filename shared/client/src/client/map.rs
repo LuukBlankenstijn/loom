@@ -1,28 +1,13 @@
-use crate::convert::prelude::ToProto;
+use crate::{
+    client::Client,
+    convert::map::prelude::{ToProto, TryFromProto},
+};
 
-use super::convert::prelude::TryFromProto;
 use loom_map_types::MapElement;
-use loom_rpc::map::v1::{GetMapRequest, UpdateMapRequest, map_service_client::MapServiceClient};
-#[cfg(not(target_arch = "wasm32"))]
-use tonic::transport::Channel;
-#[cfg(target_arch = "wasm32")]
-use tonic_web_wasm_client::Client as Channel;
+use loom_rpc::map::v1::{AssignStationRequest, GetMapRequest, UpdateMapRequest};
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-pub struct MapClient {
-    inner: MapServiceClient<Channel>,
-}
-
-impl MapClient {
-    pub fn new(channel: Channel) -> Self {
-        Self {
-            inner: MapServiceClient::new(channel),
-        }
-    }
-}
-
-pub trait MapClientExt {
+pub trait MapClient {
     fn get_map_elements(
         &self,
         map_id: i32,
@@ -33,12 +18,17 @@ pub trait MapClientExt {
         deleted: Vec<Uuid>,
         updated: Vec<MapElement>,
     ) -> impl Future<Output = Result<(), String>>;
+    fn assign_station_to_seat(
+        &self,
+        station_ip: String,
+        seat_id: Option<Uuid>,
+    ) -> impl Future<Output = Result<(), String>>;
 }
 
-impl MapClientExt for MapClient {
+impl MapClient for Client {
     async fn get_map_elements(&self, map_id: i32) -> Result<Vec<MapElement>, String> {
         Ok(self
-            .inner
+            .map_client
             .clone()
             .get_map(GetMapRequest { id: map_id })
             .await
@@ -56,12 +46,28 @@ impl MapClientExt for MapClient {
         deleted: Vec<Uuid>,
         updated: Vec<MapElement>,
     ) -> Result<(), String> {
-        self.inner
+        self.map_client
             .clone()
             .update_map(UpdateMapRequest {
                 id: map_id,
                 deleted: deleted.iter().map(|uuid| uuid.to_string()).collect(),
                 updated: updated.into_iter().map(|u| u.to_proto()).collect(),
+            })
+            .await
+            .map_err(|e| e.to_string())
+            .map(|_| ())
+    }
+
+    async fn assign_station_to_seat(
+        &self,
+        station_ip: String,
+        seat_id: Option<Uuid>,
+    ) -> Result<(), String> {
+        self.map_client
+            .clone()
+            .assign_station_to_seat(AssignStationRequest {
+                station_ip,
+                seat_id: seat_id.map(|id| id.to_string()),
             })
             .await
             .map_err(|e| e.to_string())

@@ -1,4 +1,4 @@
-use crate::convert::prelude::{ConvertError, FromProto, ToProto, TryFromProto};
+use crate::convert::map::prelude::{ConvertError, FromProto, ToProto, TryFromProto};
 
 use loom_map_types::{MapElement, Point, wall::Wall};
 use loom_rpc::map::v1::Wall as ProtoWall;

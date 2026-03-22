@@ -5,9 +5,9 @@ use std::sync::Arc;
 use iced::Font;
 use iced::Theme;
 use iced::font;
-use loom_map_client::client::MapClient;
+use loom_client::client::Client;
 use map::Map;
-use tonic_web_wasm_client::Client;
+use tonic_web_wasm_client::Client as Channel;
 
 fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -28,13 +28,13 @@ fn main() {
     let _ = app.run();
 }
 
-fn get_client() -> MapClient {
+fn get_client() -> Client {
     let window = web_sys::window().expect("no global `window` exists");
     let location = window.location();
     let origin = location.origin().expect("failed to get origin");
     let base_url = format!("{}/api", origin);
-    let wasm_transport = Client::new(base_url);
-    MapClient::new(wasm_transport)
+    let wasm_transport = Channel::new(base_url);
+    Client::new(wasm_transport)
 }
 
 fn get_map_id_from_url() -> i32 {

@@ -1,7 +1,7 @@
 use loom_map_types::{MapElement, door::Door, seat::Seat, wall::Wall};
 use loom_rpc::map::v1::{Element as ProtoWrapperElement, element::Element as ProtoElement};
 
-use crate::convert::prelude::{ToProto, TryFromProto};
+use crate::convert::map::prelude::{ToProto, TryFromProto};
 
 impl TryFromProto<ProtoElement> for MapElement {
     fn try_from_proto(val: ProtoElement) -> Result<Self, super::prelude::ConvertError> {
