@@ -38,6 +38,7 @@ message Seat {
   string id = 1 [(buf.validate.field).string.uuid = true];
   Location location = 2;
   Rotation rotation = 3;
+  optional string ip = 4;
 }
 
 message Element {

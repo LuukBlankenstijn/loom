@@ -40,6 +40,8 @@ pub struct Seat {
     pub location: ::core::option::Option<Location>,
     #[prost(enumeration="Rotation", tag="3")]
     pub rotation: i32,
+    #[prost(string, optional, tag="4")]
+    pub ip: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Element {

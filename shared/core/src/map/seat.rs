@@ -7,6 +7,7 @@ pub struct Seat {
     pub id: Uuid,
     pub position: Point,
     pub rotation: Rotation,
+    pub ip: Option<String>,
 }
 
 impl Seat {
@@ -15,19 +16,26 @@ impl Seat {
     pub const CHAIR_ARC_RADIUS: f32 = 20.0;
     pub const CHAIR_PROTRUSION: f32 = 25.0;
 
-    pub fn new(position: Point, rotation: Option<Rotation>) -> Self {
+    pub fn new(position: Point, rotation: Option<Rotation>, ip: Option<String>) -> Self {
         Self {
             id: Uuid::now_v7(),
             position,
             rotation: rotation.unwrap_or_default(),
+            ip,
         }
     }
 
-    pub fn construct(id: Uuid, position: impl Into<Point>, rotation: impl Into<Rotation>) -> Self {
+    pub fn construct(
+        id: Uuid,
+        position: impl Into<Point>,
+        rotation: impl Into<Rotation>,
+        ip: Option<String>,
+    ) -> Self {
         Self {
             id,
             position: position.into(),
             rotation: rotation.into(),
+            ip,
         }
     }
 

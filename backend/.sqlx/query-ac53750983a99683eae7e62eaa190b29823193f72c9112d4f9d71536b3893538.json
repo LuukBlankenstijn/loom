@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT s.ip, e.id FROM map_element AS e \n            INNER JOIN stations AS s ON e.station_id = s.id \n            WHERE e.map_id = ($1)\n            ",
+  "query": "\n            SELECT s.ip, e.id FROM map_element AS e \n            INNER JOIN stations AS s ON e.station_id = s.id \n            WHERE ($1::int4 IS NULL OR e.map_id = $1)\n            ",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "36fa8f0c8f67e52db6cff24299d0e18a7d92c138a7b3258e8103b9c3bf77f98a"
+  "hash": "ac53750983a99683eae7e62eaa190b29823193f72c9112d4f9d71536b3893538"
 }

@@ -7,6 +7,8 @@ WORKDIR /src
 # Cargo dep caching with dummy sources
 COPY backend/Cargo.toml backend/Cargo.lock backend/
 COPY gen/rs/Cargo.toml gen/rs/
+COPY shared/core/Cargo.toml shared/core
+COPY shared/proto-bridge/Cargo.toml shared/proto-bridge
 
 RUN mkdir -p backend/src gen/rs/src && \
     echo "fn main() {}" > backend/src/main.rs && \

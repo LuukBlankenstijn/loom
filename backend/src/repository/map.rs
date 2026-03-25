@@ -48,7 +48,11 @@ impl MapRepository for MapRepo {
         };
 
         let element_rows = sqlx::query!(
-            "SELECT id, element_type, props FROM map_element WHERE map_id = $1",
+            "
+            SELECT me.id, me.element_type, s.ip as \"ip?\", me.props FROM map_element as me 
+            LEFT JOIN stations as s ON me.station_id = s.id 
+            WHERE me.map_id = $1
+            ",
             map_id
         )
         .fetch_all(&self.0)
@@ -91,6 +95,7 @@ impl MapRepository for MapRepo {
                         id,
                         position: Point::new(p.x, p.y),
                         rotation: Rotation::parse(&p.rotation),
+                        ip: row.ip,
                     })
                 }
                 _ => {

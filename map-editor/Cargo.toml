@@ -8,6 +8,7 @@ resolver = "2"
 iced = { version = "0.14", features = ['web-colors'] }
 loom-map = { path = "../shared/map" }
 loom-client = { path = "../shared/client", features = ["map"] }
+loom-core = { path = "../shared/core"}
 tonic-web-wasm-client = "0.8"
 async-trait = "0.1"
 uuid = { version = "1.20.0", features = ["v7", "js"] }

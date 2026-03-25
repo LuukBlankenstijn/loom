@@ -5,6 +5,8 @@ pkgs.mkShell rec {
   buildInputs = with pkgs; [
     rustup
     trunk
+    gcc
+    pkg-config
     wayland
     libxkbcommon
     vulkan-loader
@@ -14,6 +16,8 @@ pkgs.mkShell rec {
     export RUSTUP_HOME=$PWD/.rustup
     export CARGO_HOME=$PWD/.cargo
     export PATH=$CARGO_HOME/bin:$PATH
+
+    export CC="${pkgs.gcc}/bin/gcc"
 
     if [ ! -d "$RUSTUP_HOME" ]; then
       rustup default stable

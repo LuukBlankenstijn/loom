@@ -1,4 +1,5 @@
 use loom_client::client::map::MapClient;
+use loom_core::map::{MapElement, Point, door::Door, seat::Seat};
 use std::sync::Arc;
 
 use iced::{
@@ -13,10 +14,7 @@ use iced::{
     },
 };
 use loom_client::client::Client;
-use loom_map::{
-    MapMode,
-    loom_map_types::{MapElement, Point, door::Door, seat::Seat},
-};
+use loom_map::MapMode;
 
 #[derive(Debug)]
 pub struct Map {
@@ -150,6 +148,7 @@ impl Map {
                                         x: point.x,
                                         y: point.y,
                                     },
+                                    None,
                                     None,
                                 )
                                 .into()

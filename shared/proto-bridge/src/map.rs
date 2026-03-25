@@ -130,6 +130,7 @@ impl TryIntoCore<Seat> for pb::Seat {
             id,
             position: Point::from_proto(location),
             rotation,
+            ip: self.ip,
         })
     }
 }
@@ -140,6 +141,7 @@ impl IntoProto<pb::Seat> for Seat {
             id: self.id.to_string(),
             location: Some(self.position.into_proto()),
             rotation: self.rotation.into_proto() as i32,
+            ip: self.ip,
         }
     }
 }
@@ -195,6 +197,7 @@ impl IntoProto<pb::Element> for &MapElement {
                 id: s.id.to_string(),
                 location: Some(s.position.into_proto()),
                 rotation: s.rotation.into_proto() as i32,
+                ip: s.ip.clone(),
             }),
         };
         pb::Element {
@@ -257,6 +260,7 @@ impl TryIntoCore<MapElement> for pb::Element {
                     id,
                     position: Point::new(loc.x, loc.y),
                     rotation,
+                    ip: s.ip.clone(),
                 }
                 .into())
             }

@@ -13,6 +13,8 @@ WORKDIR /src
 COPY map-editor/Cargo.toml map-editor/Cargo.lock map-editor/
 COPY gen/rs/Cargo.toml gen/rs/
 COPY shared/map/Cargo.toml shared/map/
+COPY shared/map-client/Cargo.toml shared/map-client
+COPY shared/core shared/core/Cargo.toml
 
 RUN mkdir -p map-editor/src gen/rs/src shared/map/src && \
     echo "fn main() {}" > map-editor/src/main.rs && \
@@ -24,6 +26,8 @@ RUN cd map-editor && cargo build --target wasm32-unknown-unknown --release 2>/de
 # Copy real sources and build WASM
 COPY gen/rs/ gen/rs/
 COPY shared/map/ shared/map/
+COPY shared/map-client shared/map-client
+COPY shared/core shared/core
 COPY map-editor/src/ map-editor/src/
 COPY map-editor/fonts/ map-editor/fonts/
 COPY map-editor/index.html map-editor/

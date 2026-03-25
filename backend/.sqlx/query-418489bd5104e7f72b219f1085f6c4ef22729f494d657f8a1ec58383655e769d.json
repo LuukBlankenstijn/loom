@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, element_type, props FROM map_element WHERE map_id = $1",
+  "query": "\n            SELECT me.id, me.element_type, s.ip as \"ip?\", me.props FROM map_element as me \n            LEFT JOIN stations as s ON me.station_id = s.id \n            WHERE me.map_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -15,6 +15,11 @@
       },
       {
         "ordinal": 2,
+        "name": "ip?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
         "name": "props",
         "type_info": "Jsonb"
       }
@@ -27,8 +32,9 @@
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "d95fdc55f95b30d957487339d32f5bf32fd1b3ba5baa9c9e07dae77d2f97ea43"
+  "hash": "418489bd5104e7f72b219f1085f6c4ef22729f494d657f8a1ec58383655e769d"
 }

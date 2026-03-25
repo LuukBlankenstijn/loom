@@ -485,6 +485,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
+name = "chrono"
+version = "0.4.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c673075a2e0e5f4a1dde27ce9dee1ea4558c7ffe648f576438a20ca1d2acc4b0"
+dependencies = [
+ "iana-time-zone",
+ "js-sys",
+ "num-traits",
+ "serde",
+ "wasm-bindgen",
+ "windows-link",
+]
+
+[[package]]
 name = "clipboard-win"
 version = "5.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1387,6 +1401,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "iana-time-zone"
+version = "0.1.65"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e31bc9ad994ba00e440a8aa5c9ef0ec67d5cb5e5cb0cc7f8b744a35b389cc470"
+dependencies = [
+ "android_system_properties",
+ "core-foundation-sys",
+ "iana-time-zone-haiku",
+ "js-sys",
+ "log",
+ "wasm-bindgen",
+ "windows-core 0.62.2",
+]
+
+[[package]]
+name = "iana-time-zone-haiku"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "iced"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1766,10 +1804,20 @@ name = "loom-client"
 version = "0.1.0"
 dependencies = [
  "futures",
- "loom-map-types",
+ "loom-proto-bridge",
  "loom-rpc",
  "tonic",
  "tonic-web-wasm-client",
+ "uuid",
+]
+
+[[package]]
+name = "loom-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "derive_more",
+ "serde",
  "uuid",
 ]
 
@@ -1778,7 +1826,7 @@ name = "loom-map"
 version = "0.1.0"
 dependencies = [
  "iced",
- "loom-map-types",
+ "loom-core",
  "ordermap",
  "uuid",
 ]
@@ -1792,6 +1840,7 @@ dependencies = [
  "console_error_panic_hook",
  "iced",
  "loom-client",
+ "loom-core",
  "loom-map",
  "tonic-web-wasm-client",
  "uuid",
@@ -1799,10 +1848,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "loom-map-types"
+name = "loom-proto-bridge"
 version = "0.1.0"
 dependencies = [
- "derive_more",
+ "chrono",
+ "loom-core",
+ "loom-rpc",
+ "prost-types",
+ "tonic",
  "uuid",
 ]
 
