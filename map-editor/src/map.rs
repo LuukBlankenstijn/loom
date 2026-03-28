@@ -1,5 +1,5 @@
 use loom_client::client::map::MapClient;
-use loom_core::map::{MapElement, Point, door::Door, seat::Seat};
+use loom_core::map::{MapElement, Point, door::Door, seat::Seat, wall::Wall};
 use std::sync::Arc;
 
 use iced::{
@@ -21,7 +21,7 @@ pub struct Map {
     client: Arc<Client>,
     map_id: i32,
     map_mode: MapMode,
-    map: loom_map::Map,
+    map: loom_map::Map<MapElement>,
     is_colapsed: bool,
     error: Option<String>,
 }
@@ -29,7 +29,7 @@ pub struct Map {
 #[derive(Clone, Debug)]
 pub enum Message {
     ToggleHud,
-    Map(loom_map::Message),
+    Map(loom_map::Message<MapElement>),
     ToggleMapMode,
     FetchMap,
     MapFetched(Result<Vec<MapElement>, String>),
@@ -198,7 +198,18 @@ impl Map {
         match message {
             Message::ToggleHud => self.is_colapsed = !self.is_colapsed,
             Message::Map(message) => {
-                return self.map.update(message).map(Message::Map);
+                let mut msg = message;
+                if let loom_map::Message::DrawFinish(start, end) = msg {
+                    let wall = Wall::new(
+                        Point {
+                            x: start.x,
+                            y: start.y,
+                        },
+                        Point { x: end.x, y: end.y },
+                    );
+                    msg = loom_map::Message::Insert(MapElement::Wall(wall));
+                }
+                return self.map.update(msg).map(Message::Map);
             }
             Message::ToggleMapMode => match self.map_mode {
                 MapMode::View => self.map_mode = MapMode::Edit,

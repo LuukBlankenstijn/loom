@@ -17,7 +17,7 @@ macro_rules! dispatch_on_map_element {
     };
 }
 
-pub trait Drawable {
+pub trait Drawable: Clone + PartialEq + Send + 'static {
     fn draw(&self, frame: &mut Frame, scale: f32, selected: bool);
     fn get_id(&self) -> Uuid;
     fn is_hit(&self, point: iced::Point) -> bool;

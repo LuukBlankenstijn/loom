@@ -4,8 +4,6 @@ mod messsage;
 pub mod types;
 
 use grid::Grid;
-use loom_core::map::wall::Wall;
-use loom_core::map::{MapElement, Point};
 pub use messsage::Message;
 use ordermap::OrderMap;
 
@@ -16,8 +14,8 @@ use iced::widget::Canvas;
 use iced::{Element, Task, Vector};
 use uuid::Uuid;
 
-use crate::messsage::{GridMessage, SystemMessage};
-use crate::types::{Drawable, prelude::FromIced};
+use crate::messsage::GridMessage;
+use crate::types::Drawable;
 
 #[derive(Default, Debug, Clone)]
 pub enum MapMode {
@@ -27,17 +25,16 @@ pub enum MapMode {
 }
 
 #[derive(Debug)]
-pub struct Map {
+pub struct Map<T> {
     grid: Grid,
-    start_elements: OrderMap<Uuid, MapElement>,
-    elements: OrderMap<Uuid, MapElement>,
+    start_elements: OrderMap<Uuid, T>,
+    elements: OrderMap<Uuid, T>,
     selected: HashSet<Uuid>,
 }
 
-impl Map {
-    pub fn new(elements: Vec<MapElement>) -> Self {
-        let elements: OrderMap<Uuid, MapElement> =
-            elements.into_iter().map(|e| (e.get_id(), e)).collect();
+impl<T: Drawable> Map<T> {
+    pub fn new(elements: Vec<T>) -> Self {
+        let elements: OrderMap<Uuid, T> = elements.into_iter().map(|e| (e.get_id(), e)).collect();
         Self {
             start_elements: elements.clone(),
             elements,
@@ -46,7 +43,7 @@ impl Map {
         }
     }
 
-    pub fn get_changes(&self) -> (Vec<Uuid>, Vec<MapElement>) {
+    pub fn get_changes(&self) -> (Vec<Uuid>, Vec<T>) {
         let deleted: Vec<Uuid> = self
             .start_elements
             .keys()
@@ -54,7 +51,7 @@ impl Map {
             .cloned()
             .collect();
 
-        let new_or_changed: Vec<MapElement> = self
+        let new_or_changed: Vec<T> = self
             .elements
             .iter()
             .filter(|(key, current_val)| match self.start_elements.get(*key) {
@@ -67,21 +64,16 @@ impl Map {
         (deleted, new_or_changed)
     }
 
-    pub fn update_elements(&mut self, elements: Vec<MapElement>) {
+    pub fn update_elements(&mut self, elements: Vec<T>) {
         self.elements = elements.into_iter().map(|e| (e.get_id(), e)).collect();
         self.start_elements = self.elements.clone();
     }
 
-    pub fn update(&mut self, message: Message) -> Task<Message> {
+    pub fn update(&mut self, message: Message<T>) -> Task<Message<T>> {
         match message {
             Message::Grid(msg) => match msg {
                 GridMessage::DrawFinish(start, end) => {
-                    return Task::done(
-                        SystemMessage::AddElement(
-                            Wall::new(Point::from_iced(start), Point::from_iced(end)).into(),
-                        )
-                        .into(),
-                    );
+                    return Task::done(Message::DrawFinish(start, end));
                 }
                 GridMessage::RequestSelect(point) => {
                     let hit_id = self
@@ -95,11 +87,9 @@ impl Map {
                 }
                 _ => self.grid.update_canvas(msg),
             },
-            Message::System(msg) => match msg {
-                SystemMessage::AddElement(element) => {
-                    self.elements.insert(element.get_id(), element);
-                }
-            },
+            Message::Insert(element) => {
+                self.elements.insert(element.get_id(), element);
+            }
             Message::ClearSelection => self.selected.clear(),
             Message::DeleteSelection => {
                 for id in &self.selected {
@@ -145,12 +135,13 @@ impl Map {
                 let element = element_generator(self.grid.snap_to_grid((pos.x, pos.y).into()));
                 self.elements.insert(element.get_id(), element);
             }
+            Message::DrawFinish(_, _) => {} // consumer may handle this to insert an element
         };
         Task::none()
     }
 
-    pub fn view(&self, map_mode: MapMode) -> Element<'_, Message> {
-        let canvas: Element<'_, Message> = Canvas::new(canvas::MapCanvas::new(
+    pub fn view(&self, map_mode: MapMode) -> Element<'_, Message<T>> {
+        let canvas: Element<'_, Message<T>> = Canvas::new(canvas::MapCanvas::new(
             &self.grid,
             &self.elements,
             &self.selected,

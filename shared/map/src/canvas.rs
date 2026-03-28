@@ -4,7 +4,6 @@ use iced::{
     Event, Rectangle, Renderer, Theme, mouse,
     widget::canvas::{self, Frame, Geometry, Path, Program, Stroke},
 };
-use loom_core::map::MapElement;
 use ordermap::OrderMap;
 use uuid::Uuid;
 
@@ -13,17 +12,23 @@ use crate::{MapMode, Message};
 use super::grid::{Grid, Interaction};
 use super::types::Drawable;
 
-pub struct MapCanvas<'a> {
+pub struct MapCanvas<'a, T>
+where
+    T: Drawable,
+{
     grid: &'a Grid,
-    elements: &'a OrderMap<Uuid, MapElement>,
+    elements: &'a OrderMap<Uuid, T>,
     selected: &'a HashSet<Uuid>,
     mode: MapMode,
 }
 
-impl<'a> MapCanvas<'a> {
+impl<'a, T> MapCanvas<'a, T>
+where
+    T: Drawable,
+{
     pub fn new(
         grid: &'a Grid,
-        elements: &'a OrderMap<Uuid, MapElement>,
+        elements: &'a OrderMap<Uuid, T>,
         selected: &'a HashSet<Uuid>,
         mode: MapMode,
     ) -> Self {
@@ -36,7 +41,10 @@ impl<'a> MapCanvas<'a> {
     }
 }
 
-impl<'a> Program<Message> for MapCanvas<'a> {
+impl<'a, T> Program<Message<T>> for MapCanvas<'a, T>
+where
+    T: Drawable,
+{
     type State = Interaction;
 
     fn draw(
@@ -82,7 +90,7 @@ impl<'a> Program<Message> for MapCanvas<'a> {
         event: &Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
-    ) -> Option<canvas::Action<Message>> {
+    ) -> Option<canvas::Action<Message<T>>> {
         self.grid.update(state, event, bounds, cursor, &self.mode)
     }
 

@@ -1,7 +1,7 @@
 use iced::{Point, Vector};
 use uuid::Uuid;
 
-use crate::MapElement;
+use crate::types::Drawable;
 
 #[derive(Clone, Debug)]
 pub enum GridMessage {
@@ -11,36 +11,27 @@ pub enum GridMessage {
     RequestSelect(Point),
 }
 
-impl From<GridMessage> for Message {
+impl<T: Drawable> From<GridMessage> for Message<T> {
     fn from(val: GridMessage) -> Self {
         Message::Grid(val)
     }
 }
 
-#[doc(hidden)]
-#[derive(Debug, Clone)]
-pub enum SystemMessage {
-    AddElement(MapElement),
-}
-
-impl From<SystemMessage> for Message {
-    fn from(value: SystemMessage) -> Self {
-        Message::System(value)
-    }
-}
-
 #[non_exhaustive]
 #[derive(Debug, Clone)]
-pub enum Message {
+pub enum Message<T> {
     #[doc(hidden)]
     Grid(GridMessage),
-    #[doc(hidden)]
-    System(SystemMessage),
+    /// Insert an element directly into the map.
+    Insert(T),
+    /// Fired when the user finishes a draw gesture (shift+drag). Handle this
+    /// in your consumer to create and insert whatever element you want.
+    DrawFinish(Point, Point),
     ToggleSelect(Uuid),
     ClearSelection,
     DeleteSelection,
     DuplicateSelection,
     MoveSelection(Vector),
     RotateSelection,
-    AddElement(fn(Point) -> MapElement),
+    AddElement(fn(Point) -> T),
 }

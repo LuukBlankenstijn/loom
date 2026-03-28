@@ -5,7 +5,7 @@ use iced::{
     widget::canvas::{self, Frame, Path, Stroke},
 };
 
-use crate::{MapMode, Message, messsage::GridMessage};
+use crate::{MapMode, Message, messsage::GridMessage, types::Drawable};
 
 #[derive(Clone, Debug)]
 pub struct Grid {
@@ -110,14 +110,14 @@ impl Grid {
         Point::new(x, y)
     }
 
-    pub fn update(
+    pub fn update<T: Drawable>(
         &self,
         state: &mut Interaction,
         event: &Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
         mode: &MapMode,
-    ) -> Option<canvas::Action<Message>> {
+    ) -> Option<canvas::Action<Message<T>>> {
         let cursor_position = cursor.position_in(bounds);
         let can_edit = matches!(mode, MapMode::Edit);
 
