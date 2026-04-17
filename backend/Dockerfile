@@ -7,8 +7,8 @@ WORKDIR /src
 # Cargo dep caching with dummy sources
 COPY backend/Cargo.toml backend/Cargo.lock backend/
 COPY gen/rs/Cargo.toml gen/rs/
-COPY shared/core/Cargo.toml shared/core
-COPY shared/proto-bridge/Cargo.toml shared/proto-bridge
+COPY shared/core/Cargo.toml shared/core/
+COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/
 
 RUN mkdir -p backend/src gen/rs/src && \
     echo "fn main() {}" > backend/src/main.rs && \
@@ -21,6 +21,8 @@ COPY gen/rs/ gen/rs/
 COPY backend/src/ backend/src/
 COPY backend/migrations/ backend/migrations/
 COPY backend/.sqlx/ backend/.sqlx/
+COPY shared/core/ shared/core/
+COPY shared/proto-bridge/ shared/proto-bridge/
 
 RUN touch gen/rs/src/lib.rs backend/src/main.rs
 RUN cd backend && cargo build --release
