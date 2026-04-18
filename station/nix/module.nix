@@ -37,6 +37,8 @@ in
       default = null;
       description = "The command to the the authentication token for the service.";
     };
+
+    includeSystemPackages = mkEnableOption "Put all system packages on the path of the loomd service. Allows to use systempackages when running remote commands";
   };
 
   config = mkIf cfg.enable {
@@ -44,6 +46,7 @@ in
       description = "Loom Daemon Service";
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
+      path = lib.optionals cfg.includeSystemPackages config.environment.systemPackages;
       serviceConfig = {
         ExecStart =
           let
