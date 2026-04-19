@@ -53,7 +53,10 @@ impl From<AppError> for Status {
             AppError::InvalidArgument(msg) => Status::invalid_argument(msg.clone()),
             AppError::AlreadyExists(msg) => Status::already_exists(msg.clone()),
             AppError::FailedPrecondition(msg) => Status::failed_precondition(msg.clone()),
-            AppError::Internal(msg) => Status::internal(msg.clone()),
+            AppError::Internal(msg) => {
+                tracing::error!(error = %msg, "internal error");
+                Status::internal("internal server error")
+            }
             AppError::Database(e) => {
                 tracing::error!(error = %e, "database error");
                 Status::internal("internal database error")

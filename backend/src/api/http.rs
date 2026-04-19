@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{
     Json,
     body::Body,
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::Response,
     response::IntoResponse,
 };
@@ -18,7 +18,7 @@ use crate::{
 };
 
 #[derive(Clone, Constructor)]
-pub struct WallpaperHandler {
+pub struct HttpHandlerState {
     contest_repo: Arc<dyn ContestRepository>,
     team_repo: Arc<dyn TeamRepository>,
 }
@@ -30,7 +30,7 @@ pub struct WallpaperParams {
 }
 
 pub async fn wallpaper_handler(
-    State(state): State<WallpaperHandler>,
+    State(state): State<HttpHandlerState>,
     Query(query): Query<WallpaperParams>,
 ) -> Result<impl IntoResponse, AppError> {
     let contest_id = if let Some(id) = query.contest_id {
@@ -39,7 +39,7 @@ pub async fn wallpaper_handler(
         let contest_option = state.contest_repo.get_next_contest().await?;
         contest_option
             .map(|c| c.id)
-            .ok_or_else(|| AppError::NotFound("no upcomming contest found".to_string()))?
+            .ok_or_else(|| AppError::NotFound("no upcoming contest found".to_string()))?
     };
     // get the wallpaper
     let wallpaper = state
@@ -74,10 +74,25 @@ pub async fn wallpaper_handler(
 }
 
 pub async fn next_contest(
-    State(state): State<WallpaperHandler>,
+    State(state): State<HttpHandlerState>,
 ) -> Result<impl IntoResponse, AppError> {
     let contest = state.contest_repo.get_next_contest().await?;
     let contest = contest.ok_or_else(|| AppError::NotFound("No next contest found".to_string()))?;
 
     Ok(Json(contest))
+}
+
+pub async fn team_info(
+    State(state): State<HttpHandlerState>,
+    Path(ip): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    let team = state
+        .team_repo
+        .get_by_ip(&ip)
+        .await?
+        .ok_or(AppError::NotFound(format!("team with ip {} not found", ip)))?;
+
+    Ok(Json(serde_json::json!({
+        "name": team.name
+    })))
 }

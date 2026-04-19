@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let interceptor = combined_auth_interceptor(config.auth_token);
 
-    let contest_serice = ContestServiceServer::with_interceptor(
+    let contest_service = ContestServiceServer::with_interceptor(
         api::admin::ContestHandler::new(
             contest_repo.clone(),
             map_repo.clone(),
@@ -96,10 +96,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
 
-    let wallpaper_handler = api::http::WallpaperHandler::new(contest_repo, team_repo);
+    let wallpaper_handler = api::http::HttpHandlerState::new(contest_repo, team_repo);
 
     let grpc_router = tonic::service::Routes::builder()
-        .add_service(contest_serice)
+        .add_service(contest_service)
         .add_service(station_service)
         .add_service(team_service)
         .add_service(map_service)
@@ -113,6 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let routes = Router::new()
         .route("/wallpaper", get(api::http::wallpaper_handler))
         .route("/next-contest", get(api::http::next_contest))
+        .route("/team-info/{ip}", get(api::http::team_info))
         .with_state(wallpaper_handler)
         .merge(grpc_router)
         .layer(CorsLayer::permissive());
