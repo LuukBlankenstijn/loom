@@ -157,7 +157,7 @@ impl Greeter {
                 _ => self.greeter_client.update(msg).map(Message::GreeterClient),
             },
             Message::ApiPoller(api_poller_message) => {
-                if let ApiPollerMessage::SetStartime(starttime) = api_poller_message {
+                if let ApiPollerMessage::SetStarttime(starttime) = api_poller_message {
                     return Task::done(CountdownMessage::SetStartTime(starttime).into());
                 }
                 self.api_poller

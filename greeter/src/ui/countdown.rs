@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, TimeDelta};
 use iced::{
     Color, Element, Font, Length, Subscription, Task,
     alignment::{Horizontal, Vertical},
@@ -16,7 +16,7 @@ pub struct Countdown {
 
 #[derive(Debug, Clone)]
 pub enum CountdownMessage {
-    SetStartTime(DateTime<Local>),
+    SetStartTime(Option<DateTime<Local>>),
     Tick,
     Start,
 }
@@ -106,13 +106,21 @@ impl Countdown {
 
     pub fn update(&mut self, msg: CountdownMessage) -> Task<CountdownMessage> {
         match msg {
-            CountdownMessage::SetStartTime(date_time) => self.start_time = Some(date_time),
+            CountdownMessage::SetStartTime(date_time) => self.start_time = date_time,
             CountdownMessage::Tick => {
                 self.now = Local::now();
-                if let Some(start_time) = self.start_time
-                    && self.now >= start_time
-                {
-                    self.start_time = None;
+
+                let Some(start_time) = self.start_time else {
+                    return Task::none();
+                };
+
+                let elapsed = self.now - start_time;
+                if elapsed < TimeDelta::zero() {
+                    return Task::none(); // not started yet
+                }
+
+                self.start_time = None;
+                if elapsed < TimeDelta::seconds(15) {
                     return Task::done(CountdownMessage::Start);
                 }
             }

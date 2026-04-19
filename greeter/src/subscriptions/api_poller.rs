@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, FixedOffset, Local};
+use chrono::{DateTime, FixedOffset, Local, TimeDelta};
 use iced::{Subscription, Task, time};
 use log::{debug, error};
 use serde::Deserialize;
@@ -11,14 +11,16 @@ use crate::ui::Message;
 #[derive(Debug)]
 pub struct ApiPoller {
     url: Option<String>,
+    start_time: Option<DateTime<Local>>,
+    interval: u64,
 }
 
 #[derive(Clone, Debug)]
 pub enum ApiPollerMessage {
-    FetchStartTime,
-    StartTimeFetched(Result<DateTime<Local>, String>),
+    Tick,
+    StartTimeFetched(Result<Option<DateTime<Local>>, String>),
     SetUrl(Option<String>),
-    SetStartime(DateTime<Local>),
+    SetStarttime(Option<DateTime<Local>>),
 }
 
 impl From<ApiPollerMessage> for Message {
@@ -29,12 +31,19 @@ impl From<ApiPollerMessage> for Message {
 
 impl ApiPoller {
     pub fn new(url: Option<String>) -> (Self, Task<ApiPollerMessage>) {
-        (Self { url }, Task::done(ApiPollerMessage::FetchStartTime))
+        (
+            Self {
+                url,
+                start_time: None,
+                interval: 60,
+            },
+            Task::done(ApiPollerMessage::Tick),
+        )
     }
 
     pub fn update(&mut self, msg: ApiPollerMessage) -> Task<ApiPollerMessage> {
         match msg {
-            ApiPollerMessage::FetchStartTime => {
+            ApiPollerMessage::Tick => {
                 if let Some(url) = self.url.clone() {
                     return Task::perform(
                         async move {
@@ -51,10 +60,24 @@ impl ApiPoller {
             }
             ApiPollerMessage::SetUrl(url) => {
                 self.url = url;
-                return Task::done(ApiPollerMessage::FetchStartTime);
+                return Task::done(ApiPollerMessage::Tick);
             }
             ApiPollerMessage::StartTimeFetched(result) => match result {
-                Ok(datetime) => return Task::done(ApiPollerMessage::SetStartime(datetime)),
+                Ok(fetched_start_time) => {
+                    if let Some(fetched) = fetched_start_time {
+                        self.interval = if fetched - Local::now() < TimeDelta::minutes(2) {
+                            5
+                        } else {
+                            60
+                        };
+                    }
+
+                    if self.start_time == fetched_start_time {
+                        return Task::none();
+                    }
+                    self.start_time = fetched_start_time;
+                    return Task::done(ApiPollerMessage::SetStarttime(fetched_start_time));
+                }
                 Err(error) => error!("failed getting starttime from api:{error}"),
             },
             _ => {}
@@ -63,16 +86,17 @@ impl ApiPoller {
     }
 
     pub fn subscription(&self) -> Subscription<ApiPollerMessage> {
-        time::every(Duration::from_secs(60)).map(|_| ApiPollerMessage::FetchStartTime)
+        time::every(Duration::from_secs(self.interval)).map(|_| ApiPollerMessage::Tick)
     }
 }
 
 #[derive(Deserialize)]
 struct ContestApiResponse {
-    start_time: DateTime<FixedOffset>,
+    #[serde(default)]
+    start_time: Option<DateTime<FixedOffset>>,
 }
 
-fn fetch_start_time(url: &str) -> Result<DateTime<Local>> {
+fn fetch_start_time(url: &str) -> Result<Option<DateTime<Local>>> {
     debug!("fetch start time from {url}");
     let mut response = ureq::get(url)
         .call()
@@ -83,5 +107,5 @@ fn fetch_start_time(url: &str) -> Result<DateTime<Local>> {
         .read_json()
         .context("decoding JSON payload")?;
 
-    Ok(payload.start_time.with_timezone(&Local))
+    Ok(payload.start_time.map(|t| t.with_timezone(&Local)))
 }
