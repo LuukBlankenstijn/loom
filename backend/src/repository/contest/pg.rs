@@ -10,7 +10,7 @@ use crate::error::AppError;
 struct ContestRow {
     id: String,
     name: String,
-    start_time: DateTime<Utc>,
+    start_time: Option<DateTime<Utc>>,
     end_time: DateTime<Utc>,
 }
 
