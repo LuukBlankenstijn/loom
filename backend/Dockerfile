@@ -1,30 +1,29 @@
-FROM rust:1.94-bookworm AS builder
+# syntax=docker/dockerfile:1
+FROM lukemathwalker/cargo-chef:0.1.77-rust-1.94-bookworm AS chef
+WORKDIR /src
+
+FROM chef AS planner
+COPY . .
+RUN cd backend && cargo chef prepare --recipe-path /recipe.json
+
+# ── Build ────────────────────────────────────────────────────────
+FROM chef AS builder
 
 ENV SQLX_OFFLINE=true
 
-WORKDIR /src
+# Cook dependencies from recipe (layer is cached unless deps change)
+COPY --from=planner /recipe.json backend/recipe.json
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cd backend && cargo chef cook --release --recipe-path recipe.json
 
-# Cargo dep caching with dummy sources
-COPY backend/Cargo.toml backend/Cargo.lock backend/
-COPY gen/rs/Cargo.toml gen/rs/
-COPY shared/core/Cargo.toml shared/core/
-COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/
-
-RUN mkdir -p backend/src gen/rs/src && \
-    echo "fn main() {}" > backend/src/main.rs && \
-    touch gen/rs/src/lib.rs
-
-RUN cd backend && cargo build --release 2>/dev/null || true
-
-# Copy real sources and build
+# Copy real sources over stubs and build
 COPY gen/rs/ gen/rs/
+COPY shared/ shared/
 COPY backend/src/ backend/src/
 COPY backend/migrations/ backend/migrations/
 COPY backend/.sqlx/ backend/.sqlx/
-COPY shared/core/ shared/core/
-COPY shared/proto-bridge/ shared/proto-bridge/
 
-RUN touch gen/rs/src/lib.rs backend/src/main.rs
 RUN cd backend && cargo build --release
 
 # ── Runtime ──────────────────────────────────────────────────────

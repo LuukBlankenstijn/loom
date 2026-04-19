@@ -1,5 +1,14 @@
-# ── Stage 1: Build map-editor WASM ───────────────────────────────
-FROM rust:1.94-bookworm AS wasm-builder
+# syntax=docker/dockerfile:1
+# ── cargo-chef base ─────────────────────────────────────────────
+FROM lukemathwalker/cargo-chef:0.1.77-rust-1.94-bookworm AS chef
+WORKDIR /src
+
+FROM chef AS planner
+COPY . .
+RUN cd map-editor && cargo chef prepare --recipe-path /recipe.json
+
+# ── Stage 1: Build map-editor WASM ──────────────────────────────
+FROM chef AS wasm-builder
 
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install cargo-binstall && \
@@ -7,35 +16,19 @@ RUN rustup target add wasm32-unknown-unknown && \
     curl -fsSL https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-linux.tar.gz \
       | tar -xz -C /usr/local --strip-components=1
 
-WORKDIR /src
-
-# Cargo dep caching with dummy sources
-COPY map-editor/Cargo.toml map-editor/Cargo.lock map-editor/
-COPY gen/rs/Cargo.toml gen/rs/
-COPY shared/map/Cargo.toml shared/map/
-COPY shared/client/Cargo.toml shared/client/
-COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/
-COPY shared/core/Cargo.toml shared/core/
-
-RUN mkdir -p map-editor/src gen/rs/src shared/map/src && \
-    echo "fn main() {}" > map-editor/src/main.rs && \
-    touch gen/rs/src/lib.rs && \
-    touch shared/map/src/lib.rs
-
-RUN cd map-editor && cargo build --target wasm32-unknown-unknown --release 2>/dev/null || true
+# Cook dependencies from recipe (layer is cached unless deps change)
+COPY --from=planner /recipe.json map-editor/recipe.json
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cd map-editor && cargo chef cook --release --target wasm32-unknown-unknown --recipe-path recipe.json
 
 # Copy real sources and build WASM
 COPY gen/rs/ gen/rs/
-COPY shared/map/ shared/map/
-COPY shared/client/ shared/client/
-COPY shared/core/ shared/core/
-COPY shared/proto-bridge/ shared/proto-bridge/
+COPY shared/ shared/
 COPY map-editor/src/ map-editor/src/
 COPY map-editor/fonts/ map-editor/fonts/
 COPY map-editor/index.html map-editor/
 
-# Force cargo to detect changed sources (Docker COPY preserves original timestamps)
-RUN touch gen/rs/src/lib.rs shared/map/src/lib.rs map-editor/src/main.rs
 RUN cd map-editor && trunk build --release
 
 # ── Stage 2: Build dashboard ────────────────────────────────────
@@ -59,7 +52,7 @@ COPY --from=wasm-builder /src/map-editor/dist/ map-editor/dist/
 
 RUN cd dashboard && pnpm build
 
-# ── Stage 3: Serve with Caddy ────────────────────────────────────
+# ── Stage 3: Serve with Caddy ───────────────────────────────────
 FROM caddy:alpine
 
 COPY <<'EOF' /etc/caddy/Caddyfile
