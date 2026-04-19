@@ -50,10 +50,12 @@ in
       serviceConfig = {
         ExecStart =
           let
-            authFlag = lib.optionalString (cfg.authTokenCommand != null) "--auth $(${cfg.authTokenCommand})";
+            authFlag = lib.optionalString (
+              cfg.authTokenCommand != null
+            ) "--auth-command=${lib.escapeShellArg cfg.authTokenCommand}";
           in
           pkgs.writeShellScript "start-loomd" ''
-            exec ${stationPackage}/bin/loomd --server ${cfg.server} ${authFlag}
+            exec ${stationPackage}/bin/loomd --server ${lib.escapeShellArg cfg.server} ${authFlag}
           '';
         Restart = "on-failure";
         RestartSec = "5s";

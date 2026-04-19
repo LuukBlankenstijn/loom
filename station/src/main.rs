@@ -1,5 +1,4 @@
 use anyhow::Result;
-use clap::Parser;
 use tokio::sync::broadcast;
 use tracing::Level;
 use tracing::error;
@@ -12,26 +11,15 @@ use crate::messages::Message;
 use crate::rpc::RpcClient;
 
 mod command;
+mod config;
 mod dbus;
 mod messages;
 mod rpc;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Server to connect to
-    #[arg(short, long)]
-    server: String,
-
-    /// Secret to use to authenticate with the backend
-    #[arg(short, long)]
-    auth: Option<String>,
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     setup_logging();
-    let args = Args::parse();
+    let args = config::Args::parse_and_resolve()?;
 
     let (tx, _) = broadcast::channel::<Message>(32);
 
