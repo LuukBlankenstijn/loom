@@ -31,7 +31,7 @@ impl IntoProto<pb::Contest> for Contest {
         pb::Contest {
             id: self.id,
             name: self.name,
-            start_time: Some(to_timestamp(self.start_time)),
+            start_time: self.start_time.map(to_timestamp),
             end_time: Some(to_timestamp(self.end_time)),
             map_id: None,
         }

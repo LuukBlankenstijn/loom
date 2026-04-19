@@ -183,7 +183,11 @@ export function ContestPage() {
                 <p className="text-xs text-primary-400 mb-1 uppercase tracking-wide">
                   Start Time
                 </p>
-                <p className="text-gray-200">{formatDate(contest.startTime)}</p>
+                <p className="text-gray-200">
+                  {contest.startTime
+                    ? formatDate(contest.startTime)
+                    : "Delayed"}
+                </p>
               </div>
               <div className="p-4 rounded-lg bg-linear-to-br from-orange-500/10 to-rose-500/10 border border-orange-500/20">
                 <p className="text-xs text-orange-400 mb-1 uppercase tracking-wide">
