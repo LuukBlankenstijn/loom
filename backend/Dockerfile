@@ -1,38 +1,19 @@
 # syntax=docker/dockerfile:1
-FROM lukemathwalker/cargo-chef:0.1.77-rust-1.94-bookworm AS chef
-WORKDIR /src
-
-FROM chef AS planner
-COPY . .
-RUN cd backend && cargo chef prepare --recipe-path /recipe.json
-
 # ── Build ────────────────────────────────────────────────────────
-FROM chef AS builder
+FROM rust:1.94-bookworm AS builder
+WORKDIR /src
 
 ENV SQLX_OFFLINE=true
 
-# Copy Cargo.toml files and stub sources for path dependencies
-COPY backend/Cargo.toml backend/Cargo.toml
-COPY gen/rs/Cargo.toml gen/rs/Cargo.toml
-COPY shared/core/Cargo.toml shared/core/Cargo.toml
-COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/Cargo.toml
-RUN mkdir -p gen/rs/src shared/core/src shared/proto-bridge/src && \
-    touch gen/rs/src/lib.rs shared/core/src/lib.rs shared/proto-bridge/src/lib.rs
-
-# Cook dependencies from recipe (layer is cached unless deps change)
-COPY --from=planner /recipe.json backend/recipe.json
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
-    cd backend && cargo chef cook --release --recipe-path recipe.json
-
-# Copy real sources over stubs and build
 COPY gen/rs/ gen/rs/
 COPY shared/ shared/
-COPY backend/src/ backend/src/
-COPY backend/migrations/ backend/migrations/
-COPY backend/.sqlx/ backend/.sqlx/
+COPY backend/ backend/
 
-RUN cd backend && cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/src/backend/target \
+    cd backend && cargo build --release && \
+    cp target/release/loom-backend /loom-backend
 
 # ── Runtime ──────────────────────────────────────────────────────
 FROM debian:bookworm-slim
@@ -41,7 +22,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/backend/target/release/loom-backend /usr/local/bin/loom-backend
+COPY --from=builder /loom-backend /usr/local/bin/loom-backend
 
 EXPOSE 8080
 
