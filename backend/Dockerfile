@@ -11,6 +11,14 @@ FROM chef AS builder
 
 ENV SQLX_OFFLINE=true
 
+# Copy Cargo.toml files and stub sources for path dependencies
+COPY backend/Cargo.toml backend/Cargo.toml
+COPY gen/rs/Cargo.toml gen/rs/Cargo.toml
+COPY shared/core/Cargo.toml shared/core/Cargo.toml
+COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/Cargo.toml
+RUN mkdir -p gen/rs/src shared/core/src shared/proto-bridge/src && \
+    touch gen/rs/src/lib.rs shared/core/src/lib.rs shared/proto-bridge/src/lib.rs
+
 # Cook dependencies from recipe (layer is cached unless deps change)
 COPY --from=planner /recipe.json backend/recipe.json
 RUN --mount=type=cache,target=/usr/local/cargo/registry \

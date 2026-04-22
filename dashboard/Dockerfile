@@ -16,6 +16,16 @@ RUN rustup target add wasm32-unknown-unknown && \
     curl -fsSL https://github.com/WebAssembly/binaryen/releases/download/version_123/binaryen-version_123-x86_64-linux.tar.gz \
       | tar -xz -C /usr/local --strip-components=1
 
+# Copy Cargo.toml files and stub sources for path dependencies
+COPY map-editor/Cargo.toml map-editor/Cargo.toml
+COPY shared/client/Cargo.toml shared/client/Cargo.toml
+COPY shared/map/Cargo.toml shared/map/Cargo.toml
+COPY shared/core/Cargo.toml shared/core/Cargo.toml
+COPY shared/proto-bridge/Cargo.toml shared/proto-bridge/Cargo.toml
+COPY gen/rs/Cargo.toml gen/rs/Cargo.toml
+RUN mkdir -p shared/client/src shared/map/src shared/core/src shared/proto-bridge/src gen/rs/src && \
+    touch shared/client/src/lib.rs shared/map/src/lib.rs shared/core/src/lib.rs shared/proto-bridge/src/lib.rs gen/rs/src/lib.rs
+
 # Cook dependencies from recipe (layer is cached unless deps change)
 COPY --from=planner /recipe.json map-editor/recipe.json
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
