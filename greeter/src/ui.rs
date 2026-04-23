@@ -132,10 +132,18 @@ impl Greeter {
 
     pub fn update(&mut self, msg: Message) -> Task<Message> {
         match msg {
-            Message::Background(background_message) => self
-                .background
-                .update(background_message)
-                .map(Message::Background),
+            Message::Background(background_message) => {
+                if let BackgroundMessage::GotColor(color) = background_message {
+                    return self
+                        .countdown
+                        .update(CountdownMessage::SetColor(color))
+                        .map(Message::Countdown);
+                }
+
+                self.background
+                    .update(background_message)
+                    .map(Message::Background)
+            }
             Message::Form(form_message) => {
                 if let FormMessage::LoginWithCredentials(username, password) = form_message {
                     return Task::done(

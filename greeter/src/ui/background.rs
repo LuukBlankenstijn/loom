@@ -38,6 +38,7 @@ pub enum BackgroundMessage {
     Data((Option<iced::widget::image::Handle>, Option<Label>)),
     Handle(Option<iced::widget::image::Handle>),
     Label(Option<Label>),
+    GotColor(Option<Color>),
 }
 
 impl From<BackgroundMessage> for Message {
@@ -162,9 +163,11 @@ impl Background {
             BackgroundMessage::Data((handle, label)) => {
                 return Task::batch(vec![
                     Task::done(BackgroundMessage::Handle(handle)),
-                    Task::done(BackgroundMessage::Label(label)),
+                    Task::done(BackgroundMessage::Label(label.clone())),
+                    Task::done(BackgroundMessage::GotColor(label.map(|l| l.color))),
                 ]);
             }
+            BackgroundMessage::GotColor(_) => {} // handled by parent
         }
         Task::none()
     }

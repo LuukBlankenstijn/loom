@@ -8,15 +8,27 @@ use iced::{
 };
 
 use crate::ui::Message;
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Countdown {
     start_time: Option<DateTime<Local>>,
     now: DateTime<Local>,
+    color: Color,
+}
+
+impl Default for Countdown {
+    fn default() -> Self {
+        Self {
+            start_time: Default::default(),
+            now: Default::default(),
+            color: Color::WHITE,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum CountdownMessage {
     SetStartTime(Option<DateTime<Local>>),
+    SetColor(Option<Color>),
     Tick,
     Start,
 }
@@ -63,7 +75,7 @@ impl Countdown {
                             weight: Weight::Bold,
                             ..Default::default()
                         })
-                        .color(Color::WHITE),
+                        .color(self.color),
                 )
                 .center(Length::Fill)
                 .into(),
@@ -107,6 +119,13 @@ impl Countdown {
     pub fn update(&mut self, msg: CountdownMessage) -> Task<CountdownMessage> {
         match msg {
             CountdownMessage::SetStartTime(date_time) => self.start_time = date_time,
+            CountdownMessage::SetColor(color) => {
+                if let Some(color) = color {
+                    self.color = color;
+                } else {
+                    self.color = Color::WHITE;
+                }
+            }
             CountdownMessage::Tick => {
                 self.now = Local::now();
 
