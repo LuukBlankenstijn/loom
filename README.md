@@ -24,5 +24,6 @@ The system exist out of several components:
 - Backend: go connectRPC server, central brain of the system. Has stream connections to the different clients and has some in-memory state about contest machines
 - Greeter: Greetd greeter running on the contest machine
 - Station: systemd service running on team machine written in rust. This acts as the bridge between the backend and the greeter. This is done to make sure the greeter still functions when the rest of the system breaks down.
-- Dashboard: This is the web ui that is used to manage everything. It is written in typescript with a generated connectrpc client
-- map-editor: Map editor iced component. This is compiled to web assembly and embedded into the dashboard. It is also going to be used on the client machine to allow assigning teams to a location on the machine itself.
+- Dashboard: This is the web ui that is used to manage everything. It is written in typescript with a generated connectrpc client. The map editor is an embedded React component (`@loom/map-react`) using Konva for canvas rendering.
+- station-registration: Tauri 2 desktop app that runs on the contest machine. Reuses the shared `@loom/map-react` component to let an operator click their seat and bind the machine's IP to it.
+- shared/map-react: React + Konva map rendering library shared between dashboard (edit mode) and station-registration (view mode + seat overlay).

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use loom_core::team::Team;
 use sqlx::PgPool;
 
-use crate::domain::TeamRepository;
+use crate::domain::{IpChange, TeamRepository};
 use crate::error::AppError;
 
 pub struct PgTeamRepo(PgPool);
@@ -15,7 +15,7 @@ impl PgTeamRepo {
 
 #[async_trait]
 impl TeamRepository for PgTeamRepo {
-    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError> {
+    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<IpChange, AppError> {
         let old_ip = sqlx::query!(
             "SELECT s.ip FROM teams t
              JOIN stations s ON t.team_station = s.id
@@ -51,7 +51,10 @@ impl TeamRepository for PgTeamRepo {
             .execute(&self.0)
             .await?;
 
-            Ok(Some(ip.to_string()))
+            Ok(IpChange {
+                old: old_ip,
+                new: Some(ip.to_string()),
+            })
         } else {
             sqlx::query!(
                 "UPDATE teams SET team_station = NULL WHERE id = $1",
@@ -60,7 +63,10 @@ impl TeamRepository for PgTeamRepo {
             .execute(&self.0)
             .await?;
 
-            Ok(old_ip)
+            Ok(IpChange {
+                old: old_ip,
+                new: None,
+            })
         }
     }
 

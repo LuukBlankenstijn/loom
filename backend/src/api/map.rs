@@ -9,7 +9,7 @@ use tonic::{Request, Response, Status};
 use uuid::Uuid;
 
 use crate::{
-    domain::{MapRepository, Orchestrator},
+    domain::{MapRepository, Orchestrator, TeamRepository},
     error::AppError,
 };
 
@@ -17,6 +17,7 @@ use crate::{
 pub struct MapHandler {
     orchestrator: Arc<dyn Orchestrator>,
     map_repo: Arc<dyn MapRepository>,
+    team_repo: Arc<dyn TeamRepository>,
 }
 
 #[async_trait]
@@ -94,19 +95,33 @@ impl MapService for MapHandler {
         request: Request<pb::AssignStationRequest>,
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
-        let seat_id = req
-            .seat_id
-            .map(|id| {
-                Uuid::try_parse(id.as_ref())
-                    .map_err(|_| AppError::InvalidArgument("invalid seat id".to_string()))
-            })
-            .transpose()?;
-        self.map_repo
-            .assign_station_to_seat(req.station_ip.clone(), seat_id)
+        let seat_id = Uuid::try_parse(&req.seat_id)
+            .map_err(|_| AppError::InvalidArgument("invalid seat id".to_string()))?;
+        let old = self
+            .map_repo
+            .assign_station_to_seat(seat_id, req.station_ip.clone())
             .await?;
 
-        self.orchestrator
-            .broadcast(vec![StationAssignment::from((req.station_ip, seat_id))].into());
+        let team_name = match req.station_ip.as_deref() {
+            Some(ip) => self.team_repo.get_by_ip(ip).await?.map(|t| t.name),
+            None => None,
+        };
+
+        let mut assignments = vec![StationAssignment {
+            seat_id,
+            station_ip: req.station_ip,
+            team_name,
+        }];
+
+        if let Some(old) = old {
+            assignments.push(StationAssignment {
+                seat_id: old,
+                station_ip: None,
+                team_name: None,
+            });
+        }
+
+        self.orchestrator.broadcast(assignments.into());
 
         Ok(().into())
     }

@@ -1,19 +1,21 @@
-use std::{pin::Pin, sync::Arc};
+use std::{collections::HashMap, pin::Pin, sync::Arc};
 
 use derive_more::derive::Constructor;
 use futures::{Stream, StreamExt};
-use loom_core::event::broadcast::BroadcastEvent;
+use loom_core::event::broadcast::{BroadcastEvent, StationAssignment};
 use loom_proto_bridge::IntoProto;
 use loom_rpc::broadcast::v1::broadcast_service_server::BroadcastService;
 use loom_rpc::broadcast::v1::{self as pb, SubscribeBroadcastRequest};
 use tonic::{Request, Response, Status, async_trait};
 
-use crate::domain::{MapRepository, Orchestrator};
+use crate::domain::{ContestRepository, MapRepository, Orchestrator, TeamRepository};
 
 #[derive(Constructor)]
 pub struct BroadcastHandler {
     orchestrator: Arc<dyn Orchestrator>,
     map_repo: Arc<dyn MapRepository>,
+    teams_repo: Arc<dyn TeamRepository>,
+    contest_repo: Arc<dyn ContestRepository>,
 }
 
 #[async_trait]
@@ -46,8 +48,36 @@ impl BroadcastService for BroadcastHandler {
             .types
             .contains(&(pb::BroadcastType::StationAssignments as i32))
         {
-            let state = self.map_repo.get_all_station_assignments(None).await?;
-            let stream = tokio_stream::once(Ok(BroadcastEvent::Assignment(state).into_proto()));
+            let state = self.map_repo.get_all_station_assignments().await?;
+            let contest = self.contest_repo.get_next_contest().await?;
+            let team_name_by_ip: HashMap<String, String> = match contest {
+                Some(contest) => self
+                    .teams_repo
+                    .get_all(&contest.id)
+                    .await?
+                    .into_iter()
+                    .filter_map(|t| t.ip.map(|ip| (ip, t.name)))
+                    .collect(),
+                None => HashMap::new(),
+            };
+
+            let assignments: Vec<StationAssignment> = state
+                .into_iter()
+                .map(|(seat_id, station_ip)| {
+                    let team_name = station_ip
+                        .as_ref()
+                        .and_then(|ip| team_name_by_ip.get(ip).cloned());
+                    StationAssignment {
+                        seat_id,
+                        station_ip,
+                        team_name,
+                    }
+                })
+                .collect();
+
+            let stream = tokio_stream::once(Ok(
+                BroadcastEvent::Assignment(assignments).into_proto()
+            ));
             broadcast_stream = stream.chain(broadcast_stream).boxed();
         }
 

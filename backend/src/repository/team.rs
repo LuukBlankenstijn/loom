@@ -1,7 +1,11 @@
 mod http;
 mod pg;
 
-use crate::{config::IcpcApiConfig, domain::TeamRepository, error::AppError};
+use crate::{
+    config::IcpcApiConfig,
+    domain::{IpChange, TeamRepository},
+    error::AppError,
+};
 use async_trait::async_trait;
 use loom_core::team::Team;
 use sqlx::PgPool;
@@ -23,7 +27,7 @@ impl TeamRepo {
 
 #[async_trait]
 impl TeamRepository for TeamRepo {
-    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError> {
+    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<IpChange, AppError> {
         self.inner.set_ip(team_id, ip).await
     }
 

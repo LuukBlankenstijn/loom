@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE map_element\n                SET station_id = NULL\n                WHERE map_id = $1 AND station_id = $2\n                RETURNING *\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "map_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "element_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "props",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "station_id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "041086c4316fdef24b24a788798206bf29a5a1e7001a8867337ad9d01a7ac0f0"
+}

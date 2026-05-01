@@ -39,13 +39,11 @@ impl TryIntoCore<StationAssignment> for pb::StationAssignment {
     type Error = String;
 
     fn try_into_core(self) -> Result<StationAssignment, String> {
-        let seat_id = self
-            .seat_id
-            .map(|i| Uuid::parse_str(&i).map_err(|_| "invalid uuid".to_string()))
-            .transpose()?;
+        let seat_id = Uuid::parse_str(&self.seat_id).map_err(|_| "invalid uuid".to_string())?;
         Ok(StationAssignment {
-            station_ip: self.ip,
             seat_id,
+            station_ip: self.ip,
+            team_name: self.team_name,
         })
     }
 }
@@ -54,7 +52,8 @@ impl IntoProto<pb::StationAssignment> for StationAssignment {
     fn into_proto(self) -> pb::StationAssignment {
         pb::StationAssignment {
             ip: self.station_ip,
-            seat_id: self.seat_id.map(|uuid| uuid.to_string()),
+            team_name: self.team_name,
+            seat_id: self.seat_id.to_string(),
         }
     }
 }
@@ -64,24 +63,20 @@ impl TryIntoCore<BroadcastEvent> for pb::BroadcastEvent {
 
     fn try_into_core(self) -> Result<BroadcastEvent, String> {
         let event = match self.message.ok_or("no message found")? {
-            pb::broadcast_event::Message::StationsState(update) => {
-                BroadcastEvent::Connection(
-                    update
-                        .state
-                        .into_iter()
-                        .map(StationConnectionState::from_proto)
-                        .collect(),
-                )
-            }
-            pb::broadcast_event::Message::StationAssignments(update) => {
-                BroadcastEvent::Assignment(
-                    update
-                        .updates
-                        .into_iter()
-                        .filter_map(|u| u.try_into_core().ok())
-                        .collect(),
-                )
-            }
+            pb::broadcast_event::Message::StationsState(update) => BroadcastEvent::Connection(
+                update
+                    .state
+                    .into_iter()
+                    .map(StationConnectionState::from_proto)
+                    .collect(),
+            ),
+            pb::broadcast_event::Message::StationAssignments(update) => BroadcastEvent::Assignment(
+                update
+                    .updates
+                    .into_iter()
+                    .filter_map(|u| u.try_into_core().ok())
+                    .collect(),
+            ),
         };
         Ok(event)
     }

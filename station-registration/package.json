@@ -1,0 +1,36 @@
+{
+  "name": "@loom/station-registration",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsgo --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsgo --noEmit",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.11.0",
+    "@connectrpc/connect": "^2.1.1",
+    "@connectrpc/connect-web": "^2.1.1",
+    "@loom/gen": "workspace:*",
+    "@loom/map-react": "workspace:*",
+    "konva": "^9.3.18",
+    "react-konva": "^19.0.7",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-cli": "^2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260501.1",
+    "@vitejs/plugin-react": "^5.0.5",
+    "tailwindcss": "^4.1.18",
+    "vite": "^7.3.1"
+  }
+}

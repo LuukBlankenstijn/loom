@@ -5,6 +5,7 @@ import { TeamsPage } from "./pages/TeamsPage";
 import { StationsPage } from "./pages/StationsPage";
 import { MapsPage } from "./pages/MapsPage";
 import { MapEditorPage } from "./pages/MapEditorPage";
+import { MapViewerPage } from "./pages/MapViewerPage";
 import { CommandProvider } from "./context/command";
 import { StationsProvider } from "./context/station";
 
@@ -22,6 +23,7 @@ function App() {
             </Route>
             {/* Editor is outside layout - needs full screen for WASM canvas */}
             <Route path="/maps/:mapId/edit" element={<MapEditorPage />} />
+            <Route path="/maps/:mapId/view" element={<MapViewerPage />} />
           </Routes>
         </BrowserRouter>
       </StationsProvider>

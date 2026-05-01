@@ -65,6 +65,19 @@
             };
             cargoLock = ./station/Cargo.lock;
           };
+          loom-station-registration = pkgs.callPackage ./station-registration/nix/package.nix {
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = pkgs.lib.fileset.unions [
+                ./station-registration
+                ./gen/ts
+                ./shared/map-react
+                ./dashboard/package.json
+                ./pnpm-workspace.yaml
+                ./pnpm-lock.yaml
+              ];
+            };
+          };
         };
       }
     )

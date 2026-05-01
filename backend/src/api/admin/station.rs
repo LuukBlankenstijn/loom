@@ -1,6 +1,7 @@
 use derive_more::derive::Constructor;
 use futures::{Stream, future::try_join_all};
 use loom_core::event::admin::AdminEvent;
+use loom_core::event::broadcast::StationAssignment;
 use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::admin::v1::{
     self as pb, AssignTeamRequest, CommandOutputRequest, DeleteStationRequest,
@@ -10,13 +11,16 @@ use std::{pin::Pin, sync::Arc};
 use tokio_stream::StreamExt as _;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, Orchestrator, StationRepository, TeamRepository};
+use crate::domain::{
+    ContestRepository, MapRepository, Orchestrator, StationRepository, TeamRepository,
+};
 
 #[derive(Constructor)]
 pub struct StationHandler {
     contest_repo: Arc<dyn ContestRepository>,
     station_repo: Arc<dyn StationRepository>,
     team_repo: Arc<dyn TeamRepository>,
+    map_repo: Arc<dyn MapRepository>,
     orchestrator: Arc<dyn Orchestrator>,
 }
 
@@ -40,6 +44,16 @@ impl StationService for StationHandler {
         let station = self.station_repo.get(&req.ip).await?;
         if let Ok(Some(team)) = self.team_repo.get_by_ip(&station.ip).await {
             self.team_repo.set_ip(&team.id, None).await?;
+            if let Some(seat_id) = self.map_repo.get_seat_id_by_ip(&station.ip).await? {
+                self.orchestrator.broadcast(
+                    vec![StationAssignment {
+                        seat_id,
+                        station_ip: Some(station.ip.clone()),
+                        team_name: None,
+                    }]
+                    .into(),
+                );
+            }
         }
         self.station_repo.delete(&req.ip).await?;
 
@@ -86,7 +100,12 @@ impl StationService for StationHandler {
                 let station_ip = station.ip.clone();
                 updated_ips.push(station_ip.clone());
 
-                let fut = async move { self.team_repo.set_ip(&team_id, Some(&station_ip)).await };
+                let fut = async move {
+                    self.team_repo
+                        .set_ip(&team_id, Some(&station_ip))
+                        .await
+                        .map(|_| ())
+                };
                 update_futures.push(Box::pin(fut));
             }
         }
@@ -98,6 +117,21 @@ impl StationService for StationHandler {
         }
         let sync_refs: Vec<&str> = updated_ips.iter().map(|s| s.as_str()).collect();
         self.orchestrator.sync_stations(&sync_refs);
+
+        let mut assignments: Vec<StationAssignment> = Vec::new();
+        for ip in &updated_ips {
+            if let Some(seat_id) = self.map_repo.get_seat_id_by_ip(ip).await? {
+                let team_name = self.team_repo.get_by_ip(ip).await?.map(|t| t.name);
+                assignments.push(StationAssignment {
+                    seat_id,
+                    station_ip: Some(ip.clone()),
+                    team_name,
+                });
+            }
+        }
+        if !assignments.is_empty() {
+            self.orchestrator.broadcast(assignments.into());
+        }
 
         Ok(Response::new(()))
     }

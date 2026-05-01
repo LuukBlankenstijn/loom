@@ -1,19 +1,39 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import {
+  MapEditor,
+  fromProtoElements,
+  toProtoElements,
+  type MapChanges,
+} from "@loom/map-react";
 import { adminClient } from "../lib/client";
 
 export function MapEditorPage() {
   const { mapId } = useParams<{ mapId: string }>();
+  const id = Number(mapId);
 
   const { data: mapsData } = useQuery({
     queryKey: ["maps"],
     queryFn: () => adminClient.getAllMaps(),
   });
 
-  const map = mapsData?.maps.find((m) => m.id === Number(mapId));
+  const map = mapsData?.maps.find((m) => m.id === id);
 
-  // Build the editor URL with the map ID as a query parameter
-  const editorUrl = `/editor/?mapId=${mapId}`;
+  const { data: mapData, isLoading } = useQuery({
+    queryKey: ["map", id],
+    queryFn: () => adminClient.getMap(id),
+    enabled: Number.isFinite(id),
+  });
+
+  const handleSave = async (changes: MapChanges) => {
+    await adminClient.updateMap(
+      id,
+      changes.deleted,
+      toProtoElements(changes.updated),
+    );
+  };
+
+  const initialElements = mapData ? fromProtoElements(mapData.elements) : [];
 
   return (
     <div className="h-screen flex flex-col bg-surface-900">
@@ -62,11 +82,16 @@ export function MapEditorPage() {
         </div>
       </div>
       <div className="flex-1 relative">
-        <iframe
-          src={editorUrl}
-          className="absolute inset-0 w-full h-full border-0"
-          title="Map Editor"
-        />
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            Loading map…
+          </div>
+        ) : (
+          <MapEditor
+            initialElements={initialElements}
+            onSave={handleSave}
+          />
+        )}
       </div>
     </div>
   );

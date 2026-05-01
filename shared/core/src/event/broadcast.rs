@@ -10,8 +10,9 @@ pub struct StationConnectionState {
 
 #[derive(Debug, Clone)]
 pub struct StationAssignment {
-    pub station_ip: String,
-    pub seat_id: Option<Uuid>,
+    pub seat_id: Uuid,
+    pub station_ip: Option<String>,
+    pub team_name: Option<String>,
 }
 
 impl From<(String, bool, bool)> for StationConnectionState {
@@ -24,11 +25,12 @@ impl From<(String, bool, bool)> for StationConnectionState {
     }
 }
 
-impl From<(String, Option<Uuid>)> for StationAssignment {
-    fn from(value: (String, Option<Uuid>)) -> Self {
+impl From<(Uuid, Option<String>)> for StationAssignment {
+    fn from(value: (Uuid, Option<String>)) -> Self {
         Self {
-            station_ip: value.0,
-            seat_id: value.1,
+            seat_id: value.0,
+            station_ip: value.1,
+            team_name: None,
         }
     }
 }

@@ -1,3 +1,5 @@
 packages:
   - dashboard
   - gen/ts
+  - shared/map-react
+  - station-registration

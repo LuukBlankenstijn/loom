@@ -70,6 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             contest_repo.clone(),
             station_repo.clone(),
             team_repo.clone(),
+            map_repo.clone(),
             orchestrator.clone(),
         ),
         interceptor.clone(),
@@ -78,17 +79,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         api::admin::TeamHandler::new(
             contest_repo.clone(),
             team_repo.clone(),
+            map_repo.clone(),
             orchestrator.clone(),
         ),
         interceptor.clone(),
     );
     let map_service = MapServiceServer::with_interceptor(
-        api::map::MapHandler::new(orchestrator.clone(), map_repo.clone()),
+        api::map::MapHandler::new(
+            orchestrator.clone(),
+            map_repo.clone(),
+            team_repo.clone(),
+        ),
         interceptor.clone(),
     );
 
     let broadcast_service = BroadcastServiceServer::with_interceptor(
-        api::broadcast::BroadcastHandler::new(orchestrator.clone(), map_repo.clone()),
+        api::broadcast::BroadcastHandler::new(
+            orchestrator.clone(),
+            map_repo.clone(),
+            team_repo.clone(),
+            contest_repo.clone(),
+        ),
         interceptor.clone(),
     );
     let station_stream_service = station_service_server::StationServiceServer::with_interceptor(

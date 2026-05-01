@@ -1,8 +1,5 @@
 use async_trait::async_trait;
-use loom_core::{
-    event::broadcast::StationAssignment,
-    map::{Map, MapElement, MapMetadata},
-};
+use loom_core::map::{Map, MapElement, MapMetadata};
 use uuid::Uuid;
 
 use crate::error::AppError;
@@ -22,11 +19,9 @@ pub trait MapRepository: Send + Sync {
 
     async fn assign_station_to_seat(
         &self,
-        station_ip: String,
-        seat_id: Option<Uuid>,
-    ) -> Result<(), AppError>;
-    async fn get_all_station_assignments(
-        &self,
-        map_id: Option<i32>,
-    ) -> Result<Vec<StationAssignment>, AppError>;
+        seat_id: Uuid,
+        station_id: Option<String>,
+    ) -> Result<Option<Uuid>, AppError>;
+    async fn get_all_station_assignments(&self) -> Result<Vec<(Uuid, Option<String>)>, AppError>;
+    async fn get_seat_id_by_ip(&self, ip: &str) -> Result<Option<Uuid>, AppError>;
 }

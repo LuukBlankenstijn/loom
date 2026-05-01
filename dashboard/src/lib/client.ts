@@ -18,9 +18,13 @@ import {
 import { TeamService, type TeamsResponse } from "@client/v1/admin/team_pb";
 import {
   MapService,
+  GetMapRequestSchema,
+  UpdateMapRequestSchema,
+  AssignStationRequestSchema,
   type GetAllMapMetadataResponse,
   type MapResponse,
 } from "@client/v1/map/map_pb";
+import type { Element as ProtoElement } from "@client/v1/map/types_pb";
 import {
   BroadcastService,
   BroadcastType,
@@ -116,14 +120,33 @@ export const adminClient = {
   createMap: async (name: string): Promise<MapResponse> => {
     return await map_client.createMap({ name });
   },
+  getMap: async (id: number): Promise<MapResponse> => {
+    return await map_client.getMap(create(GetMapRequestSchema, { id }));
+  },
+  updateMap: async (
+    id: number,
+    deleted: string[],
+    updated: ProtoElement[],
+  ): Promise<void> => {
+    await map_client.updateMap(
+      create(UpdateMapRequestSchema, { id, deleted, updated }),
+    );
+  },
+  assignStationToSeat: async (
+    seatId: string,
+    stationIp: string | undefined,
+  ): Promise<void> => {
+    await map_client.assignStationToSeat(
+      create(AssignStationRequestSchema, { seatId, stationIp }),
+    );
+  },
 
   subscribe: async function* (
     signal?: AbortSignal,
+    types: BroadcastType[] = [BroadcastType.CONNECTION_STATE],
   ): AsyncIterable<BroadcastEvent> {
     const stream = broadcast_client.subscribe(
-      create(SubscribeBroadcastRequestSchema, {
-        types: [BroadcastType.CONNECTION_STATE],
-      }),
+      create(SubscribeBroadcastRequestSchema, { types }),
       { signal },
     );
 

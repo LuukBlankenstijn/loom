@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "loom-station-registration",
+  "version": "0.1.0",
+  "identifier": "com.loom.station-registration",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Loom Station Registration",
+        "width": 1100,
+        "height": 750,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  },
+  "plugins": {
+    "cli": {
+      "args": [
+        {
+          "name": "server",
+          "short": "s",
+          "takesValue": true,
+          "description": "Backend server URL"
+        },
+        {
+          "name": "auth",
+          "short": "a",
+          "takesValue": true,
+          "description": "Auth token"
+        },
+        {
+          "name": "ip",
+          "short": "i",
+          "takesValue": true,
+          "description": "Override detected local IP (debug)"
+        }
+      ]
+    }
+  }
+}

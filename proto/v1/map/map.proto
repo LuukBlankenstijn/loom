@@ -30,8 +30,8 @@ message UpdateMapRequest {
 }
 
 message AssignStationRequest {
-  string station_ip = 1;
-  optional string seat_id = 2;
+  string seat_id = 2;
+  optional string station_ip = 1;
 }
 
 service MapService {

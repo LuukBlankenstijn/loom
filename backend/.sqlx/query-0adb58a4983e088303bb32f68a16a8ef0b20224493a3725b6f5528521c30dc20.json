@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT e.id FROM map_element as e\n            INNER JOIN stations AS s ON s.id = e.station_id\n            WHERE s.ip = $1 AND e.element_type = 'Seat'\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0adb58a4983e088303bb32f68a16a8ef0b20224493a3725b6f5528521c30dc20"
+}

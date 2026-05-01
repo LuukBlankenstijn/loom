@@ -3,7 +3,7 @@ use loom_core::team::Team;
 use serde::Deserialize;
 
 use crate::config::IcpcApiConfig;
-use crate::domain::TeamRepository;
+use crate::domain::{IpChange, TeamRepository};
 use crate::error::AppError;
 
 pub struct HttpTeamRepo {
@@ -100,14 +100,15 @@ impl TeamRepository for HttpTeamRepo {
             .collect())
     }
 
-    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<Option<String>, AppError> {
+    async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<IpChange, AppError> {
         let users = self.get_users().await?;
         let new_ip = ip.unwrap_or("");
 
         let old_ip = users
             .iter()
             .find(|u| u.team_id.as_deref() == Some(team_id))
-            .and_then(|u| u.ip.clone());
+            .and_then(|u| u.ip.clone())
+            .filter(|s| !s.is_empty());
 
         if !new_ip.is_empty() {
             for u in &users {
@@ -171,11 +172,10 @@ impl TeamRepository for HttpTeamRepo {
             h.await.map_err(|e| AppError::Internal(e.to_string()))??;
         }
 
-        if ip.is_some() {
-            Ok(Some(new_ip.to_string()))
-        } else {
-            Ok(old_ip)
-        }
+        Ok(IpChange {
+            old: old_ip,
+            new: ip.map(|s| s.to_string()),
+        })
     }
 
     async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {

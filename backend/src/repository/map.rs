@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use loom_core::event::broadcast::StationAssignment;
 use loom_core::map::door::Door;
 use loom_core::map::seat::Seat;
 use loom_core::map::wall::Wall;
@@ -240,64 +239,102 @@ impl MapRepository for MapRepo {
 
     async fn assign_station_to_seat(
         &self,
-        station_ip: String,
-        seat_id: Option<Uuid>,
-    ) -> Result<(), AppError> {
-        // check if station exists
-        let station = sqlx::query!("SELECT * FROM stations WHERE ip = ($1)", station_ip)
-            .fetch_one(&self.0)
-            .await?;
-        if let Some(seat_id) = seat_id {
-            // check if the elment exists and is of the correct type
-            let element = sqlx::query!("SELECT * FROM map_element WHERE id = ($1)", seat_id)
-                .fetch_one(&self.0)
-                .await?;
-            if element.element_type != "Seat" {
-                return Err(AppError::InvalidArgument(
-                    "Element is not of type seat".to_string(),
-                ));
-            }
-            // assign station
-            sqlx::query!(
-                "UPDATE map_element SET station_id = ($2) WHERE id = ($1)",
-                element.id,
-                station.id
-            )
-            .execute(&self.0)
-            .await?;
-        } else {
-            sqlx::query!(
-                "UPDATE map_element SET station_id = NULL WHERE station_id = ($1)",
-                station.id
-            )
-            .execute(&self.0)
-            .await?;
-        }
+        seat_id: Uuid,
+        station_ip: Option<String>,
+    ) -> Result<Option<Uuid>, AppError> {
+        // check seat
+        let Some(seat) = sqlx::query!(
+            "SELECT * FROM map_element WHERE id = $1 AND element_type = \'Seat\'",
+            seat_id
+        )
+        .fetch_optional(&self.0)
+        .await?
+        else {
+            return Err(AppError::NotFound("seat not found".to_string()));
+        };
 
-        Ok(())
+        if let Some(station_ip) = station_ip {
+            let mut tx = self.0.begin().await?;
+            let station = sqlx::query!(
+                r#"
+                    SELECT * FROM stations
+                    WHERE ip = $1
+                "#,
+                station_ip
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+
+            let old = sqlx::query!(
+                r#"
+                UPDATE map_element
+                SET station_id = NULL
+                WHERE map_id = $1 AND station_id = $2
+                RETURNING *
+                "#,
+                seat.map_id,
+                station.id,
+            )
+            .fetch_optional(&mut *tx)
+            .await?;
+
+            sqlx::query!(
+                r#"
+                UPDATE map_element
+                SET station_id = $1
+                WHERE id = $2
+                "#,
+                station.id,
+                seat.id
+            )
+            .execute(&mut *tx)
+            .await?;
+            tx.commit().await?;
+            if let Some(old) = old {
+                Ok(Some(old.id))
+            } else {
+                Ok(None)
+            }
+        } else {
+            // remove current assignment
+            sqlx::query!(
+                r#"
+                    UPDATE map_element SET station_id = NULL WHERE id = $1
+                "#,
+                seat.id
+            )
+            .execute(&self.0)
+            .await?;
+
+            Ok(Some(seat.id))
+        }
     }
 
-    async fn get_all_station_assignments(
-        &self,
-        map_id: Option<i32>,
-    ) -> Result<Vec<StationAssignment>, AppError> {
+    async fn get_all_station_assignments(&self) -> Result<Vec<(Uuid, Option<String>)>, AppError> {
         let rows = sqlx::query!(
             "
-            SELECT s.ip, e.id FROM map_element AS e 
-            INNER JOIN stations AS s ON e.station_id = s.id 
-            WHERE ($1::int4 IS NULL OR e.map_id = $1)
+            SELECT e.id, s.ip FROM map_element as e
+            INNER JOIN stations AS s ON s.id = e.station_id
             ",
-            map_id
         )
         .fetch_all(&self.0)
         .await?;
 
-        Ok(rows
-            .into_iter()
-            .map(|r| StationAssignment {
-                station_ip: r.ip,
-                seat_id: Some(r.id),
-            })
-            .collect())
+        Ok(rows.into_iter().map(|r| (r.id, Some(r.ip))).collect())
+    }
+
+    async fn get_seat_id_by_ip(&self, ip: &str) -> Result<Option<Uuid>, AppError> {
+        let row = sqlx::query!(
+            "
+            SELECT e.id FROM map_element as e
+            INNER JOIN stations AS s ON s.id = e.station_id
+            WHERE s.ip = $1 AND e.element_type = 'Seat'
+            ",
+            ip
+        )
+        .fetch_optional(&self.0)
+        .await?;
+
+        Ok(row.map(|r| r.id))
     }
 }

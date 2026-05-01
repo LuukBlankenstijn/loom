@@ -11,10 +11,12 @@ pub struct StationState {
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct StationAssignment {
-    #[prost(string, tag="1")]
-    pub ip: ::prost::alloc::string::String,
-    #[prost(string, optional, tag="2")]
-    pub seat_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, tag="2")]
+    pub seat_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="1")]
+    pub ip: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="3")]
+    pub team_name: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StationStateUpdate {

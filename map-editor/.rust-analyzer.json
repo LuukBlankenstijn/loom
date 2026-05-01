@@ -1,9 +1,0 @@
-{
-  "cargo": {
-    "target": "wasm32-unknown-unknown"
-  },
-  "check": {
-    "command": "check",
-    "extraArgs": ["--target", "wasm32-unknown-unknown"]
-  }
-}

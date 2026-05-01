@@ -9,8 +9,9 @@ message StationState {
 }
 
 message StationAssignment {
-  string ip = 1;
-  optional string seat_id = 2;
+  string seat_id = 2;
+  optional string ip = 1;
+  optional string team_name = 3;
 }
 
 message StationStateUpdate {
