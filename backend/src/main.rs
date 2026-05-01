@@ -22,6 +22,7 @@ mod config;
 mod domain;
 mod error;
 mod orchestrator;
+mod render;
 mod repository;
 
 #[tokio::main]
@@ -107,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
 
-    let wallpaper_handler = api::http::HttpHandlerState::new(contest_repo, team_repo);
+    let wallpaper_handler = api::http::HttpHandlerState::new(contest_repo, team_repo, map_repo);
 
     let grpc_router = tonic::service::Routes::builder()
         .add_service(contest_service)
@@ -125,6 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/wallpaper", get(api::http::wallpaper_handler))
         .route("/next-contest", get(api::http::next_contest))
         .route("/team-info/{ip}", get(api::http::team_info))
+        .route("/map-image", get(api::http::map_image))
         .with_state(wallpaper_handler)
         .merge(grpc_router)
         .layer(CorsLayer::permissive());

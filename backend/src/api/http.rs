@@ -13,14 +13,17 @@ use serde::Deserialize;
 use tokio_stream::StreamExt as _;
 
 use crate::{
-    domain::{ContestRepository, TeamRepository},
+    domain::{ContestRepository, MapRepository, TeamRepository},
     error::AppError,
+    render,
 };
+use loom_core::map::MapElement;
 
 #[derive(Clone, Constructor)]
 pub struct HttpHandlerState {
     contest_repo: Arc<dyn ContestRepository>,
     team_repo: Arc<dyn TeamRepository>,
+    map_repo: Arc<dyn MapRepository>,
 }
 
 #[derive(Deserialize)]
@@ -95,4 +98,46 @@ pub async fn team_info(
     Ok(Json(serde_json::json!({
         "name": team.name
     })))
+}
+
+#[derive(Deserialize)]
+pub struct MapImageParams {
+    pub ip: Option<String>,
+    pub contest_id: Option<String>,
+}
+
+pub async fn map_image(
+    State(state): State<HttpHandlerState>,
+    Query(query): Query<MapImageParams>,
+) -> Result<impl IntoResponse, AppError> {
+    let contest_id = if let Some(id) = query.contest_id {
+        id
+    } else {
+        state
+            .contest_repo
+            .get_next_contest()
+            .await?
+            .map(|c| c.id)
+            .ok_or_else(|| AppError::NotFound("no upcoming contest found".to_string()))?
+    };
+
+    let map = state
+        .map_repo
+        .get_by_contest(&contest_id)
+        .await?
+        .ok_or_else(|| AppError::NotFound(format!("no map for contest {contest_id}")))?;
+
+    let highlight_seat_id = query.ip.as_deref().and_then(|ip| {
+        map.elements.iter().find_map(|el| match el {
+            MapElement::Seat(s) if s.ip.as_deref() == Some(ip) => Some(s.id),
+            _ => None,
+        })
+    });
+
+    let png = render::render_map_png(&map, highlight_seat_id)?;
+
+    Response::builder()
+        .header(header::CONTENT_TYPE, "image/png")
+        .body(Body::from(png))
+        .map_err(|e| AppError::Internal(e.to_string()))
 }
