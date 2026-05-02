@@ -86,10 +86,9 @@ export function ContestPage() {
   const formatDate = (timestamp: Timestamp | undefined) => {
     if (!timestamp) return "N/A";
     const date = timestampDate(timestamp);
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(undefined, {
       dateStyle: "long",
       timeStyle: "short",
-      timeZone: "UTC",
     }).format(date);
   };
 
