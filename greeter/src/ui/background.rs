@@ -107,8 +107,8 @@ impl Background {
 
         let label_element = if is_wallpaper_valid {
             self.label.as_ref().map(|label| {
-                container(text(&label.text).color(label.color).size(40).font(Font {
-                    weight: Weight::Bold,
+                container(text(&label.text).color(label.color).size(70).font(Font {
+                    weight: Weight::ExtraBold,
                     ..Default::default()
                 }))
                 .center(Length::Fill)
