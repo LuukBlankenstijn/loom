@@ -109,4 +109,22 @@ impl TeamRepository for PgTeamRepo {
             ip: Some(r.ip),
         }))
     }
+
+    async fn get(&self, id: &str) -> Result<Option<Team>, AppError> {
+        let row = sqlx::query!(
+            r#"SELECT t.id, t.name, s.ip as "ip?"
+             FROM teams t
+             LEFT JOIN stations s ON t.team_station = s.id
+             WHERE t.id = $1"#,
+            id
+        )
+        .fetch_optional(&self.0)
+        .await?;
+
+        Ok(row.map(|r| Team {
+            id: r.id,
+            name: r.name,
+            ip: r.ip,
+        }))
+    }
 }

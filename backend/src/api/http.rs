@@ -103,6 +103,7 @@ pub async fn team_info(
 #[derive(Deserialize)]
 pub struct MapImageParams {
     pub ip: Option<String>,
+    pub team_id: Option<String>,
     pub contest_id: Option<String>,
 }
 
@@ -127,7 +128,19 @@ pub async fn map_image(
         .await?
         .ok_or_else(|| AppError::NotFound(format!("no map for contest {contest_id}")))?;
 
-    let highlight_seat_id = query.ip.as_deref().and_then(|ip| {
+    let target_ip: Option<String> = if let Some(ip) = query.ip {
+        Some(ip)
+    } else if let Some(team_id) = query.team_id {
+        state
+            .team_repo
+            .get(&team_id)
+            .await?
+            .and_then(|t| t.ip)
+    } else {
+        None
+    };
+
+    let highlight_seat_id = target_ip.as_deref().and_then(|ip| {
         map.elements.iter().find_map(|el| match el {
             MapElement::Seat(s) if s.ip.as_deref() == Some(ip) => Some(s.id),
             _ => None,

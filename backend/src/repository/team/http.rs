@@ -213,4 +213,38 @@ impl TeamRepository for HttpTeamRepo {
             ip: Some(ip.to_string()),
         }))
     }
+
+    async fn get(&self, id: &str) -> Result<Option<Team>, AppError> {
+        let contests_url = format!("{}/api/v4/contests", self.config.base_url);
+        let (contests, users): (Vec<ApiContestRef>, Vec<ApiUser>) =
+            tokio::try_join!(self.get_json(&contests_url), self.get_users())?;
+
+        let ip = users
+            .iter()
+            .find(|u| u.team_id.as_deref() == Some(id))
+            .and_then(|u| u.ip.clone())
+            .filter(|s| !s.is_empty());
+
+        for contest in contests {
+            let url = format!(
+                "{}/api/v4/contests/{}/teams",
+                self.config.base_url, contest.id
+            );
+            if let Ok(teams) = self.get_json::<Vec<ApiTeam>>(&url).await
+                && let Some(t) = teams.into_iter().find(|t| t.id == id)
+            {
+                return Ok(Some(Team {
+                    id: t.id,
+                    name: t.name,
+                    ip,
+                }));
+            }
+        }
+
+        Ok(Some(Team {
+            id: id.to_string(),
+            name: String::new(),
+            ip,
+        }))
+    }
 }

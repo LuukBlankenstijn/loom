@@ -38,4 +38,8 @@ impl TeamRepository for TeamRepo {
     async fn get_by_ip(&self, ip: &str) -> Result<Option<Team>, AppError> {
         self.inner.get_by_ip(ip).await
     }
+
+    async fn get(&self, id: &str) -> Result<Option<Team>, AppError> {
+        self.inner.get(id).await
+    }
 }
