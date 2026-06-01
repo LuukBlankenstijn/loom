@@ -3,3 +3,5 @@ packages:
   - gen/ts
   - shared/map-react
   - station-registration
+allowBuilds:
+  esbuild: true

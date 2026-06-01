@@ -7,7 +7,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /src
 
 # pnpm dep caching
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY pnpm-*.yaml ./
 COPY dashboard/package.json dashboard/
 COPY gen/ts/package.json gen/ts/
 COPY shared/map-react/package.json shared/map-react/
