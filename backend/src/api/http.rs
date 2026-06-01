@@ -13,7 +13,7 @@ use serde::Deserialize;
 use tokio_stream::StreamExt as _;
 
 use crate::{
-    domain::{ContestRepository, MapRepository, TeamRepository},
+    domain::{ContestRepository, MapRepository, Orchestrator, TeamRepository},
     error::AppError,
     render,
 };
@@ -24,6 +24,7 @@ pub struct HttpHandlerState {
     contest_repo: Arc<dyn ContestRepository>,
     team_repo: Arc<dyn TeamRepository>,
     map_repo: Arc<dyn MapRepository>,
+    orchestrator: Arc<dyn Orchestrator>,
 }
 
 #[derive(Deserialize)]
@@ -100,6 +101,25 @@ pub async fn team_info(
     })))
 }
 
+pub async fn station_inventory(
+    State(state): State<HttpHandlerState>,
+) -> Result<impl IntoResponse, AppError> {
+    Ok(Json(
+        state
+            .orchestrator
+            .get_state()
+            .into_iter()
+            .filter_map(|state_entry| {
+                if state_entry.connected {
+                    Some(state_entry.ip)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>(),
+    ))
+}
+
 #[derive(Deserialize)]
 pub struct MapImageParams {
     pub ip: Option<String>,
@@ -131,11 +151,7 @@ pub async fn map_image(
     let target_ip: Option<String> = if let Some(ip) = query.ip {
         Some(ip)
     } else if let Some(team_id) = query.team_id {
-        state
-            .team_repo
-            .get(&team_id)
-            .await?
-            .and_then(|t| t.ip)
+        state.team_repo.get(&team_id).await?.and_then(|t| t.ip)
     } else {
         None
     };

@@ -94,7 +94,7 @@ impl DbusClient {
     async fn handle_message(&self, msg: Message) -> Result<()> {
         match msg {
             Message::SyncWallpaper => {
-                let mut source = format!("{}/wallpaper", self.server_address.clone());
+                let mut source = format!("{}/api/wallpaper", self.server_address.clone());
                 if let Ok(ip) = local_ip() {
                     source = format!("{}?ip={}", source, ip)
                 }
@@ -102,7 +102,7 @@ impl DbusClient {
                 self.proxy.set_wallpaper_source(source).await?;
             }
             Message::SetContestUrl => {
-                let url = format!("{}/next-contest", self.server_address.clone());
+                let url = format!("{}/api/next-contest", self.server_address.clone());
                 debug!("setting contest url to {}", url);
                 self.proxy.set_api_poller_url(url).await?;
             }

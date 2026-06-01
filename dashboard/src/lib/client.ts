@@ -34,7 +34,7 @@ import {
 import { SESSION_ID } from "../session";
 
 const transport = createGrpcWebTransport({
-  baseUrl: "/api",
+  baseUrl: "/rpc",
 });
 
 const contest_client = createClient(ContestService, transport);

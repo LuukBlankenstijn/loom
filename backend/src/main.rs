@@ -86,11 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
     let map_service = MapServiceServer::with_interceptor(
-        api::map::MapHandler::new(
-            orchestrator.clone(),
-            map_repo.clone(),
-            team_repo.clone(),
-        ),
+        api::map::MapHandler::new(orchestrator.clone(), map_repo.clone(), team_repo.clone()),
         interceptor.clone(),
     );
 
@@ -108,7 +104,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
 
-    let wallpaper_handler = api::http::HttpHandlerState::new(contest_repo, team_repo, map_repo);
+    let wallpaper_handler =
+        api::http::HttpHandlerState::new(contest_repo, team_repo, map_repo, orchestrator.clone());
 
     let grpc_router = tonic::service::Routes::builder()
         .add_service(contest_service)
@@ -122,12 +119,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_axum_router()
         .layer(tonic_web::GrpcWebLayer::new());
 
-    let routes = Router::new()
+    let http_routes = Router::new()
         .route("/wallpaper", get(api::http::wallpaper_handler))
         .route("/next-contest", get(api::http::next_contest))
         .route("/team-info/{ip}", get(api::http::team_info))
         .route("/map-image", get(api::http::map_image))
-        .with_state(wallpaper_handler)
+        .route("/inventory", get(api::http::station_inventory))
+        .with_state(wallpaper_handler);
+
+    let routes = Router::new()
+        .nest("/api", http_routes)
         .merge(grpc_router)
         .layer(CorsLayer::permissive());
 
