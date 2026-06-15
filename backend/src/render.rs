@@ -7,13 +7,8 @@ use crate::error::AppError;
 const IMAGE_W: u32 = 1200;
 const IMAGE_H: u32 = 800;
 const PADDING: f32 = 60.0;
-const STROKE_WALL: f32 = 3.0;
+const STROKE_WALL: f32 = 6.0;
 const STROKE_SEAT: f32 = 2.0;
-
-const PIN_HEAD_R: f32 = 14.0;
-const PIN_INNER_R: f32 = 5.0;
-const PIN_HEIGHT: f32 = 38.0;
-const PIN_OUTLINE: f32 = 2.5;
 
 pub fn render_map_png(map: &Map, highlight_seat_id: Option<Uuid>) -> Result<Vec<u8>, AppError> {
     let points = collect_points(map);
@@ -40,8 +35,6 @@ pub fn render_map_png(map: &Map, highlight_seat_id: Option<Uuid>) -> Result<Vec<
     let mut paint = Paint::default();
     paint.set_color(Color::BLACK);
     paint.anti_alias = true;
-
-    let mut highlight: Option<(f32, f32)> = None;
 
     for el in &map.elements {
         match el {
@@ -75,98 +68,35 @@ pub fn render_map_png(map: &Map, highlight_seat_id: Option<Uuid>) -> Result<Vec<
                 }
                 pb.close();
                 if let Some(path) = pb.finish() {
-                    pixmap.stroke_path(
-                        &path,
-                        &paint,
-                        &Stroke {
-                            width: STROKE_SEAT,
-                            ..Default::default()
-                        },
-                        Transform::identity(),
-                        None,
-                    );
-                }
-                if Some(s.id) == highlight_seat_id {
-                    let cx = (corners[0].0 + corners[2].0) / 2.0;
-                    let cy = (corners[0].1 + corners[2].1) / 2.0;
-                    highlight = Some(to_screen(cx, cy));
+                    if Some(s.id) == highlight_seat_id {
+                        pixmap.fill_path(
+                            &path,
+                            &paint,
+                            FillRule::Winding,
+                            Transform::identity(),
+                            None,
+                        );
+                    } else {
+                        pixmap.stroke_path(
+                            &path,
+                            &paint,
+                            &Stroke {
+                                width: STROKE_SEAT,
+                                ..Default::default()
+                            },
+                            Transform::identity(),
+                            None,
+                        );
+                    }
                 }
             }
             MapElement::Door(_) => {}
         }
     }
 
-    if let Some((tx, ty)) = highlight {
-        draw_pin(&mut pixmap, &paint, tx, ty);
-    }
-
     pixmap
         .encode_png()
         .map_err(|e| AppError::Internal(format!("encode png: {e}")))
-}
-
-fn draw_pin(pixmap: &mut Pixmap, paint_black: &Paint, tip_x: f32, tip_y: f32) {
-    let head_x = tip_x;
-    let head_y = tip_y - PIN_HEIGHT;
-
-    let mut paint_white = Paint::default();
-    paint_white.set_color(Color::WHITE);
-    paint_white.anti_alias = true;
-
-    // Teardrop body: smooth curve from tip up around the head and back.
-    // Two cubic beziers form the left and right sides of the drop.
-    let r = PIN_HEAD_R;
-    let mut pb = PathBuilder::new();
-    pb.move_to(tip_x, tip_y);
-    pb.cubic_to(
-        tip_x - r * 1.4, tip_y - PIN_HEIGHT * 0.55,
-        head_x - r,      head_y + r,
-        head_x - r,      head_y,
-    );
-    pb.cubic_to(
-        head_x - r,      head_y - r * 1.35,
-        head_x + r,      head_y - r * 1.35,
-        head_x + r,      head_y,
-    );
-    pb.cubic_to(
-        head_x + r,      head_y + r,
-        tip_x + r * 1.4, tip_y - PIN_HEIGHT * 0.55,
-        tip_x,           tip_y,
-    );
-    pb.close();
-    if let Some(path) = pb.finish() {
-        // White outline behind the pin so it stays visible over dark map elements.
-        pixmap.stroke_path(
-            &path,
-            &paint_white,
-            &Stroke {
-                width: PIN_OUTLINE,
-                ..Default::default()
-            },
-            Transform::identity(),
-            None,
-        );
-        pixmap.fill_path(
-            &path,
-            paint_black,
-            FillRule::Winding,
-            Transform::identity(),
-            None,
-        );
-    }
-
-    // White hole in the head.
-    let mut inner = PathBuilder::new();
-    inner.push_circle(head_x, head_y, PIN_INNER_R);
-    if let Some(path) = inner.finish() {
-        pixmap.fill_path(
-            &path,
-            &paint_white,
-            FillRule::Winding,
-            Transform::identity(),
-            None,
-        );
-    }
 }
 
 fn collect_points(map: &Map) -> Vec<(f32, f32)> {
@@ -209,12 +139,7 @@ fn seat_table_corners(position: Point, rotation: Rotation) -> [(f32, f32); 4] {
     let half_w = Seat::TABLE_W / 2.0;
     let top = -Seat::TABLE_H / 2.0 + vshift;
     let bot = Seat::TABLE_H / 2.0 + vshift;
-    let local = [
-        (-half_w, top),
-        (half_w, top),
-        (half_w, bot),
-        (-half_w, bot),
-    ];
+    let local = [(-half_w, top), (half_w, top), (half_w, bot), (-half_w, bot)];
     let angle = rotation as u16 as f32;
     let rad = angle.to_radians();
     let (s, c) = rad.sin_cos();
