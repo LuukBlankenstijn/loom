@@ -97,7 +97,9 @@ pub async fn team_info(
         .ok_or(AppError::NotFound(format!("team with ip {} not found", ip)))?;
 
     Ok(Json(serde_json::json!({
-        "name": team.name
+        "name": team.name,
+        "id": team.id,
+        "ip": ip
     })))
 }
 
