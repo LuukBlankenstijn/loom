@@ -76,6 +76,12 @@ impl TryFrom<StationCommand> for Message {
                     command: msg.command,
                     admin_id: msg.admin_id,
                 },
+                station_command::Message::StartRegistrationTool(_) => {
+                    Message::StartRegistrationTool
+                }
+                station_command::Message::StopRegistrationTool(_) => {
+                    Message::StopRegistrationTool
+                }
             },
             None => return Err(anyhow::anyhow!("Message is none")),
         };

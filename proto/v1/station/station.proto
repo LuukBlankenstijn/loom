@@ -31,6 +31,8 @@ message StationCommand {
     command.v1.LogoutCommand logout = 4;
     command.v1.LoginWithCredentialsCommand login_with_credentials = 5;
     CustomCommand custom_command = 6;
+    google.protobuf.Empty start_registration_tool = 7;
+    google.protobuf.Empty stop_registration_tool = 8;
   }
 }
 

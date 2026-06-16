@@ -1,4 +1,5 @@
 import { create } from "@bufbuild/protobuf";
+import { EmptySchema } from "@bufbuild/protobuf/wkt";
 import {
   LoginCommandSchema,
   LoginWithCredentialsCommandSchema,
@@ -95,6 +96,38 @@ export const STATION_ACTIONS: StationAction[] = [
         {
           case: "logout",
           value: create(LogoutCommandSchema),
+        },
+      ),
+  },
+  {
+    key: "startRegistrationTool",
+    name: "Start Registration Tool",
+    target: "both",
+    description:
+      "Launch the seat-registration overlay on the selected stations (on top of the greeter or desktop).",
+    fields: [],
+    execute: (stations) =>
+      adminClient.sendEvent(
+        stations.map((s) => s.ip),
+        {
+          case: "startRegistrationTool",
+          value: create(EmptySchema),
+        },
+      ),
+  },
+  {
+    key: "stopRegistrationTool",
+    name: "Stop Registration Tool",
+    target: "both",
+    description:
+      "Close the seat-registration overlay on the selected stations.",
+    fields: [],
+    execute: (stations) =>
+      adminClient.sendEvent(
+        stations.map((s) => s.ip),
+        {
+          case: "stopRegistrationTool",
+          value: create(EmptySchema),
         },
       ),
   },

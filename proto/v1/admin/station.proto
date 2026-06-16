@@ -29,6 +29,8 @@ message AdminEvent {
     command.v1.LoginCommand login = 3;
     command.v1.LogoutCommand logout = 4;
     CustomCommand custom = 5;
+    google.protobuf.Empty start_registration_tool = 6;
+    google.protobuf.Empty stop_registration_tool = 7;
   }
 }
 

@@ -3,7 +3,7 @@ use std::process::Command;
 use anyhow::Context;
 use clap::Parser;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     /// Server to connect to
@@ -18,6 +18,11 @@ pub struct Args {
     /// If set the output of the command overwrites the auth argument
     #[arg(long)]
     pub auth_command: Option<String>,
+
+    /// Path (or PATH-resolvable name) of the registration tool binary that
+    /// loomd launches into the active graphical session on request.
+    #[arg(long, default_value = "loom-station-registration")]
+    pub registration_tool: String,
 }
 
 impl Args {

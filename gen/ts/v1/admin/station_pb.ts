@@ -5,7 +5,7 @@
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
-import type { EmptySchema } from "@bufbuild/protobuf/wkt";
+import type { Empty, EmptySchema } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_empty } from "@bufbuild/protobuf/wkt";
 import type { LoginCommand, LoginWithCredentialsCommand, LogoutCommand } from "../command/command_pb";
 import { file_v1_command_command } from "../command/command_pb";
@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/station.proto.
  */
 export const file_v1_admin_station: GenFile = /*@__PURE__*/
-  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSIeCgdTdGF0aW9uEhMKAmlwGAIgASgJQge6SARyAnABIjcKEFN0YXRpb25zUmVzcG9uc2USIwoIc3RhdGlvbnMYASADKAsyES5hZG1pbi52MS5TdGF0aW9uIiIKFERlbGV0ZVN0YXRpb25SZXF1ZXN0EgoKAmlwGAEgASgJIiAKEUFzc2lnblRlYW1SZXF1ZXN0EgsKA2lwcxgBIAMoCSLyAQoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEikKBmN1c3RvbRgFIAEoCzIXLmFkbWluLnYxLkN1c3RvbUNvbW1hbmRIAEIJCgdjb21tYW5kIjsKE0N1c3RvbUNvbW1hbmRPdXRwdXQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg4KBm91dHB1dBgCIAEoCSJICg1DdXN0b21Db21tYW5kEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJEhAKCGFkbWluX2lkGAMgASgJIigKFENvbW1hbmRPdXRwdXRSZXF1ZXN0EhAKCGFkbWluX2lkGAEgASgJMvgCCg5TdGF0aW9uU2VydmljZRJDCgtHZXRTdGF0aW9ucxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoaLmFkbWluLnYxLlN0YXRpb25zUmVzcG9uc2UiABJJCg1EZWxldGVTdGF0aW9uEh4uYWRtaW4udjEuRGVsZXRlU3RhdGlvblJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJDCgpBc3NpZ25UZWFtEhsuYWRtaW4udjEuQXNzaWduVGVhbVJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI9CgtTZW5kQ29tbWFuZBIULmFkbWluLnYxLkFkbWluRXZlbnQaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJSCg1Db21tYW5kT3V0cHV0Eh4uYWRtaW4udjEuQ29tbWFuZE91dHB1dFJlcXVlc3QaHS5hZG1pbi52MS5DdXN0b21Db21tYW5kT3V0cHV0IgAwAUKXAQoMY29tLmFkbWluLnYxQgxTdGF0aW9uUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSIeCgdTdGF0aW9uEhMKAmlwGAIgASgJQge6SARyAnABIjcKEFN0YXRpb25zUmVzcG9uc2USIwoIc3RhdGlvbnMYASADKAsyES5hZG1pbi52MS5TdGF0aW9uIiIKFERlbGV0ZVN0YXRpb25SZXF1ZXN0EgoKAmlwGAEgASgJIiAKEUFzc2lnblRlYW1SZXF1ZXN0EgsKA2lwcxgBIAMoCSLnAgoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEikKBmN1c3RvbRgFIAEoCzIXLmFkbWluLnYxLkN1c3RvbUNvbW1hbmRIABI5ChdzdGFydF9yZWdpc3RyYXRpb25fdG9vbBgGIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjgKFnN0b3BfcmVnaXN0cmF0aW9uX3Rvb2wYByABKAsyFi5nb29nbGUucHJvdG9idWYuRW1wdHlIAEIJCgdjb21tYW5kIjsKE0N1c3RvbUNvbW1hbmRPdXRwdXQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg4KBm91dHB1dBgCIAEoCSJICg1DdXN0b21Db21tYW5kEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJEhAKCGFkbWluX2lkGAMgASgJIigKFENvbW1hbmRPdXRwdXRSZXF1ZXN0EhAKCGFkbWluX2lkGAEgASgJMvgCCg5TdGF0aW9uU2VydmljZRJDCgtHZXRTdGF0aW9ucxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoaLmFkbWluLnYxLlN0YXRpb25zUmVzcG9uc2UiABJJCg1EZWxldGVTdGF0aW9uEh4uYWRtaW4udjEuRGVsZXRlU3RhdGlvblJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJDCgpBc3NpZ25UZWFtEhsuYWRtaW4udjEuQXNzaWduVGVhbVJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI9CgtTZW5kQ29tbWFuZBIULmFkbWluLnYxLkFkbWluRXZlbnQaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJSCg1Db21tYW5kT3V0cHV0Eh4uYWRtaW4udjEuQ29tbWFuZE91dHB1dFJlcXVlc3QaHS5hZG1pbi52MS5DdXN0b21Db21tYW5kT3V0cHV0IgAwAUKXAQoMY29tLmFkbWluLnYxQgxTdGF0aW9uUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
 
 /**
  * @generated from message admin.v1.Station
@@ -121,6 +121,18 @@ export type AdminEvent = Message<"admin.v1.AdminEvent"> & {
      */
     value: CustomCommand;
     case: "custom";
+  } | {
+    /**
+     * @generated from field: google.protobuf.Empty start_registration_tool = 6;
+     */
+    value: Empty;
+    case: "startRegistrationTool";
+  } | {
+    /**
+     * @generated from field: google.protobuf.Empty stop_registration_tool = 7;
+     */
+    value: Empty;
+    case: "stopRegistrationTool";
   } | { case: undefined; value?: undefined };
 };
 

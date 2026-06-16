@@ -61,6 +61,12 @@ impl TryIntoCore<AdminEvent> for pb::AdminEvent {
                 command: c.command,
             }
             .into(),
+            pb::admin_event::Command::StartRegistrationTool(_) => {
+                StationCommand::StartRegistrationTool
+            }
+            pb::admin_event::Command::StopRegistrationTool(_) => {
+                StationCommand::StopRegistrationTool
+            }
         };
         Ok((ips, station_cmd).into())
     }

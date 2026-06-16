@@ -58,7 +58,7 @@ pub struct AssignTeamRequest {
 pub struct AdminEvent {
     #[prost(string, repeated, tag="1")]
     pub ips: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(oneof="admin_event::Command", tags="2, 3, 4, 5")]
+    #[prost(oneof="admin_event::Command", tags="2, 3, 4, 5, 6, 7")]
     pub command: ::core::option::Option<admin_event::Command>,
 }
 /// Nested message and enum types in `AdminEvent`.
@@ -73,6 +73,10 @@ pub mod admin_event {
         Logout(super::super::super::command::v1::LogoutCommand),
         #[prost(message, tag="5")]
         Custom(super::CustomCommand),
+        #[prost(message, tag="6")]
+        StartRegistrationTool(()),
+        #[prost(message, tag="7")]
+        StopRegistrationTool(()),
     }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

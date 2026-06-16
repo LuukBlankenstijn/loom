@@ -31,4 +31,6 @@ pub enum StationCommand {
     Logout,
     LoginWithCredentials { username: String, password: String },
     CustomCommand(CustomCommand),
+    StartRegistrationTool,
+    StopRegistrationTool,
 }

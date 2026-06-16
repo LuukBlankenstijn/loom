@@ -8,12 +8,14 @@ use tracing_subscriber::util::SubscriberInitExt;
 use crate::command::CommandRunner;
 use crate::dbus::DbusClient;
 use crate::messages::Message;
+use crate::registration::RegistrationToolRunner;
 use crate::rpc::RpcClient;
 
 mod command;
 mod config;
 mod dbus;
 mod messages;
+mod registration;
 mod rpc;
 
 #[tokio::main]
@@ -22,6 +24,13 @@ async fn main() -> Result<()> {
     let args = config::Args::parse_and_resolve()?;
 
     let (tx, _) = broadcast::channel::<Message>(32);
+
+    let registration_tool = RegistrationToolRunner::new(tx.clone(), args.clone());
+    tokio::spawn(async move {
+        if let Err(e) = registration_tool.run().await {
+            error!("Registration tool runner error: {}", e);
+        }
+    });
 
     let dbus_client = DbusClient::new(tx.clone(), args.server.clone()).await?;
     tokio::spawn(async move {

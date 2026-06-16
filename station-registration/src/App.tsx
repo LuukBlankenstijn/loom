@@ -9,8 +9,6 @@ import {
 import { createBackendClient } from "./client";
 import { getStationConfig, type StationConfig } from "./tauri";
 
-const MAP_ID = 1;
-
 type SeatMeta = {
   connected: boolean;
   teamName: string | null;
@@ -46,12 +44,26 @@ export function App() {
       );
   }, []);
 
+  const resetMapState = useCallback(() => {
+    setElements([]);
+    ipToSeatRef.current = new Map();
+    setSeatMeta(new Map());
+  }, []);
+
   const loadMap = useCallback(async () => {
     if (!client) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await client.getMap(MAP_ID);
+      // Resolve the map of the current/next contest rather than assuming an id.
+      const contest = await client.getNextContest();
+      const mapId = contest?.mapId ?? null;
+      if (mapId == null) {
+        // No contest scheduled, or the contest has no map assigned yet.
+        resetMapState();
+        return;
+      }
+      const res = await client.getMap(mapId);
       const els = fromProtoElements(res.elements);
       setElements(els);
       const ipMap = new Map<string, string>();
@@ -70,7 +82,7 @@ export function App() {
     } finally {
       setLoading(false);
     }
-  }, [client]);
+  }, [client, resetMapState]);
 
   useEffect(() => {
     void loadMap();
@@ -156,6 +168,7 @@ export function App() {
         seat={seat}
         connected={meta?.connected ?? false}
         teamName={meta?.teamName ?? null}
+        active={!!config?.ip && seat.ip === config.ip}
       />
     );
   };

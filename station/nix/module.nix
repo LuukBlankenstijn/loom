@@ -38,6 +38,17 @@ in
       description = "The command to the the authentication token for the service.";
     };
 
+    registrationTool = mkOption {
+      type = types.nullOr types.package;
+      default = flake.packages.${pkgs.system}.loom-station-registration;
+      description = ''
+        The loom-station-registration package whose binary loomd launches into
+        the active graphical session (greeter or desktop) when it receives a
+        start-registration-tool command. Set to null to fall back to PATH
+        resolution of `loom-station-registration`.
+      '';
+    };
+
     includeSystemPackages = mkEnableOption "Put all system packages on the path of the loomd service. Allows to use systempackages when running remote commands";
   };
 
@@ -53,9 +64,12 @@ in
             authFlag = lib.optionalString (
               cfg.authTokenCommand != null
             ) "--auth-command=${lib.escapeShellArg cfg.authTokenCommand}";
+            registrationToolFlag = lib.optionalString (
+              cfg.registrationTool != null
+            ) "--registration-tool ${lib.escapeShellArg (lib.getExe cfg.registrationTool)}";
           in
           pkgs.writeShellScript "start-loomd" ''
-            exec ${stationPackage}/bin/loomd --server ${lib.escapeShellArg cfg.server} ${authFlag}
+            exec ${stationPackage}/bin/loomd --server ${lib.escapeShellArg cfg.server} ${authFlag} ${registrationToolFlag}
           '';
         Restart = "on-failure";
         RestartSec = "5s";

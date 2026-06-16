@@ -14,6 +14,7 @@ import {
   SubscribeBroadcastRequestSchema,
   type BroadcastEvent,
 } from "@client/v1/broadcast/broadcast_pb";
+import { ContestService, type Contest } from "@client/v1/admin/contest_pb";
 
 export type ClientConfig = {
   server: string;
@@ -35,8 +36,20 @@ export function createBackendClient(config: ClientConfig) {
 
   const map = createClient(MapService, transport);
   const broadcast = createClient(BroadcastService, transport);
+  const contest = createClient(ContestService, transport);
 
   return {
+    // Returns the current/next contest, or null when none is scheduled.
+    getNextContest: async (): Promise<Contest | null> => {
+      try {
+        return await contest.getNextContest(create(EmptySchema));
+      } catch (err: unknown) {
+        if (err instanceof ConnectError && err.code === Code.NotFound) {
+          return null;
+        }
+        throw err;
+      }
+    },
     getMap: async (id: number): Promise<MapResponse> => {
       return await map.getMap(create(GetMapRequestSchema, { id }));
     },

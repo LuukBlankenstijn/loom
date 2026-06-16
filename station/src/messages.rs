@@ -7,6 +7,8 @@ pub enum Message {
     Login,
     LoginWithCredentials(String, String),
     Logout,
+    StartRegistrationTool,
+    StopRegistrationTool,
     RequestLoginStatus,
     RunCommand {
         id: String,

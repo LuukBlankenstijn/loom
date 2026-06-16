@@ -1,4 +1,4 @@
-import { Circle, Group, Text } from "react-konva";
+import { Circle, Group, Rect, Text } from "react-konva";
 import {
   SEAT_TABLE_W,
   SEAT_TABLE_H,
@@ -17,14 +17,23 @@ const COLOR_CONNECTED = "#22c55e";
 const COLOR_DISCONNECTED = "#ef4444";
 const COLOR_IP = "#f3f4f6";
 const COLOR_TEAM = "#9ca3af";
+const COLOR_ACTIVE = "#f59e0b";
+const COLOR_ACTIVE_FILL = "rgba(245,158,11,0.18)";
 
 export type SeatOverlayProps = {
   seat: Seat;
   connected: boolean;
   teamName: string | null;
+  /** Highlights this seat as the one currently claimed by this machine. */
+  active?: boolean;
 };
 
-export function SeatOverlay({ seat, connected, teamName }: SeatOverlayProps) {
+export function SeatOverlay({
+  seat,
+  connected,
+  teamName,
+  active = false,
+}: SeatOverlayProps) {
   const tableHalfW = SEAT_TABLE_W / 2;
   const tableHalfH = SEAT_TABLE_H / 2;
   const verticalShift = SEAT_CHAIR_PROTRUSION / 2;
@@ -40,6 +49,19 @@ export function SeatOverlay({ seat, connected, teamName }: SeatOverlayProps) {
 
   return (
     <Group>
+      {active && (
+        <Rect
+          x={-tableHalfW}
+          y={-tableHalfH - SEAT_CHAIR_PROTRUSION + verticalShift}
+          width={SEAT_TABLE_W}
+          height={SEAT_TABLE_H + SEAT_CHAIR_PROTRUSION}
+          stroke={COLOR_ACTIVE}
+          strokeWidth={3}
+          cornerRadius={6}
+          fill={COLOR_ACTIVE_FILL}
+          listening={false}
+        />
+      )}
       <Circle x={dotX} y={dotY} radius={DOT_RADIUS} fill={dotColor} />
       {seat.ip && (
         <Group x={0} y={verticalShift} rotation={-seat.rotation}>

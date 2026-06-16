@@ -58,7 +58,7 @@ impl MapService for MapHandler {
                 }),
                 elements: map.elements.iter().map(IntoProto::into_proto).collect(),
             })),
-            None => todo!(),
+            None => Err(AppError::NotFound(format!("map {} not found", req.id)).into()),
         }
     }
 

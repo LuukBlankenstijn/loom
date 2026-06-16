@@ -30,12 +30,8 @@ impl TryIntoCore<StationEvent> for pb::StationEvent {
 impl IntoProto<pb::StationCommand> for StationCommand {
     fn into_proto(self) -> pb::StationCommand {
         let inner = match self {
-            StationCommand::SyncWallpaper => {
-                pb::station_command::Message::SyncWallpaper(())
-            }
-            StationCommand::SyncContestUrl => {
-                pb::station_command::Message::SyncContestUrl(())
-            }
+            StationCommand::SyncWallpaper => pb::station_command::Message::SyncWallpaper(()),
+            StationCommand::SyncContestUrl => pb::station_command::Message::SyncContestUrl(()),
             StationCommand::Login => {
                 pb::station_command::Message::Login(command_pb::LoginCommand {})
             }
@@ -53,6 +49,12 @@ impl IntoProto<pb::StationCommand> for StationCommand {
                     admin_id: c.admin_id,
                     command: c.command,
                 })
+            }
+            StationCommand::StartRegistrationTool => {
+                pb::station_command::Message::StartRegistrationTool(())
+            }
+            StationCommand::StopRegistrationTool => {
+                pb::station_command::Message::StopRegistrationTool(())
             }
         };
         pb::StationCommand {

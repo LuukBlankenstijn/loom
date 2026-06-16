@@ -27,7 +27,7 @@ pub struct CustomCommand {
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct StationCommand {
-    #[prost(oneof="station_command::Message", tags="1, 2, 3, 4, 5, 6")]
+    #[prost(oneof="station_command::Message", tags="1, 2, 3, 4, 5, 6, 7, 8")]
     pub message: ::core::option::Option<station_command::Message>,
 }
 /// Nested message and enum types in `StationCommand`.
@@ -46,6 +46,10 @@ pub mod station_command {
         LoginWithCredentials(super::super::super::command::v1::LoginWithCredentialsCommand),
         #[prost(message, tag="6")]
         CustomCommand(super::CustomCommand),
+        #[prost(message, tag="7")]
+        StartRegistrationTool(()),
+        #[prost(message, tag="8")]
+        StopRegistrationTool(()),
     }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

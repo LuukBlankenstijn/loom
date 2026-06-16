@@ -97,7 +97,11 @@
       };
 
       overlays.default = _: prev: {
-        inherit (self.packages.${prev.system}) loom-greeter loomd;
+        inherit (self.packages.${prev.system})
+          loom-greeter
+          loomd
+          loom-station-registration
+          ;
       };
     };
 }
