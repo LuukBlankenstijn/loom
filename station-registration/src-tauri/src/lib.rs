@@ -1,3 +1,5 @@
+mod grpc;
+
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::sync::Mutex;
@@ -13,28 +15,11 @@ struct CliOverride {
 
 #[derive(Serialize)]
 struct StationConfig {
-    server: String,
-    auth: Option<String>,
     ip: String,
 }
 
 #[tauri::command]
 fn get_station_config(cli: State<'_, CliOverride>) -> Result<StationConfig, String> {
-    let server = cli
-        .server
-        .lock()
-        .unwrap()
-        .clone()
-        .or_else(|| std::env::var("LOOM_SERVER").ok())
-        .unwrap_or_else(|| "http://localhost:8080".to_string());
-
-    let auth = cli
-        .auth
-        .lock()
-        .unwrap()
-        .clone()
-        .or_else(|| std::env::var("LOOM_AUTH").ok());
-
     let ip = cli
         .ip
         .lock()
@@ -44,7 +29,24 @@ fn get_station_config(cli: State<'_, CliOverride>) -> Result<StationConfig, Stri
         .unwrap_or_else(detect_ip)
         .map_err(|e| e.to_string())?;
 
-    Ok(StationConfig { server, auth, ip })
+    Ok(StationConfig { ip })
+}
+
+fn resolve_server(cli: &CliOverride) -> String {
+    cli.server
+        .lock()
+        .unwrap()
+        .clone()
+        .or_else(|| std::env::var("LOOM_SERVER").ok())
+        .unwrap_or_else(|| "http://localhost:8080".to_string())
+}
+
+fn resolve_auth(cli: &CliOverride) -> Option<String> {
+    cli.auth
+        .lock()
+        .unwrap()
+        .clone()
+        .or_else(|| std::env::var("LOOM_AUTH").ok())
 }
 
 fn detect_ip() -> Result<String> {
@@ -78,9 +80,20 @@ pub fn run() {
                     *cli.ip.lock().unwrap() = Some(s.to_string());
                 }
             }
+
+            let cli = app.state::<CliOverride>();
+            let backend = grpc::Backend::new(resolve_server(&cli), resolve_auth(&cli))
+                .context("failed to configure the backend connection")?;
+            app.manage(backend);
+
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_station_config])
+        .invoke_handler(tauri::generate_handler![
+            get_station_config,
+            grpc::grpc_unary,
+            grpc::grpc_server_stream,
+            grpc::grpc_cancel_stream
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

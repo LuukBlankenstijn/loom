@@ -36,7 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
   cargoDeps = rustPlatform.fetchCargoVendor {
     inherit (finalAttrs) pname version src;
     sourceRoot = "${finalAttrs.src.name}/station-registration/src-tauri";
-    hash = "sha256-ALITVjyzxjOi6sNO4sWxyVohyA9seBB/IV0JUyynRaU=";
+    hash = "sha256-6ZJkwJavaVUiiC0GAC60ygrxFWOgf1RFhXys6nfcQLQ=";
   };
 
   pnpmDeps = fetchPnpmDeps {

@@ -1,8 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
 export type StationConfig = {
-  server: string;
-  auth: string | null;
   ip: string;
 };
 

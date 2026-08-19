@@ -1,5 +1,5 @@
-import { Code, ConnectError, createClient, type Interceptor } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { Code, ConnectError, createClient } from "@connectrpc/connect";
+import { createTauriGrpcTransport } from "./transport";
 import { create } from "@bufbuild/protobuf";
 import { EmptySchema } from "@bufbuild/protobuf/wkt";
 import {
@@ -16,23 +16,8 @@ import {
 } from "@client/v1/broadcast/broadcast_pb";
 import { ContestService, type Contest } from "@client/v1/admin/contest_pb";
 
-export type ClientConfig = {
-  server: string;
-  auth: string | null;
-};
-
-export function createBackendClient(config: ClientConfig) {
-  const authInterceptor: Interceptor = (next) => async (req) => {
-    if (config.auth) {
-      req.header.set("authorization", `Bearer ${config.auth}`);
-    }
-    return await next(req);
-  };
-
-  const transport = createGrpcWebTransport({
-    baseUrl: config.server,
-    interceptors: [authInterceptor],
-  });
+export function createBackendClient() {
+  const transport = createTauriGrpcTransport();
 
   const map = createClient(MapService, transport);
   const broadcast = createClient(BroadcastService, transport);

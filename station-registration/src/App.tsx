@@ -24,10 +24,7 @@ export function App() {
   const ipToSeatRef = useRef<Map<string, string>>(new Map());
   const connectedIpsRef = useRef<Set<string>>(new Set());
 
-  const client = useMemo(
-    () => (config ? createBackendClient(config) : null),
-    [config],
-  );
+  const client = useMemo(() => createBackendClient(), []);
 
   const myAssignedSeat = useMemo(() => {
     if (!config) return null;
@@ -51,7 +48,6 @@ export function App() {
   }, []);
 
   const loadMap = useCallback(async () => {
-    if (!client) return;
     setLoading(true);
     setError(null);
     try {
@@ -89,7 +85,6 @@ export function App() {
   }, [loadMap]);
 
   useEffect(() => {
-    if (!client) return;
     const controller = new AbortController();
     (async () => {
       try {
@@ -153,7 +148,7 @@ export function App() {
   }, [client]);
 
   const handleClick = async (el: MapElement) => {
-    if (el.kind !== "seat" || !client || !config) return;
+    if (el.kind !== "seat" || !config) return;
     try {
       await client.assignStationToSeat(el.id, config.ip);
     } catch (e: unknown) {
