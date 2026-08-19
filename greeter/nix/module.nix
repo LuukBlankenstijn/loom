@@ -35,7 +35,7 @@ let
 
   configFile = tomlFormat.generate "loom-greeter.toml" filteredConfig;
 
-  greeterPackage = flake.packages.${pkgs.system}.loom-greeter;
+  greeterPackage = flake.packages.${pkgs.stdenv.hostPlatform.system}.loom-greeter;
 in
 {
   options.services.greetd.loom-greeter = {

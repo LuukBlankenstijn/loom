@@ -23,7 +23,7 @@ in
 
     package = mkOption {
       type = types.package;
-      default = flake.packages.${pkgs.system}.loomd;
+      default = flake.packages.${pkgs.stdenv.hostPlatform.system}.loomd;
       description = "The loomd package to use.";
     };
 
@@ -40,7 +40,7 @@ in
 
     registrationTool = mkOption {
       type = types.nullOr types.package;
-      default = flake.packages.${pkgs.system}.loom-station-registration;
+      default = flake.packages.${pkgs.stdenv.hostPlatform.system}.loom-station-registration;
       description = ''
         The loom-station-registration package whose binary loomd launches into
         the active graphical session (greeter or desktop) when it receives a

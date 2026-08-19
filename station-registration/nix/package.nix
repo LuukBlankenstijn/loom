@@ -5,7 +5,7 @@
   cargo,
   rustc,
   cargo-tauri,
-  pnpm_10,
+  pnpm_11,
   pnpmConfigHook,
   fetchPnpmDeps,
   nodejs,
@@ -42,8 +42,8 @@ stdenv.mkDerivation (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     pnpmRoot = ".";
-    fetcherVersion = 1;
-    hash = "sha256-PMNIvHxZ4McUlB/MnMjM900jD4r6xNkBFA2n495BheE=";
+    fetcherVersion = 4;
+    hash = "sha256-SxJ82w5IHyZVBnSxurEkGVUMjrhFAWqDDxEcVBCrc1Y=";
   };
 
   nativeBuildInputs = [
@@ -52,7 +52,7 @@ stdenv.mkDerivation (finalAttrs: {
     rustc
     cargo-tauri.hook
     pnpmConfigHook
-    pnpm_10
+    pnpm_11
     nodejs
     pkg-config
     wrapGAppsHook4

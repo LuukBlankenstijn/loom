@@ -19,6 +19,8 @@ jobs:
         with:
           name: luukblankenstijn
           skipPush: true
-      - run: nix build .#${{ matrix.package }} --print-out-paths | cachix push luukblankenstijn
+      - run: |
+          set -o pipefail
+          nix build .#${{ matrix.package }} --print-out-paths | cachix push luukblankenstijn
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
