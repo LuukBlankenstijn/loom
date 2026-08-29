@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminClient } from "../lib/client";
+import { getErrorMessage } from "../lib/errors";
 import type { Station } from "@client/v1/admin/station_pb";
 import type { Team } from "@client/v1/admin/team_pb";
 
@@ -37,6 +38,10 @@ export function AssignModal({
       onClose();
     },
   });
+
+  const assignError = assignMutation.isError
+    ? getErrorMessage(assignMutation.error)
+    : null;
 
   const handleAssign = () => {
     if (!selectedValue) return;
@@ -84,6 +89,9 @@ export function AssignModal({
             <p className="text-sm text-gray-500 mt-2">
               All teams are already assigned
             </p>
+          )}
+          {assignError && (
+            <p className="text-sm text-danger-500 mt-2">{assignError}</p>
           )}
         </div>
 

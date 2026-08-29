@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { adminClient } from "../lib/client";
+import { getErrorMessage } from "../lib/errors";
 import { AssignModal } from "../components/AssignModal";
 import { StationActinoModal } from "../components/StationActionModal";
 import { StationTerminal } from "../components/StationTerminal";
@@ -66,6 +67,10 @@ export function StationsPage() {
     },
   });
 
+  const unassignError = unassignMutation.isError
+    ? getErrorMessage(unassignMutation.error)
+    : null;
+
   const toggleTerminal = (ip: string) => {
     setExpandedIps((prev) => {
       const next = new Set(prev);
@@ -110,6 +115,11 @@ export function StationsPage() {
           </span>
         </div>
       </div>
+      {unassignError && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-danger-500/10 border border-danger-500/30 text-danger-500 text-sm">
+          {unassignError}
+        </div>
+      )}
       {isLoading ? (
         <div className="text-gray-400">Loading...</div>
       ) : stations.length === 0 ? (
