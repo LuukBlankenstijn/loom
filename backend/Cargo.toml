@@ -34,6 +34,9 @@ futures = "0.3.32"
 derive_more = { version = "2.1.1", features = ["from", "constructor"] }
 async-stream = "0.3.6"
 bytes = "1.11.1"
+utoipa = { version = "5.5", features = ["axum_extras", "chrono"] }
+utoipa-axum = "0.2"
+utoipa-scalar = { version = "0.3", features = ["axum"] }
 
 [profile.dev.package.image]
 opt-level = 3

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::get};
+use axum::Router;
 use loom_rpc::{
     admin::v1::{
         contest_service_server::ContestServiceServer, station_service_server::StationServiceServer,
@@ -14,6 +14,9 @@ use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use utoipa::OpenApi;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_scalar::{Scalar, Servable as _};
 
 use crate::{api::combined_auth_interceptor, config::Config, orchestrator::Orchestrator};
 
@@ -104,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         interceptor.clone(),
     );
 
-    let wallpaper_handler =
+    let http_state =
         api::http::HttpHandlerState::new(contest_repo, team_repo, map_repo, orchestrator.clone());
 
     let grpc_router = tonic::service::Routes::builder()
@@ -119,16 +122,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_axum_router()
         .layer(tonic_web::GrpcWebLayer::new());
 
-    let http_routes = Router::new()
-        .route("/wallpaper", get(api::http::wallpaper_handler))
-        .route("/next-contest", get(api::http::next_contest))
-        .route("/team-info/{ip}", get(api::http::team_info))
-        .route("/map-image", get(api::http::map_image))
-        .route("/inventory", get(api::http::station_inventory))
-        .with_state(wallpaper_handler);
+    let (http_routes, openapi) = OpenApiRouter::with_openapi(api::ApiDoc::openapi())
+        .nest("/api", api::http::router(http_state))
+        .split_for_parts();
 
     let routes = Router::new()
-        .nest("/api", http_routes)
+        .merge(http_routes)
+        .merge(Scalar::with_url("/api/docs", openapi))
         .merge(grpc_router)
         .layer(CorsLayer::permissive());
 

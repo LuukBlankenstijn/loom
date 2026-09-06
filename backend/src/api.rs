@@ -13,7 +13,26 @@ use axum::{
     Json,
     response::{IntoResponse, Response},
 };
-use serde_json::json;
+use serde::Serialize;
+use utoipa::{OpenApi, ToSchema};
+
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Loom HTTP API",
+        description = "Endpoints served to contest stations and the dashboard. The admin surface is gRPC and is documented in the protobuf definitions."
+    ),
+    tags(
+        (name = "station", description = "Consumed by station machines"),
+        (name = "map", description = "Seating map rendering")
+    )
+)]
+pub struct ApiDoc;
+
+#[derive(Serialize, ToSchema)]
+pub struct ErrorResponse {
+    pub error: String,
+}
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
@@ -38,9 +57,9 @@ impl IntoResponse for AppError {
             }
         };
 
-        let body = Json(json!({
-            "error": error_message,
-        }));
+        let body = Json(ErrorResponse {
+            error: error_message,
+        });
 
         (status, body).into_response()
     }
