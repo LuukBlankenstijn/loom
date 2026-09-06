@@ -37,6 +37,8 @@ bytes = "1.11.1"
 utoipa = { version = "5.5", features = ["axum_extras", "chrono"] }
 utoipa-axum = "0.2"
 utoipa-scalar = { version = "0.3", features = ["axum"] }
+simple-dns = "0.12.0"
+base64 = "0.23"
 
 [profile.dev.package.image]
 opt-level = 3

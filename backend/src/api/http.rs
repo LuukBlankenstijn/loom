@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+mod dns;
+
 use axum::{
     Json,
     body::Body,
@@ -9,6 +11,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use derive_more::derive::Constructor;
+use dns::*;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use tokio_stream::StreamExt as _;
@@ -66,6 +69,8 @@ pub fn router(state: HttpHandlerState) -> OpenApiRouter {
         .routes(routes!(team_info))
         .routes(routes!(map_image))
         .routes(routes!(station_inventory))
+        .routes(routes!(dns_post))
+        .routes(routes!(dns_get))
         .with_state(state)
 }
 
