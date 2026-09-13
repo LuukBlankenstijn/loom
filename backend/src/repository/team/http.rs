@@ -113,9 +113,17 @@ impl TeamRepository for HttpTeamRepo {
         if !new_ip.is_empty() {
             for u in &users {
                 if u.ip.as_deref() == Some(new_ip) && u.team_id.as_deref() != Some(team_id) {
-                    return Err(AppError::AlreadyExists(
-                        "ip already in use by another team".into(),
-                    ));
+                    tracing::warn!(
+                        team_id,
+                        ip = new_ip,
+                        conflicting_user = %u.id,
+                        conflicting_team = ?u.team_id,
+                        "refusing to assign ip: already in use by another team's user"
+                    );
+                    return Err(AppError::AlreadyExists(format!(
+                        "ip {new_ip} is already in use by another team (user {})",
+                        u.id
+                    )));
                 }
             }
         }
@@ -124,6 +132,19 @@ impl TeamRepository for HttpTeamRepo {
             .iter()
             .filter(|u| u.team_id.as_deref() == Some(team_id))
             .collect();
+
+        // The IP lives on the DOMjudge user, not the team. A team with no linked
+        // user has nowhere to store the IP, so assigning would silently no-op.
+        if team_users.is_empty() && !new_ip.is_empty() {
+            tracing::warn!(
+                team_id,
+                ip = new_ip,
+                "cannot assign ip: team has no DOMjudge user to bind it to"
+            );
+            return Err(AppError::FailedPrecondition(format!(
+                "team {team_id} has no DOMjudge user to bind the ip to"
+            )));
+        }
 
         let mut handles = Vec::new();
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { adminClient } from "../lib/client";
+import { getErrorMessage } from "../lib/errors";
 import { AssignModal } from "../components/AssignModal";
 import type { Team } from "@client/v1/admin/team_pb";
 
@@ -27,6 +28,10 @@ export function TeamsPage() {
     },
   });
 
+  const unassignError = unassignMutation.isError
+    ? getErrorMessage(unassignMutation.error)
+    : null;
+
   const teams = data?.teams ?? [];
 
   const openAssignModal = (team: Team) => {
@@ -43,6 +48,11 @@ export function TeamsPage() {
           {teams.length} total
         </span>
       </div>
+      {unassignError && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-danger-500/10 border border-danger-500/30 text-danger-500 text-sm">
+          {unassignError}
+        </div>
+      )}
       {isLoading ? (
         <div className="text-gray-400">Loading...</div>
       ) : teams.length === 0 ? (

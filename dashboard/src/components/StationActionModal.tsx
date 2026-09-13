@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { STATION_ACTIONS, type StationTarget } from "../lib/actions";
 import { useCommandStore } from "../context/command";
+import { getErrorMessage } from "../lib/errors";
 
 type StationActionProps = {
   stations: StationTarget[];
@@ -13,6 +14,7 @@ export function StationActinoModal({ stations, onClose }: StationActionProps) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set());
   const [isPending, setIsPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const isSingle = stations.length === 1;
   const availableActions = STATION_ACTIONS.filter(
@@ -43,9 +45,15 @@ export function StationActinoModal({ stations, onClose }: StationActionProps) {
     }
 
     setIsPending(true);
-    await selectedAction.execute(stations, fieldValues, register);
-    setIsPending(false);
-    onClose();
+    setActionError(null);
+    try {
+      await selectedAction.execute(stations, fieldValues, register);
+      onClose();
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -116,6 +124,10 @@ export function StationActinoModal({ stations, onClose }: StationActionProps) {
               );
             })}
           </>
+        )}
+
+        {actionError && (
+          <p className="text-sm text-danger-500 mt-4">{actionError}</p>
         )}
 
         <div className="flex justify-end gap-3 mt-6">
