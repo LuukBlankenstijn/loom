@@ -3,9 +3,9 @@ use log::error;
 use std::{path::Path, str::FromStr};
 
 use iced::{
-    Color, ContentFit, Element, Font, Length, Task,
+    Color, ContentFit, Element, Font, Length, Padding, Task, alignment,
     font::Weight,
-    widget::{container, text},
+    widget::{container, stack, text},
 };
 
 use crate::ui::Message;
@@ -107,13 +107,14 @@ impl Background {
 
         let label_element = if is_wallpaper_valid {
             self.label.as_ref().map(|label| {
-                container(text(&label.text).color(label.color).size(70).font(Font {
-                    weight: Weight::ExtraBold,
-                    ..Default::default()
-                }))
+                container(outlined_text(
+                    &label.text,
+                    70.0,
+                    label.color,
+                    Color::BLACK,
+                    2.0,
+                ))
                 .center(Length::Fill)
-                .width(Length::Fill)
-                .height(Length::Fill)
                 .into()
             })
         } else {
@@ -178,6 +179,56 @@ fn no_background_container<'a>(label: String) -> Element<'a, BackgroundMessage> 
         .height(Length::Fill)
         .center(Length::Fill)
         .into()
+}
+
+fn outlined_text<'a>(
+    content: &'a str,
+    size: f32,
+    color: Color,
+    outline: Color,
+    border: f32,
+) -> Element<'a, BackgroundMessage> {
+    let layer = |dx: f32, dy: f32, color: Color| {
+        container(
+            text(content)
+                .color(color)
+                .size(size)
+                .font(Font {
+                    weight: Weight::ExtraBold,
+                    ..Default::default()
+                })
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .align_x(alignment::Horizontal::Center)
+                .align_y(alignment::Vertical::Center),
+        )
+        .padding(Padding {
+            top: dy,
+            right: 2.0 * border - dx,
+            bottom: 2.0 * border - dy,
+            left: dx,
+        })
+        .width(Length::Fill)
+        .height(Length::Fill)
+    };
+
+    let (w, d) = (border, border * 2.0);
+    let mut layers: Vec<Element<'a, BackgroundMessage>> = [
+        (0.0, 0.0),
+        (w, 0.0),
+        (d, 0.0),
+        (0.0, w),
+        (d, w),
+        (0.0, d),
+        (w, d),
+        (d, d),
+    ]
+    .into_iter()
+    .map(|(dx, dy)| layer(dx, dy, outline).into())
+    .collect();
+    layers.push(layer(w, w, color).into());
+
+    stack(layers).into()
 }
 
 fn is_http_url(source: &str) -> bool {
