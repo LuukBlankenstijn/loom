@@ -137,7 +137,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                 }
                 dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
             } else { 
-                if (!modifiersRef.current.shift) {
+                if (modifiersRef.current.shift) {
+                    clickStartRef.current = pos;
+                    dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) };
+                } else {
                     s.clearSelection();
                     dragRef.current = { kind: "panning", lastScreen: pos };
                 }
@@ -146,8 +149,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     }
 
     if (e.evt.button === 2) {
-        clickStartRef.current = pos;
-        dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) }
+        if (modifiersRef.current.shift) {
+            clickStartRef.current = pos;
+            dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) }
+        }
     }
 
     // if (e.evt.button === 0) {
@@ -211,18 +216,20 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
 
     const s = useStore.getState();
 
-    if (drag.kind === "drawing" && pos) {
-      const end = snapToGrid(screenToWorldNow(pos));
-      const startWorld = drag.start;
-      const dx = startWorld.x - end.x;
-      const dy = startWorld.y - end.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 1) {
-        s.finishWallDraw(startWorld, end);
-      }
-    }
+    // if (drag.kind === "drawing" && pos) {
+    //   const end = snapToGrid(screenToWorldNow(pos));
+    //   const startWorld = drag.start;
+    //   const dx = startWorld.x - end.x;
+    //   const dy = startWorld.y - end.y;
+    //   if (Math.sqrt(dx * dx + dy * dy) > 1) {
+    //     s.finishWallDraw(startWorld, end);
+    //   }
+    // }
 
     if (drag.kind === "selecting") {
-        s.selectBySelection({x: Math.min(start.x, pos.x), y: Math.min(start.y, pos.y)}, {x: Math.max(start.x, pos.x), y:Math.max(start.y, pos.y) }) 
+        const startWorld = drag.start;
+        const end = screenToWorldNow(pos);
+        s.selectBySelection({x: Math.min(startWorld.x, end.x), y: Math.min(startWorld.y, end.y)}, {x: Math.max(startWorld.x, end.x), y:Math.max(startWorld.y, end.y) }) 
     }
 
     // emit click if minimal travel
@@ -293,7 +300,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     cursorPos
   ) {
     const start = dragRef.current.start;
-    const end = snapToGrid(screenToWorldNow(cursorPos));
+    const end = screenToWorldNow(cursorPos);
     ghostSelection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
   }
 

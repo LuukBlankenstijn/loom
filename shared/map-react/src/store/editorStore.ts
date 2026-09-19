@@ -4,7 +4,7 @@ import { Rotation, rotateCw } from "../coords";
 import { applyZoom, snapToGrid } from "../geometry";
 import { elementHit } from "../hit";
 import type { MapElement, Wall } from "../types";
-import { SEAT_TABLE_W, SEAT_TABLE_H, SEAT_CHAIR_PROTRUSION } from "../types";
+import { SEAT_TABLE_W, SEAT_TABLE_H, SEAT_CHAIR_PROTRUSION, getSeatTotalBounds } from "../types";
 
 export type MapMode = "view" | "edit" | "trump";
 
@@ -215,8 +215,9 @@ export function createEditorStore() {
             const next = new Set<string>();
             for (const el of get().elements.values()) {
 
+                  const { w, h } = getSeatTotalBounds(el);
                 const seatTL={x: el.position.x, y: el.position.y}
-                const seatBR={x: el.position.x + SEAT_TABLE_W, y: el.position.y + SEAT_CHAIR_PROTRUSION + SEAT_TABLE_H}
+                const seatBR={x: el.position.x + w, y: el.position.y + h}
 
                 if (seatTL.x > selectionBR.x || selectionTL.x > seatBR.x) continue;
                 if (seatBR.y < selectionTL.y || selectionBR.y < seatTL.y) continue;
