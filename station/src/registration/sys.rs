@@ -143,10 +143,10 @@ fn read_proc_environ(pid: u32) -> Option<HashMap<String, String>> {
     let data = fs::read(format!("/proc/{pid}/environ")).ok()?;
     let mut env = HashMap::new();
     for entry in data.split(|&b| b == 0) {
-        if let Ok(s) = std::str::from_utf8(entry) {
-            if let Some((k, v)) = s.split_once('=') {
-                env.insert(k.to_string(), v.to_string());
-            }
+        if let Ok(s) = std::str::from_utf8(entry)
+            && let Some((k, v)) = s.split_once('=')
+        {
+            env.insert(k.to_string(), v.to_string());
         }
     }
     Some(env)
@@ -234,10 +234,11 @@ pub fn launch_gui(
     // unusable, redirect HOME and the XDG base dirs to the writable per-user
     // runtime dir.
     let harvested_home = user_env.get("HOME").map(String::as_str).unwrap_or("");
-    let home_unusable = matches!(harvested_home, "" | "/var/empty" | "/nonexistent" | "/dev/null");
-    if home_unusable
-        && let Some(rt) = user_env.get("XDG_RUNTIME_DIR")
-    {
+    let home_unusable = matches!(
+        harvested_home,
+        "" | "/var/empty" | "/nonexistent" | "/dev/null"
+    );
+    if home_unusable && let Some(rt) = user_env.get("XDG_RUNTIME_DIR") {
         cmd.env("HOME", rt);
         let base = format!("{rt}/loom-registration");
         cmd.env("XDG_DATA_HOME", format!("{base}/data"));

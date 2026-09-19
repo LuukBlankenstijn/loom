@@ -1,6 +1,6 @@
 export type { Point, Vector } from "./coords";
 export { Rotation, rotateCw } from "./coords";
-export type { MapElement, Wall, Door, Seat } from "./types";
+export type { MapElement, Door, Seat } from "./types";
 export {
   SEAT_TABLE_W,
   SEAT_TABLE_H,

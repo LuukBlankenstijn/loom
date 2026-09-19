@@ -2,8 +2,8 @@ import { create } from "zustand";
 import type { Point, Vector } from "../coords";
 import { Rotation, rotateCw } from "../coords";
 import { applyZoom, snapToGrid } from "../geometry";
-import { elementHit } from "../hit";
-import type { MapElement, Wall } from "../types";
+import { elementHit, elementOverlap } from "../hit";
+import type { MapElement } from "../types";
 
 export type MapMode = "view" | "edit";
 
@@ -27,14 +27,19 @@ export type EditorActions = {
   loadElements: (els: MapElement[]) => void;
   insertElement: (el: MapElement) => void;
   addAtViewportCenter: (factory: (snapped: Point) => MapElement) => void;
-  finishWallDraw: (start: Point, end: Point) => void;
 
   toggleSelect: (id: string) => void;
+  selectAll: () => void;
+  isInSelection: (id: string) => boolean;
   selectByHit: (worldPoint: Point) => string | null;
+  selectBySelection: (selectionTL: Point, selectionBR: Point) => void;
+  deselectBySelection: (selectionTL: Point, selectionBR: Point) => void;
   clearSelection: () => void;
   deleteSelection: () => void;
   duplicateSelection: () => void;
   rotateSelection: () => void;
+  mirrorSelectionHorizontal: () => void;
+  mirrorSelectionVertical: () => void;
   moveSelection: (delta: Vector) => void;
 
   getChanges: () => { deleted: string[]; updated: MapElement[] };
@@ -48,12 +53,6 @@ function makeId(): string {
 
 function moveElementBy(el: MapElement, delta: Vector): MapElement {
   switch (el.kind) {
-    case "wall":
-      return {
-        ...el,
-        start: { x: el.start.x + delta.x, y: el.start.y + delta.y },
-        end: { x: el.end.x + delta.x, y: el.end.y + delta.y },
-      };
     case "door":
     case "seat":
       return {
@@ -68,11 +67,31 @@ function moveElementBy(el: MapElement, delta: Vector): MapElement {
 
 function rotateElement(el: MapElement): MapElement {
   switch (el.kind) {
-    case "wall":
-      return el;
     case "door":
     case "seat":
       return { ...el, rotation: rotateCw(el.rotation) };
+  }
+}
+
+function mirrorElementHorizontal(el: MapElement, xmin: number, xmax: number): MapElement {
+  switch (el.kind) {
+    case "door":
+    case "seat":
+      return { ...el, position: {
+        x: xmax - (el.position.x - xmin),
+        y: el.position.y,
+    } };
+  }
+}
+
+function mirrorElementVertical(el: MapElement, ymin: number, ymax: number): MapElement {
+  switch (el.kind) {
+    case "door":
+    case "seat":
+      return { ...el, position: {
+        x: el.position.x,
+        y: ymax - (el.position.y - ymin),
+    } };
   }
 }
 
@@ -80,13 +99,6 @@ function duplicateElement(el: MapElement): MapElement {
   const newId = makeId();
   const delta: Vector = { x: 10, y: 10 };
   switch (el.kind) {
-    case "wall":
-      return {
-        ...el,
-        id: newId,
-        start: { x: el.start.x + delta.x, y: el.start.y + delta.y },
-        end: { x: el.end.x + delta.x, y: el.end.y + delta.y },
-      };
     case "door":
     case "seat":
       return {
@@ -102,14 +114,6 @@ function duplicateElement(el: MapElement): MapElement {
 
 function elementsEqual(a: MapElement, b: MapElement): boolean {
   if (a.kind !== b.kind || a.id !== b.id) return false;
-  if (a.kind === "wall" && b.kind === "wall") {
-    return (
-      a.start.x === b.start.x &&
-      a.start.y === b.start.y &&
-      a.end.x === b.end.x &&
-      a.end.y === b.end.y
-    );
-  }
   if ((a.kind === "door" || a.kind === "seat") && a.kind === b.kind) {
     const sameBase =
       a.position.x === b.position.x &&
@@ -175,19 +179,6 @@ export function createEditorStore() {
         m.set(el.id, el);
         return { elements: m };
       }),
-    finishWallDraw: (start, end) =>
-      set((s) => {
-        const wall: Wall = {
-          kind: "wall",
-          id: makeId(),
-          start,
-          end,
-        };
-        const m = new Map(s.elements);
-        m.set(wall.id, wall);
-        return { elements: m };
-      }),
-
     toggleSelect: (id) =>
       set((s) => {
         const next = new Set(s.selected);
@@ -195,12 +186,45 @@ export function createEditorStore() {
         else next.add(id);
         return { selected: next };
       }),
+    selectAll: () => 
+      set((s) => {
+          const next = new Set(s.elements.keys());
+          return {selected: next };
+      }),
+    isInSelection: (id) => {return get().selected.has(id);},
     selectByHit: (worldPoint) => {
+        // To make sure that duplicated elements/selected elements get preference when clicking
+        for (const id of get().selected) {
+            const el = get().elements.get(id);
+            if (el && elementHit(el, worldPoint)) return id;
+        }
+
       for (const el of get().elements.values()) {
         if (elementHit(el, worldPoint)) return el.id;
       }
       return null;
     },
+    selectBySelection: (selectionTL, selectionBR) => 
+        set((s) => {
+            const next = new Set<string>(s.selected);
+            for (const el of get().elements.values()) {
+
+                if (elementOverlap(el, selectionTL, selectionBR)) {
+                    next.add(el.id)
+                }
+            }
+            return { selected: next };
+        }),
+    deselectBySelection: (selectionTL, selectionBR) => 
+        set((s) => {
+            const next = new Set<string>(s.selected);
+            for (const el of get().elements.values()) {
+                if (elementOverlap(el, selectionTL, selectionBR)) {
+                    next.delete(el.id)
+                }
+            }
+            return { selected: next };
+        }),
     clearSelection: () => set({ selected: new Set() }),
     deleteSelection: () =>
       set((s) => {
@@ -239,7 +263,32 @@ export function createEditorStore() {
         }
         return { elements: m };
       }),
-
+    mirrorSelectionHorizontal: () => 
+        set((s) => {
+            const m = new Map(s.elements);
+            const selected = Array.from(s.selected).flatMap((id) => m.get(id) ?? []);
+            const x = selected.map((el) => el.position.x);
+            const xmax = Math.max(...x);
+            const xmin = Math.min(...x);
+            for (let el of selected) {
+                if (el.rotation === Rotation.Deg90 || el.rotation === Rotation.Deg270) {el = rotateElement(rotateElement(el))}
+                m.set(el.id, mirrorElementHorizontal(el, xmin, xmax));
+            }
+            return { elements: m };
+        }),
+    mirrorSelectionVertical: () => 
+        set((s) => {
+            const m = new Map(s.elements);
+            const selected = Array.from(s.selected).flatMap((id) => m.get(id) ?? []);
+            const y = selected.map((el) => el.position.y);
+            const ymax = Math.max(...y);
+            const ymin = Math.min(...y);
+            for (let el of selected) {
+                if (el.rotation === Rotation.Deg90 || el.rotation === Rotation.Deg270) {el = rotateElement(rotateElement(el))}
+                m.set(el.id, mirrorElementVertical(rotateElement(rotateElement(el)), ymin, ymax));
+            }
+            return { elements: m };
+        }),
     getChanges: () => {
       const { startElements, elements } = get();
       const deleted: string[] = [];

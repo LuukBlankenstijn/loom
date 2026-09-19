@@ -6,7 +6,7 @@ import { StationActinoModal } from "../components/StationActionModal";
 import { StationTerminal } from "../components/StationTerminal";
 import { StationLabel } from "../components/StationLabel";
 import type { StationTarget } from "../lib/actions";
-import { useStationState } from "../context/station";
+import { useStationState } from "../context/station-state";
 import type { Station } from "@client/v1/admin/station_pb";
 
 type SortKey = "connected" | "loggedIn";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { STATION_ACTIONS, type StationTarget } from "../lib/actions";
-import { useCommandStore } from "../context/command";
+import { useCommandStore } from "../context/command-store";
 
 type StationActionProps = {
   stations: StationTarget[];

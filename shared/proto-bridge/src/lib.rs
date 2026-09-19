@@ -30,7 +30,9 @@ pub use loom_core::map::{door::Door, seat::Seat, wall::Wall};
 #[cfg(feature = "broadcast-v1")]
 pub mod broadcast;
 #[cfg(feature = "broadcast-v1")]
-pub use loom_core::event::broadcast::{BroadcastEvent, BroadcastType, StationAssignment, StationConnectionState};
+pub use loom_core::event::broadcast::{
+    BroadcastEvent, BroadcastType, StationAssignment, StationConnectionState,
+};
 
 #[cfg(feature = "admin-v1")]
 pub(crate) fn to_timestamp(dt: chrono::DateTime<chrono::Utc>) -> prost_types::Timestamp {

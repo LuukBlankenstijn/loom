@@ -5,7 +5,7 @@ import { adminClient } from "../lib/client";
 import { WallpaperMedia } from "../components/WallpaperMedia";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
-import { useStationState } from "../context/station";
+import { useStationState } from "../context/station-state";
 import type { Station } from "@client/v1/admin/station_pb";
 
 export function ContestPage() {

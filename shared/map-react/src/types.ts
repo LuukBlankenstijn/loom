@@ -1,13 +1,6 @@
 import type { Point } from "./coords";
 import type { Rotation } from "./coords";
 
-export type Wall = {
-  kind: "wall";
-  id: string;
-  start: Point;
-  end: Point;
-};
-
 export type Door = {
   kind: "door";
   id: string;
@@ -23,12 +16,12 @@ export type Seat = {
   ip: string | null;
 };
 
-export type MapElement = Wall | Door | Seat;
+export type MapElement = Door | Seat;
 
 export const SEAT_TABLE_W = 200.0;
-export const SEAT_TABLE_H = 90.0;
-export const SEAT_CHAIR_ARC_RADIUS = 20.0;
-export const SEAT_CHAIR_PROTRUSION = 25.0;
+export const SEAT_TABLE_H = 80.0;
+export const SEAT_CHAIR_ARC_RADIUS = 25.0;
+export const SEAT_CHAIR_PROTRUSION = 20.0;
 
 export const DOOR_WIDTH = 100.0;
 

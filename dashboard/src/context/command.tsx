@@ -1,27 +1,6 @@
-import {
-  createContext,
-  useCallback,
-  use,
-  useRef,
-  useState,
-  useEffect,
-} from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { adminClient } from "../lib/client";
-
-export type CommandEntry = {
-  id: string;
-  command: string;
-  timestamp: number;
-  output: string | null;
-};
-
-type CommandStore = {
-  register: (id: string, ips: string[], command: string) => void;
-  setOutput: (id: string, output: string) => void;
-  getHistory: (ip: string) => CommandEntry[];
-};
-
-const CommandContext = createContext<CommandStore | undefined>(undefined);
+import { CommandContext, type CommandEntry } from "./command-store";
 
 export function CommandProvider({ children }: { children: React.ReactNode }) {
   const [history, setHistory] = useState<Record<string, CommandEntry[]>>({});
@@ -92,12 +71,4 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
       {children}
     </CommandContext>
   );
-}
-
-export function useCommandStore() {
-  const context = use(CommandContext);
-  if (!context) {
-    throw new Error("useCommandStore must be used within a CommandProvider");
-  }
-  return context;
 }

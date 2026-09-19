@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { create } from "@bufbuild/protobuf";
 import { adminClient } from "../lib/client";
-import { useCommandStore } from "../context/command";
-import { useStationState } from "../context/station";
+import { useCommandStore } from "../context/command-store";
+import { useStationState } from "../context/station-state";
 import { CustomCommandSchema } from "@client/v1/admin/station_pb";
 
 type StationTerminalProps = {

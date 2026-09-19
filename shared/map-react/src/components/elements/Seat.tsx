@@ -41,13 +41,13 @@ export function Seat({
   const laptopH = 25;
 
   return (
-    <Group
+      <Group
       x={seat.position.x + totalW / 2}
       y={seat.position.y + totalH / 2}
       rotation={seat.rotation}
       onClick={onClick}
       onContextMenu={onContextMenu}
-    >
+      >
       {selected && (
         <Rect
           x={-SEAT_TABLE_W / 2}
@@ -80,16 +80,20 @@ export function Seat({
       />
       <Rect
         x={-laptopW / 2}
-        y={-laptopH / 2 + verticalShift}
+        y={-laptopH / 2}
         width={laptopW}
         height={laptopH}
         stroke={LAPTOP_COLOR}
         strokeWidth={1.5 * scale}
       />
       <Line
-        points={[-laptopW / 2, verticalShift, laptopW / 2, verticalShift]}
+        points={[
+            -laptopW / 2, laptopH / 2, 
+            -laptopW / 4, 3 * laptopH / 4, 
+            3 * laptopW / 4, 3 * laptopH / 4, 
+            laptopW / 2, laptopH / 2]}
         stroke={LAPTOP_COLOR}
-        strokeWidth={1.0 * scale}
+        strokeWidth={1.5 * scale}
       />
       {overlay}
     </Group>

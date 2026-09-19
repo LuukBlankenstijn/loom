@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Layer, Line, Rect, Stage } from "react-konva";
+import { Layer, Rect, Stage } from "react-konva";
 import type Konva from "konva";
 import { Rotation } from "../coords";
 import { screenToWorld, snapToGrid } from "../geometry";
@@ -9,7 +9,6 @@ import { Grid } from "./Grid";
 import { Hud } from "./Hud";
 import { Door } from "./elements/Door";
 import { Seat } from "./elements/Seat";
-import { Wall } from "./elements/Wall";
 
 export type MapChanges = {
   deleted: string[];
@@ -24,8 +23,9 @@ export type MapEditorProps = {
 type DragState =
   | { kind: "none" }
   | { kind: "panning"; lastScreen: { x: number; y: number } }
-  | { kind: "drawing"; start: { x: number; y: number } }
-  | { kind: "moving"; lastWorld: { x: number; y: number } };
+  | { kind: "moving"; lastWorld: { x: number; y: number } }
+  | { kind: "selecting"; start: { x: number; y: number } }
+  | { kind: "deselecting"; start: { x: number; y: number } };
 
 export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const useStore = useMemo(() => createEditorStore(), []);
@@ -35,7 +35,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const dragRef = useRef<DragState>({ kind: "none" });
   const clickStartRef = useRef<{ x: number; y: number } | null>(null);
-  const modifiersRef = useRef({ shift: false, alt: false });
+  const modifiersRef = useRef({ shift: false, alt: false, ctrl: false });
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -66,6 +66,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     const onKeyDown = (e: KeyboardEvent) => {
       modifiersRef.current.shift = e.shiftKey;
       modifiersRef.current.alt = e.altKey;
+      modifiersRef.current.ctrl = e.ctrlKey;
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -90,11 +91,26 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
         case "r":
           s.rotateSelection();
           break;
+        case "h":
+          s.mirrorSelectionHorizontal();
+          break;
+        case "v":
+          s.mirrorSelectionVertical();
+          break;
+        case "a":
+          e.preventDefault();
+          if (modifiersRef.current.ctrl) s.selectAll();
+          break;
+        case "d":
+          e.preventDefault();
+          if (modifiersRef.current.ctrl) s.clearSelection();
+          break;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
       modifiersRef.current.shift = e.shiftKey;
       modifiersRef.current.alt = e.altKey;
+      modifiersRef.current.ctrl = e.ctrlKey;
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -118,20 +134,40 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     const canEdit = s.mode === "edit";
 
     if (e.evt.button === 0) {
-      clickStartRef.current = pos;
-      if (canEdit && modifiersRef.current.shift) {
-        const world = screenToWorldNow(pos);
-        dragRef.current = { kind: "drawing", start: snapToGrid(world) };
-      } else if (canEdit && modifiersRef.current.alt) {
-        dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
-      } else {
-        dragRef.current = { kind: "panning", lastScreen: pos };
-      }
-    } else if (e.evt.button === 2 && canEdit) {
-      e.evt.preventDefault();
-      const world = screenToWorldNow(pos);
-      const id = s.selectByHit(world);
-      if (id) s.toggleSelect(id);
+        clickStartRef.current = pos;
+        if (canEdit) {
+            e.evt.preventDefault();
+            const world = screenToWorldNow(pos);
+            const id = s.selectByHit(world);
+
+            if (id) { 
+                const selected = s.isInSelection(id);
+                if (!selected) {
+                    if (!modifiersRef.current.shift) s.clearSelection();
+                    s.toggleSelect(id);
+                } 
+                if (selected && modifiersRef.current.alt) {
+                    s.duplicateSelection();
+                    dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
+                }
+                dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
+            } else { 
+                if (modifiersRef.current.shift) {
+                    dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) };
+                } else if (modifiersRef.current.alt) {
+                    dragRef.current = { kind: "deselecting", start: screenToWorldNow(pos) };
+                } else {
+                    dragRef.current = { kind: "panning", lastScreen: pos };
+                }
+            }
+        }
+    }
+
+    if (e.evt.button === 2) {
+        if (modifiersRef.current.shift) {
+            clickStartRef.current = pos;
+            dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) }
+        }
     }
   };
 
@@ -174,14 +210,16 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
 
     const s = useStore.getState();
 
-    if (drag.kind === "drawing" && pos) {
-      const end = snapToGrid(screenToWorldNow(pos));
-      const startWorld = drag.start;
-      const dx = startWorld.x - end.x;
-      const dy = startWorld.y - end.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 1) {
-        s.finishWallDraw(startWorld, end);
-      }
+    if (drag.kind === "selecting" && pos) {
+        const startWorld = drag.start;
+        const end = screenToWorldNow(pos);
+        s.selectBySelection({x: Math.min(startWorld.x, end.x), y: Math.min(startWorld.y, end.y)}, {x: Math.max(startWorld.x, end.x), y:Math.max(startWorld.y, end.y) }) 
+    }
+
+    if (drag.kind === "deselecting" && pos) {
+        const startWorld = drag.start;
+        const end = screenToWorldNow(pos);
+        s.deselectBySelection({x: Math.min(startWorld.x, end.x), y: Math.min(startWorld.y, end.y)}, {x: Math.max(startWorld.x, end.x), y:Math.max(startWorld.y, end.y) }) 
     }
 
     // emit click if minimal travel
@@ -189,9 +227,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
       const dx = pos.x - start.x;
       const dy = pos.y - start.y;
       if (dx * dx + dy * dy < 1 && drag.kind === "panning") {
-        const world = screenToWorldNow(pos);
-        const id = s.selectByHit(world);
-        if (id) s.toggleSelect(id);
+        s.clearSelection();
       }
     }
   };
@@ -233,16 +269,28 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const elementsArray = Array.from(state.elements.values());
   const editing = state.mode === "edit";
 
-  // Ghost wall while drawing
-  let ghost: { points: number[] } | null = null;
+  // Ghost selection while drawing
+  let ghostSelection: { x1: number, y1: number, x2: number, y2: number } | null = null;
   if (
     editing &&
-    dragRef.current.kind === "drawing" &&
+    dragRef.current.kind === "selecting" &&
     cursorPos
   ) {
     const start = dragRef.current.start;
-    const end = snapToGrid(screenToWorldNow(cursorPos));
-    ghost = { points: [start.x, start.y, end.x, end.y] };
+    const end = screenToWorldNow(cursorPos);
+    ghostSelection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
+  }
+
+  // Ghost selection while drawing
+  let ghostDeselection: { x1: number, y1: number, x2: number, y2: number } | null = null;
+  if (
+    editing &&
+    dragRef.current.kind === "deselecting" &&
+    cursorPos
+  ) {
+    const start = dragRef.current.start;
+    const end = screenToWorldNow(cursorPos);
+    ghostDeselection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
   }
 
   return (
@@ -281,8 +329,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
             const scale = 1 / state.zoom;
             const selected = state.selected.has(el.id);
             switch (el.kind) {
-              case "wall":
-                return <Wall key={el.id} wall={el} selected={selected} scale={scale} />;
               case "door":
                 return <Door key={el.id} door={el} selected={selected} scale={scale} />;
               case "seat": {
@@ -293,7 +339,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                     seat={el}
                     selected={selected}
                     scale={scale}
-                    overlay={
+                    overlay=
                       <Rect
                         x={-w / 2}
                         y={-h / 2}
@@ -301,18 +347,32 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                         height={h}
                         fill="transparent"
                       />
-                    }
                   />
-                );
+                )
               }
             }
           })}
-          {ghost && (
-            <Line
-              points={ghost.points}
-              stroke="rgba(255,255,255,0.5)"
+          {
+              ghostSelection && (
+              <Rect
+              x={Math.min(ghostSelection.x1, ghostSelection.x2)}
+              y={Math.min(ghostSelection.y1, ghostSelection.y2)}
+              width={Math.abs(ghostSelection.x1-ghostSelection.x2)}
+              height={Math.abs(ghostSelection.y1-ghostSelection.y2)}
+              fill="rgba(255,255,255,0.5)"
               strokeWidth={1 / state.zoom}
-            />
+              />
+          )}
+          {
+              ghostDeselection && (
+              <Rect
+              x={Math.min(ghostDeselection.x1, ghostDeselection.x2)}
+              y={Math.min(ghostDeselection.y1, ghostDeselection.y2)}
+              width={Math.abs(ghostDeselection.x1-ghostDeselection.x2)}
+              height={Math.abs(ghostDeselection.y1-ghostDeselection.y2)}
+              fill="rgba(170,0, 0,0.5)"
+              strokeWidth={1 / state.zoom}
+              />
           )}
         </Layer>
       </Stage>

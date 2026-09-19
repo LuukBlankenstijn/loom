@@ -37,17 +37,6 @@ export function fromProtoElements(elements: ProtoElement[]): MapElement[] {
   const out: MapElement[] = [];
   for (const e of elements) {
     switch (e.element.case) {
-      case "wall": {
-        const w = e.element.value;
-        if (!w.start || !w.end) continue;
-        out.push({
-          kind: "wall",
-          id: w.id,
-          start: { x: w.start.x, y: w.start.y },
-          end: { x: w.end.x, y: w.end.y },
-        });
-        break;
-      }
       case "door": {
         const d = e.element.value;
         if (!d.location) continue;
@@ -79,18 +68,6 @@ export function fromProtoElements(elements: ProtoElement[]): MapElement[] {
 export function toProtoElements(elements: MapElement[]): ProtoElement[] {
   return elements.map((e) => {
     switch (e.kind) {
-      case "wall":
-        return create(ElementSchema, {
-          element: {
-            case: "wall",
-            value: {
-              $typeName: "map.v1.Wall",
-              id: e.id,
-              start: { $typeName: "map.v1.Location", x: e.start.x, y: e.start.y },
-              end: { $typeName: "map.v1.Location", x: e.end.x, y: e.end.y },
-            },
-          },
-        });
       case "door":
         return create(ElementSchema, {
           element: {

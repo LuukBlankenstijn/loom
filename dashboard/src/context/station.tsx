@@ -1,24 +1,11 @@
-import {
-  createContext,
-  useState,
-  useEffect,
-  useCallback,
-  use,
-  useMemo,
-} from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { adminClient } from "../lib/client";
+import { StationsContext, type StationsState } from "./station-state";
 
 type ConnectionStatus = {
   connected: boolean;
   loggedIn: boolean;
 };
-
-type State = {
-  getState: (ip: string) => { connected: boolean; loggedIn: boolean };
-  connectedCount: number;
-};
-
-const StationsContext = createContext<State | undefined>(undefined);
 
 export function StationsProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Record<string, ConnectionStatus>>({});
@@ -73,7 +60,7 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
     [state],
   );
 
-  const value: State = useMemo(
+  const value: StationsState = useMemo(
     () => ({
       getState: getter,
       connectedCount: Object.keys(state).length,
@@ -82,12 +69,4 @@ export function StationsProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <StationsContext value={value}>{children}</StationsContext>;
-}
-
-export function useStationState() {
-  const context = use(StationsContext);
-  if (!context) {
-    throw new Error("useStationState must be used within a StationsProvider");
-  }
-  return context;
 }
