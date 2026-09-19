@@ -24,7 +24,8 @@ type DragState =
   | { kind: "none" }
   | { kind: "panning"; lastScreen: { x: number; y: number } }
   | { kind: "moving"; lastWorld: { x: number; y: number } }
-  | { kind: "selecting"; start: { x: number; y: number } };
+  | { kind: "selecting"; start: { x: number; y: number } }
+  | { kind: "deselecting"; start: { x: number; y: number } };
 
 export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const useStore = useMemo(() => createEditorStore(), []);
@@ -133,10 +134,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                 dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
             } else { 
                 if (modifiersRef.current.shift) {
-                    clickStartRef.current = pos;
                     dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) };
+                } else if (modifiersRef.current.alt) {
+                    dragRef.current = { kind: "deselecting", start: screenToWorldNow(pos) };
                 } else {
-                    s.clearSelection();
                     dragRef.current = { kind: "panning", lastScreen: pos };
                 }
             }
@@ -196,13 +197,20 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
         s.selectBySelection({x: Math.min(startWorld.x, end.x), y: Math.min(startWorld.y, end.y)}, {x: Math.max(startWorld.x, end.x), y:Math.max(startWorld.y, end.y) }) 
     }
 
+    if (drag.kind === "deselecting") {
+        const startWorld = drag.start;
+        const end = screenToWorldNow(pos);
+        s.deselectBySelection({x: Math.min(startWorld.x, end.x), y: Math.min(startWorld.y, end.y)}, {x: Math.max(startWorld.x, end.x), y:Math.max(startWorld.y, end.y) }) 
+    }
+
     // emit click if minimal travel
     if (pos && start) {
       const dx = pos.x - start.x;
       const dy = pos.y - start.y;
-      if (dx * dx + dy * dy < 1 && drag.kind === "moving") {
+      if (dx * dx + dy * dy < 1 && drag.kind === "panning") {
         const world = screenToWorldNow(pos);
         const id = s.selectByHit(world);
+        s.clearSelection();
       }
     }
   };
@@ -254,6 +262,18 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     const start = dragRef.current.start;
     const end = screenToWorldNow(cursorPos);
     ghostSelection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
+  }
+
+  // Ghost selection while drawing
+  let ghostDeselection: { x1: number, y1: number, x2: number, y2: number } | null = null;
+  if (
+    editing &&
+    dragRef.current.kind === "deselecting" &&
+    cursorPos
+  ) {
+    const start = dragRef.current.start;
+    const end = screenToWorldNow(cursorPos);
+    ghostDeselection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
   }
 
   return (
@@ -323,6 +343,17 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
               width={Math.abs(ghostSelection.x1-ghostSelection.x2)}
               height={Math.abs(ghostSelection.y1-ghostSelection.y2)}
               fill="rgba(255,255,255,0.5)"
+              strokeWidth={1 / state.zoom}
+              />
+          )}
+          {
+              ghostDeselection && (
+              <Rect
+              x={Math.min(ghostDeselection.x1, ghostDeselection.x2)}
+              y={Math.min(ghostDeselection.y1, ghostDeselection.y2)}
+              width={Math.abs(ghostDeselection.x1-ghostDeselection.x2)}
+              height={Math.abs(ghostDeselection.y1-ghostDeselection.y2)}
+              fill="rgba(255,0, 0,0.5)"
               strokeWidth={1 / state.zoom}
               />
           )}

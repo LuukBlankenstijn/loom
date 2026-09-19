@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { Point, Vector } from "../coords";
 import { Rotation, rotateCw } from "../coords";
 import { applyZoom, snapToGrid } from "../geometry";
-import { elementHit } from "../hit";
+import { elementHit, elementOverlap } from "../hit";
 import type { MapElement } from "../types";
 import { SEAT_TABLE_W, SEAT_TABLE_H, SEAT_CHAIR_PROTRUSION, getSeatTotalBounds } from "../types";
 
@@ -175,17 +175,22 @@ export function createEditorStore() {
     },
     selectBySelection: (selectionTL, selectionBR) => 
         set((s) => {
-            const next = new Set<string>();
+            const next = new Set<string>(s.selected);
             for (const el of get().elements.values()) {
 
-                  const { w, h } = getSeatTotalBounds(el);
-                const seatTL={x: el.position.x, y: el.position.y}
-                const seatBR={x: el.position.x + w, y: el.position.y + h}
-
-                if (seatTL.x > selectionBR.x || selectionTL.x > seatBR.x) continue;
-                if (seatBR.y < selectionTL.y || selectionBR.y < seatTL.y) continue;
-
-                next.add(el.id);
+                if (elementOverlap(el, selectionTL, selectionBR)) {
+                    next.add(el.id)
+                }
+            }
+            return { selected: next };
+        }),
+    deselectBySelection: (selectionTL, selectionBR) => 
+        set((s) => {
+            const next = new Set<string>(s.selected);
+            for (const el of get().elements.values()) {
+                if (elementOverlap(el, selectionTL, selectionBR)) {
+                    next.delete(el.id)
+                }
             }
             return { selected: next };
         }),

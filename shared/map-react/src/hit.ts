@@ -24,24 +24,9 @@ function distanceToSegment(p: Point, a: Point, b: Point): number {
 }
 
 export function doorHit(door: Door, p: Point): boolean {
-  // world -> local: undo translation
-  const tx = p.x - door.position.x;
-  const ty = p.y - door.position.y;
-
-  // undo rotation
-  const angle = -rotationToRadians(door.rotation);
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const lx = tx * cos - ty * sin;
-  const ly = tx * sin + ty * cos;
-  const local: Point = { x: lx, y: ly };
-
-  const leftJamb: Point = { x: -DOOR_WIDTH / 2, y: 0 };
-  const rightJamb: Point = { x: DOOR_WIDTH / 2, y: 0 };
-
   return (
     p.x >= door.position.x - DOOR_WIDTH / 2 &&
-    p.x <= door.position.x + DOOR_WIDTH - DOOR_WIDTH / 2 &&
+    p.x <= door.position.x + DOOR_WIDTH / 2 &&
     p.y >= door.position.y - DOOR_WIDTH &&
     p.y <= door.position.y 
   );
@@ -57,11 +42,42 @@ export function seatHit(seat: Seat, p: Point): boolean {
   );
 }
 
+
+export function doorOverlap(door: Door, TL: Point, BR: Point): boolean {
+    const seatTL={x: door.position.x - DOOR_WIDTH / 2, y: door.position.y - DOOR_WIDTH}
+    const seatBR={x: door.position.x + DOOR_WIDTH / 2, y: door.position.y}
+
+
+    return (!(
+        (seatTL.x > BR.x || TL.x > seatBR.x) || 
+        (seatBR.y < TL.y || BR.y < seatTL.y) 
+    ));
+}
+export function seatOverlap(seat: Seat, TL: Point, BR: Point): boolean {
+    const { w, h } = getSeatTotalBounds(seat);
+    const seatTL={x: seat.position.x, y: seat.position.y}
+    const seatBR={x: seat.position.x + w, y: seat.position.y + h}
+
+    return (!(
+        (seatTL.x > BR.x || TL.x > seatBR.x) || 
+        (seatBR.y < TL.y || BR.y < seatTL.y) 
+    ));
+}
+
 export function elementHit(el: MapElement, p: Point): boolean {
   switch (el.kind) {
     case "door":
       return doorHit(el, p);
     case "seat":
       return seatHit(el, p);
+  }
+}
+
+export function elementOverlap(el: MapElement, TL: Point, BR: Point): boolean {
+  switch (el.kind) {
+    case "door":
+      return doorOverlap(el, TL, BR);
+    case "seat":
+      return seatOverlap(el, TL, BR);
   }
 }
