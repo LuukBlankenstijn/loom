@@ -30,6 +30,7 @@ export type EditorActions = {
   addAtViewportCenter: (factory: (snapped: Point) => MapElement) => void;
 
   toggleSelect: (id: string) => void;
+  selectAll: () => void;
   isInSelection: (id: string) => boolean;
   selectByHit: (worldPoint: Point) => string | null;
   selectBySelection: (selectionTL: Point, selectionBR: Point) => void;
@@ -183,6 +184,11 @@ export function createEditorStore() {
         if (next.has(id)) next.delete(id);
         else next.add(id);
         return { selected: next };
+      }),
+    selectAll: () => 
+      set((s) => {
+          const next = new Set(s.elements.keys());
+          return {selected: next };
       }),
     isInSelection: (id) => {return get().selected.has(id);},
     selectByHit: (worldPoint) => {

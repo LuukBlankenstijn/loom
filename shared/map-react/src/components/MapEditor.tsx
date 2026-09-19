@@ -66,6 +66,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     const onKeyDown = (e: KeyboardEvent) => {
       modifiersRef.current.shift = e.shiftKey;
       modifiersRef.current.alt = e.altKey;
+      modifiersRef.current.ctrl = e.ctrlKey;
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -95,6 +96,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
           break;
         case "v":
           s.mirrorSelectionVertical();
+          break;
+        case "a":
+          e.preventDefault();
+          if (modifiersRef.current.ctrl) s.selectAll();
           break;
       }
     };
