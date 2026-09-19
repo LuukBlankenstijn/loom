@@ -262,8 +262,9 @@ export function createEditorStore() {
             const xmax = Math.max.apply(this, [...x]) 
             const xmin = Math.min.apply(this, [...x]) 
             for (const id of s.selected) {
-                const el = m.get(id);
-                if (el) m.set(id, mirrorElementHorizontal(rotateElement(rotateElement(el)), xmin, xmax));
+                var el = m.get(id);
+                if (el.rotation === Rotation.Deg90 || el.rotation === Rotation.Deg270) {el = rotateElement(rotateElement(el))}
+                if (el) m.set(id, mirrorElementHorizontal(el, xmin, xmax));
             }
             return { elements: m };
         }),
@@ -274,7 +275,8 @@ export function createEditorStore() {
             const ymax = Math.max.apply(this, [...y]) 
             const ymin = Math.min.apply(this, [...y]) 
             for (const id of s.selected) {
-                const el = m.get(id);
+                var el = m.get(id);
+                if (el.rotation === Rotation.Deg90 || el.rotation === Rotation.Deg270) {el = rotateElement(rotateElement(el))}
                 if (el) m.set(id, mirrorElementVertical(rotateElement(rotateElement(el)), ymin, ymax));
             }
             return { elements: m };
