@@ -136,6 +136,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                 if (!selected) {
                     if (!modifiersRef.current.shift) s.clearSelection();
                     s.toggleSelect(id);
+                } 
+                if (selected && modifiersRef.current.alt) {
+                    s.duplicateSelection();
+                    dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
                 }
                 dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
             } else { 
@@ -359,7 +363,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
               y={Math.min(ghostDeselection.y1, ghostDeselection.y2)}
               width={Math.abs(ghostDeselection.x1-ghostDeselection.x2)}
               height={Math.abs(ghostDeselection.y1-ghostDeselection.y2)}
-              fill="rgba(255,0, 0,0.5)"
+              fill="rgba(170,0, 0,0.5)"
               strokeWidth={1 / state.zoom}
               />
           )}
