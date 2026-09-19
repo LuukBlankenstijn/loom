@@ -215,16 +215,12 @@ export function createEditorStore() {
             const next = new Set<string>();
             for (const el of get().elements.values()) {
 
+                const seatTL={x: el.position.x, y: el.position.y}
+                const seatBR={x: el.position.x + SEAT_TABLE_W, y: el.position.y + SEAT_CHAIR_PROTRUSION + SEAT_TABLE_H}
 
-                const totalW = SEAT_TABLE_W;
-                const totalH = SEAT_TABLE_H + SEAT_CHAIR_PROTRUSION;
-                const verticalShift = SEAT_CHAIR_PROTRUSION / 2;
-
-                const seatTL={x: el.position.x + SEAT_TABLE_W / 2 -SEAT_TABLE_W / 2, y: el.position.y + totalH / 2 -SEAT_TABLE_H / 2 - SEAT_CHAIR_PROTRUSION + verticalShift}
-                const seatBR={x: el.position.x + totalW / 2 -SEAT_TABLE_W / 2 + SEAT_TABLE_W, y: el.position.y + totalH / 2 -SEAT_TABLE_H / 2 - SEAT_CHAIR_PROTRUSION + verticalShift + SEAT_TABLE_H + SEAT_CHAIR_PROTRUSION}
                 if (seatTL.x > selectionBR.x || selectionTL.x > seatBR.x) continue;
-
                 if (seatBR.y < selectionTL.y || selectionBR.y < seatTL.y) continue;
+
                 next.add(el.id);
             }
             return { selected: next };
