@@ -80,16 +80,16 @@ export function Seat({
       />
       <Rect
         x={-laptopW / 2}
-        y={-laptopH / 2 + verticalShift}
+        y={-laptopH / 2}
         width={laptopW}
         height={laptopH}
         stroke={LAPTOP_COLOR}
         strokeWidth={1.5 * scale}
       />
       <Line
-        points={[-laptopW / 2, verticalShift, laptopW / 2, verticalShift]}
+        points={[-laptopW / 2, verticalShift, -laptopW / 4, 2 * verticalShift, 3 * laptopW / 4, 2 * verticalShift, laptopW / 2, verticalShift]}
         stroke={LAPTOP_COLOR}
-        strokeWidth={1.0 * scale}
+        strokeWidth={1.5 * scale}
       />
       {overlay}
     </Group>
