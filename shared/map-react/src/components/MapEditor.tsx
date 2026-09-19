@@ -90,6 +90,12 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
         case "r":
           s.rotateSelection();
           break;
+        case "h":
+          s.mirrorSelectionHorizontal();
+          break;
+        case "v":
+          s.mirrorSelectionVertical();
+          break;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {

@@ -37,6 +37,7 @@ export type EditorActions = {
   deleteSelection: () => void;
   duplicateSelection: () => void;
   rotateSelection: () => void;
+  mirrorSelectionHorizontal: () => void;
   moveSelection: (delta: Vector) => void;
 
   getChanges: () => { deleted: string[]; updated: MapElement[] };
@@ -67,6 +68,28 @@ function rotateElement(el: MapElement): MapElement {
     case "door":
     case "seat":
       return { ...el, rotation: rotateCw(el.rotation) };
+  }
+}
+
+function mirrorElementHorizontal(el: MapElement, xmin: number, xmax: number): MapElement {
+  switch (el.kind) {
+    case "door":
+    case "seat":
+      return { ...el, position: {
+        x: xmax - (el.position.x - xmin),
+        y: el.position.y,
+    } };
+  }
+}
+
+function mirrorElementVertical(el: MapElement, ymin: number, ymax: number): MapElement {
+  switch (el.kind) {
+    case "door":
+    case "seat":
+      return { ...el, position: {
+        x: el.position.x,
+        y: ymax - (el.position.y - ymin),
+    } };
   }
 }
 
@@ -232,7 +255,30 @@ export function createEditorStore() {
         }
         return { elements: m };
       }),
-
+    mirrorSelectionHorizontal: () => 
+        set((s) => {
+            const m = new Map(s.elements);
+            const x = Array.from(s.selected).map(el => s.elements.get(el).position.x);
+            const xmax = Math.max.apply(this, [...x]) 
+            const xmin = Math.min.apply(this, [...x]) 
+            for (const id of s.selected) {
+                const el = m.get(id);
+                if (el) m.set(id, mirrorElementHorizontal(rotateElement(rotateElement(el)), xmin, xmax));
+            }
+            return { elements: m };
+        }),
+    mirrorSelectionVertical: () => 
+        set((s) => {
+            const m = new Map(s.elements);
+            const y = Array.from(s.selected).map(el => s.elements.get(el).position.y);
+            const ymax = Math.max.apply(this, [...y]) 
+            const ymin = Math.min.apply(this, [...y]) 
+            for (const id of s.selected) {
+                const el = m.get(id);
+                if (el) m.set(id, mirrorElementVertical(rotateElement(rotateElement(el)), ymin, ymax));
+            }
+            return { elements: m };
+        }),
     getChanges: () => {
       const { startElements, elements } = get();
       const deleted: string[] = [];
