@@ -57,21 +57,12 @@ export function doorHit(door: Door, p: Point): boolean {
   const leftJamb: Point = { x: -DOOR_WIDTH / 2, y: 0 };
   const rightJamb: Point = { x: DOOR_WIDTH / 2, y: 0 };
 
-  if (
-    distance(local, leftJamb) < DOOR_THRESHOLD ||
-    distance(local, rightJamb) < DOOR_THRESHOLD
-  ) {
-    return true;
-  }
-
-  const leafStart: Point = { x: -DOOR_WIDTH / 2, y: 0 };
-  const leafEnd: Point = { x: -DOOR_WIDTH / 2, y: -DOOR_WIDTH };
-  if (distanceToSegment(local, leafStart, leafEnd) < DOOR_THRESHOLD) return true;
-
-  const distToHinge = distance(local, leftJamb);
-  const isWithinRadius = Math.abs(distToHinge - DOOR_WIDTH) < DOOR_THRESHOLD;
-  const isWithinAngles = local.x >= -DOOR_WIDTH / 2 && local.y <= 0;
-  return isWithinRadius && isWithinAngles;
+  return (
+    p.x >= door.position.x - DOOR_WIDTH / 2 &&
+    p.x <= door.position.x + DOOR_WIDTH - DOOR_WIDTH / 2 &&
+    p.y >= door.position.y - DOOR_WIDTH &&
+    p.y <= door.position.y 
+  );
 }
 
 export function seatHit(seat: Seat, p: Point): boolean {

@@ -25,7 +25,8 @@ type DragState =
   | { kind: "none" }
   | { kind: "panning"; lastScreen: { x: number; y: number } }
   | { kind: "drawing"; start: { x: number; y: number } }
-  | { kind: "moving"; lastWorld: { x: number; y: number } };
+  | { kind: "moving"; lastWorld: { x: number; y: number } }
+  | { kind: "selecting"; start: { x: number; y: number } };
 
 export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const useStore = useMemo(() => createEditorStore(), []);
@@ -90,6 +91,9 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
         case "r":
           s.rotateSelection();
           break;
+        case "m":
+          s.mirrorSelection();
+          break;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -118,21 +122,54 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     const canEdit = s.mode === "edit";
 
     if (e.evt.button === 0) {
-      clickStartRef.current = pos;
-      if (canEdit && modifiersRef.current.shift) {
-        const world = screenToWorldNow(pos);
-        dragRef.current = { kind: "drawing", start: snapToGrid(world) };
-      } else if (canEdit && modifiersRef.current.alt) {
-        dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
-      } else {
-        dragRef.current = { kind: "panning", lastScreen: pos };
-      }
-    } else if (e.evt.button === 2 && canEdit) {
-      e.evt.preventDefault();
-      const world = screenToWorldNow(pos);
-      const id = s.selectByHit(world);
-      if (id) s.toggleSelect(id);
+        clickStartRef.current = pos;
+        if (canEdit) {
+            e.evt.preventDefault();
+            const world = screenToWorldNow(pos);
+            const id = s.selectByHit(world);
+
+            const selected = s.isInSelection(id);
+
+            if (id) { 
+                if (!selected) {
+                    if (!modifiersRef.current.shift) s.clearSelection();
+                    s.toggleSelect(id);
+                }
+                dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
+            } else { 
+                if (!modifiersRef.current.shift) {
+                    s.clearSelection();
+                    dragRef.current = { kind: "panning", lastScreen: pos };
+                }
+            }
+        }
     }
+
+    if (e.evt.button === 2) {
+        clickStartRef.current = pos;
+        dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) }
+    }
+
+    // if (e.evt.button === 0) {
+    //   clickStartRef.current = pos;
+    //   if (canEdit && modifiersRef.current.shift) {
+    //     const world = screenToWorldNow(pos);
+    //     dragRef.current = { kind: "drawing", start: snapToGrid(world) };
+    //   } else if (canEdit && modifiersRef.current.alt) {
+    //     dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
+    //   } 
+    // } else if (e.evt.button === 2) {
+    //      if (canEdit) {
+    //          dragRef.current = { kind: "panning", lastScreen: pos };
+    //      }
+    // }
+    //
+    // else if (e.evt.button === 2 && canEdit) {
+    //   e.evt.preventDefault();
+    //   const world = screenToWorldNow(pos);
+    //   const id = s.selectByHit(world);
+    //   if (id) s.toggleSelect(id) else s.clearSelection();
+    // }
   };
 
   const onMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -184,14 +221,17 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
       }
     }
 
+    if (drag.kind === "selecting") {
+        s.selectBySelection({x: Math.min(start.x, pos.x), y: Math.min(start.y, pos.y)}, {x: Math.max(start.x, pos.x), y:Math.max(start.y, pos.y) }) 
+    }
+
     // emit click if minimal travel
     if (pos && start) {
       const dx = pos.x - start.x;
       const dy = pos.y - start.y;
-      if (dx * dx + dy * dy < 1 && drag.kind === "panning") {
+      if (dx * dx + dy * dy < 1 && drag.kind === "moving") {
         const world = screenToWorldNow(pos);
         const id = s.selectByHit(world);
-        if (id) s.toggleSelect(id);
       }
     }
   };
@@ -245,6 +285,18 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     ghost = { points: [start.x, start.y, end.x, end.y] };
   }
 
+  // Ghost selection while drawing
+  let ghostSelection: { x1: number, y1: number, x2: number, y2: number } | null = null;
+  if (
+    editing &&
+    dragRef.current.kind === "selecting" &&
+    cursorPos
+  ) {
+    const start = dragRef.current.start;
+    const end = snapToGrid(screenToWorldNow(cursorPos));
+    ghostSelection = { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
+  }
+
   return (
     <div
       ref={containerRef}
@@ -293,7 +345,7 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                     seat={el}
                     selected={selected}
                     scale={scale}
-                    overlay={
+                    overlay=
                       <Rect
                         x={-w / 2}
                         y={-h / 2}
@@ -301,9 +353,8 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
                         height={h}
                         fill="transparent"
                       />
-                    }
                   />
-                );
+                )
               }
             }
           })}
@@ -313,6 +364,17 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
               stroke="rgba(255,255,255,0.5)"
               strokeWidth={1 / state.zoom}
             />
+          )}
+          {
+              ghostSelection && (
+              <Rect
+              x={Math.min(ghostSelection.x1, ghostSelection.x2)}
+              y={Math.min(ghostSelection.y1, ghostSelection.y2)}
+              width={Math.abs(ghostSelection.x1-ghostSelection.x2)}
+              height={Math.abs(ghostSelection.y1-ghostSelection.y2)}
+              fill="rgba(255,255,255,0.5)"
+              strokeWidth={1 / state.zoom}
+              />
           )}
         </Layer>
       </Stage>

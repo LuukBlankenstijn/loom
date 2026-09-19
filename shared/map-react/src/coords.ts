@@ -1,5 +1,6 @@
 export type Point = { x: number; y: number };
 export type Vector = { x: number; y: number };
+export type Mirror = { x: number; y: number }
 
 export enum Rotation {
   Deg0 = 0,

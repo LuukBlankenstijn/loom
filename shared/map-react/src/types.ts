@@ -1,5 +1,6 @@
 import type { Point } from "./coords";
 import type { Rotation } from "./coords";
+import type { Mirror } from "./coords";
 
 export type Wall = {
   kind: "wall";

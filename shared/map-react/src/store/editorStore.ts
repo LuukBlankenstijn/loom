@@ -4,8 +4,9 @@ import { Rotation, rotateCw } from "../coords";
 import { applyZoom, snapToGrid } from "../geometry";
 import { elementHit } from "../hit";
 import type { MapElement, Wall } from "../types";
+import { SEAT_TABLE_W, SEAT_TABLE_H, SEAT_CHAIR_PROTRUSION } from "../types";
 
-export type MapMode = "view" | "edit";
+export type MapMode = "view" | "edit" | "trump";
 
 export type EditorState = {
   mode: MapMode;
@@ -30,7 +31,9 @@ export type EditorActions = {
   finishWallDraw: (start: Point, end: Point) => void;
 
   toggleSelect: (id: string) => void;
+  isInSelection: (id: string) => boolean;
   selectByHit: (worldPoint: Point) => string | null;
+  selectBySelection: (selectionTL: Point, selectionBR: Point) => void;
   clearSelection: () => void;
   deleteSelection: () => void;
   duplicateSelection: () => void;
@@ -195,12 +198,37 @@ export function createEditorStore() {
         else next.add(id);
         return { selected: next };
       }),
+    isInSelection: (id) => {return get().selected.has(id);},
     selectByHit: (worldPoint) => {
+        // To make sure that duplicated elements/selected elements get preference when clicking
+        for (const id of get().selected) {
+            if (elementHit(get().elements.get(id), worldPoint)) return id;
+        }
+
       for (const el of get().elements.values()) {
         if (elementHit(el, worldPoint)) return el.id;
       }
       return null;
     },
+    selectBySelection: (selectionTL, selectionBR) => 
+        set((s) => {
+            const next = new Set<string>();
+            for (const el of get().elements.values()) {
+
+
+                const totalW = SEAT_TABLE_W;
+                const totalH = SEAT_TABLE_H + SEAT_CHAIR_PROTRUSION;
+                const verticalShift = SEAT_CHAIR_PROTRUSION / 2;
+
+                const seatTL={x: el.position.x + SEAT_TABLE_W / 2 -SEAT_TABLE_W / 2, y: el.position.y + totalH / 2 -SEAT_TABLE_H / 2 - SEAT_CHAIR_PROTRUSION + verticalShift}
+                const seatBR={x: el.position.x + totalW / 2 -SEAT_TABLE_W / 2 + SEAT_TABLE_W, y: el.position.y + totalH / 2 -SEAT_TABLE_H / 2 - SEAT_CHAIR_PROTRUSION + verticalShift + SEAT_TABLE_H + SEAT_CHAIR_PROTRUSION}
+                if (seatTL.x > selectionBR.x || selectionTL.x > seatBR.x) continue;
+
+                if (seatBR.y < selectionTL.y || selectionBR.y < seatTL.y) continue;
+                next.add(el.id);
+            }
+            return { selected: next };
+        }),
     clearSelection: () => set({ selected: new Set() }),
     deleteSelection: () =>
       set((s) => {
