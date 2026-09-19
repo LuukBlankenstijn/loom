@@ -6,27 +6,9 @@ import {
   type Door,
   type MapElement,
   type Seat,
-  type Wall,
 } from "./types";
 
-const WALL_THRESHOLD = 5;
 const DOOR_THRESHOLD = 10;
-
-export function wallHit(wall: Wall, p: Point): boolean {
-  const { start: a, end: b } = wall;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const l2 = dx * dx + dy * dy;
-  if (l2 === 0) return distance(p, a) < WALL_THRESHOLD;
-
-  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
-  t = Math.max(0, Math.min(1, t));
-  const closestX = a.x + t * dx;
-  const closestY = a.y + t * dy;
-  const dxC = p.x - closestX;
-  const dyC = p.y - closestY;
-  return dxC * dxC + dyC * dyC < WALL_THRESHOLD * WALL_THRESHOLD;
-}
 
 function distanceToSegment(p: Point, a: Point, b: Point): number {
   const vx = b.x - a.x;
@@ -77,8 +59,6 @@ export function seatHit(seat: Seat, p: Point): boolean {
 
 export function elementHit(el: MapElement, p: Point): boolean {
   switch (el.kind) {
-    case "wall":
-      return wallHit(el, p);
     case "door":
       return doorHit(el, p);
     case "seat":

@@ -91,22 +91,6 @@ export function Seat({
         stroke={LAPTOP_COLOR}
         strokeWidth={1.0 * scale}
       />
-      <Rect
-        x={- totalW / 2}
-        y={- totalH / 2}
-        width={10}
-        height={10}
-        stroke={LAPTOP_COLOR}
-        strokeWidth={1.5 * scale}
-      />
-      <Rect
-        x={SEAT_TABLE_W - totalW / 2}
-        y={SEAT_TABLE_H+SEAT_CHAIR_PROTRUSION - totalH / 2}
-        width={10}
-        height={10}
-        stroke={LAPTOP_COLOR}
-        strokeWidth={1.5 * scale}
-      />
       {overlay}
     </Group>
   );

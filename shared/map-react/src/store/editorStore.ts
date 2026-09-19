@@ -3,7 +3,7 @@ import type { Point, Vector } from "../coords";
 import { Rotation, rotateCw } from "../coords";
 import { applyZoom, snapToGrid } from "../geometry";
 import { elementHit } from "../hit";
-import type { MapElement, Wall } from "../types";
+import type { MapElement } from "../types";
 import { SEAT_TABLE_W, SEAT_TABLE_H, SEAT_CHAIR_PROTRUSION, getSeatTotalBounds } from "../types";
 
 export type MapMode = "view" | "edit" | "trump";
@@ -28,7 +28,6 @@ export type EditorActions = {
   loadElements: (els: MapElement[]) => void;
   insertElement: (el: MapElement) => void;
   addAtViewportCenter: (factory: (snapped: Point) => MapElement) => void;
-  finishWallDraw: (start: Point, end: Point) => void;
 
   toggleSelect: (id: string) => void;
   isInSelection: (id: string) => boolean;
@@ -51,12 +50,6 @@ function makeId(): string {
 
 function moveElementBy(el: MapElement, delta: Vector): MapElement {
   switch (el.kind) {
-    case "wall":
-      return {
-        ...el,
-        start: { x: el.start.x + delta.x, y: el.start.y + delta.y },
-        end: { x: el.end.x + delta.x, y: el.end.y + delta.y },
-      };
     case "door":
     case "seat":
       return {
@@ -71,8 +64,6 @@ function moveElementBy(el: MapElement, delta: Vector): MapElement {
 
 function rotateElement(el: MapElement): MapElement {
   switch (el.kind) {
-    case "wall":
-      return el;
     case "door":
     case "seat":
       return { ...el, rotation: rotateCw(el.rotation) };
@@ -83,13 +74,6 @@ function duplicateElement(el: MapElement): MapElement {
   const newId = makeId();
   const delta: Vector = { x: 10, y: 10 };
   switch (el.kind) {
-    case "wall":
-      return {
-        ...el,
-        id: newId,
-        start: { x: el.start.x + delta.x, y: el.start.y + delta.y },
-        end: { x: el.end.x + delta.x, y: el.end.y + delta.y },
-      };
     case "door":
     case "seat":
       return {
@@ -105,14 +89,6 @@ function duplicateElement(el: MapElement): MapElement {
 
 function elementsEqual(a: MapElement, b: MapElement): boolean {
   if (a.kind !== b.kind || a.id !== b.id) return false;
-  if (a.kind === "wall" && b.kind === "wall") {
-    return (
-      a.start.x === b.start.x &&
-      a.start.y === b.start.y &&
-      a.end.x === b.end.x &&
-      a.end.y === b.end.y
-    );
-  }
   if ((a.kind === "door" || a.kind === "seat") && a.kind === b.kind) {
     const sameBase =
       a.position.x === b.position.x &&
@@ -178,19 +154,6 @@ export function createEditorStore() {
         m.set(el.id, el);
         return { elements: m };
       }),
-    finishWallDraw: (start, end) =>
-      set((s) => {
-        const wall: Wall = {
-          kind: "wall",
-          id: makeId(),
-          start,
-          end,
-        };
-        const m = new Map(s.elements);
-        m.set(wall.id, wall);
-        return { elements: m };
-      }),
-
     toggleSelect: (id) =>
       set((s) => {
         const next = new Set(s.selected);

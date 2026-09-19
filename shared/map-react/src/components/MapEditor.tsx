@@ -9,7 +9,6 @@ import { Grid } from "./Grid";
 import { Hud } from "./Hud";
 import { Door } from "./elements/Door";
 import { Seat } from "./elements/Seat";
-import { Wall } from "./elements/Wall";
 
 export type MapChanges = {
   deleted: string[];
@@ -24,7 +23,6 @@ export type MapEditorProps = {
 type DragState =
   | { kind: "none" }
   | { kind: "panning"; lastScreen: { x: number; y: number } }
-  | { kind: "drawing"; start: { x: number; y: number } }
   | { kind: "moving"; lastWorld: { x: number; y: number } }
   | { kind: "selecting"; start: { x: number; y: number } };
 
@@ -91,9 +89,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
         case "r":
           s.rotateSelection();
           break;
-        case "m":
-          s.mirrorSelection();
-          break;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -154,27 +149,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
             dragRef.current = { kind: "selecting", start: screenToWorldNow(pos) }
         }
     }
-
-    // if (e.evt.button === 0) {
-    //   clickStartRef.current = pos;
-    //   if (canEdit && modifiersRef.current.shift) {
-    //     const world = screenToWorldNow(pos);
-    //     dragRef.current = { kind: "drawing", start: snapToGrid(world) };
-    //   } else if (canEdit && modifiersRef.current.alt) {
-    //     dragRef.current = { kind: "moving", lastWorld: screenToWorldNow(pos) };
-    //   } 
-    // } else if (e.evt.button === 2) {
-    //      if (canEdit) {
-    //          dragRef.current = { kind: "panning", lastScreen: pos };
-    //      }
-    // }
-    //
-    // else if (e.evt.button === 2 && canEdit) {
-    //   e.evt.preventDefault();
-    //   const world = screenToWorldNow(pos);
-    //   const id = s.selectByHit(world);
-    //   if (id) s.toggleSelect(id) else s.clearSelection();
-    // }
   };
 
   const onMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -215,16 +189,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
     clickStartRef.current = null;
 
     const s = useStore.getState();
-
-    // if (drag.kind === "drawing" && pos) {
-    //   const end = snapToGrid(screenToWorldNow(pos));
-    //   const startWorld = drag.start;
-    //   const dx = startWorld.x - end.x;
-    //   const dy = startWorld.y - end.y;
-    //   if (Math.sqrt(dx * dx + dy * dy) > 1) {
-    //     s.finishWallDraw(startWorld, end);
-    //   }
-    // }
 
     if (drag.kind === "selecting") {
         const startWorld = drag.start;
@@ -280,18 +244,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
   const elementsArray = Array.from(state.elements.values());
   const editing = state.mode === "edit";
 
-  // Ghost wall while drawing
-  let ghost: { points: number[] } | null = null;
-  if (
-    editing &&
-    dragRef.current.kind === "drawing" &&
-    cursorPos
-  ) {
-    const start = dragRef.current.start;
-    const end = snapToGrid(screenToWorldNow(cursorPos));
-    ghost = { points: [start.x, start.y, end.x, end.y] };
-  }
-
   // Ghost selection while drawing
   let ghostSelection: { x1: number, y1: number, x2: number, y2: number } | null = null;
   if (
@@ -340,8 +292,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
             const scale = 1 / state.zoom;
             const selected = state.selected.has(el.id);
             switch (el.kind) {
-              case "wall":
-                return <Wall key={el.id} wall={el} selected={selected} scale={scale} />;
               case "door":
                 return <Door key={el.id} door={el} selected={selected} scale={scale} />;
               case "seat": {
@@ -365,13 +315,6 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
               }
             }
           })}
-          {ghost && (
-            <Line
-              points={ghost.points}
-              stroke="rgba(255,255,255,0.5)"
-              strokeWidth={1 / state.zoom}
-            />
-          )}
           {
               ghostSelection && (
               <Rect

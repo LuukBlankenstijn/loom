@@ -14,7 +14,6 @@ import type { SeatOverlayRenderer } from "../decorators/types";
 import { Grid } from "./Grid";
 import { Door } from "./elements/Door";
 import { Seat } from "./elements/Seat";
-import { Wall } from "./elements/Wall";
 
 export type MapViewerProps = {
   elements: MapElement[];
@@ -39,10 +38,7 @@ function computeBounds(elements: MapElement[]): Bounds | null {
     if (y > maxY) maxY = y;
   };
   for (const el of elements) {
-    if (el.kind === "wall") {
-      expand(el.start.x, el.start.y);
-      expand(el.end.x, el.end.y);
-    } else if (el.kind === "door") {
+  if (el.kind === "door") {
       const half = DOOR_WIDTH / 2;
       expand(el.position.x - half, el.position.y - half);
       expand(el.position.x + half, el.position.y + half);
@@ -196,18 +192,6 @@ export function MapViewer({
           {elements.map((el) => {
             const scale = 1 / zoom;
             switch (el.kind) {
-              case "wall":
-                return (
-                  <Wall
-                    key={el.id}
-                    wall={el}
-                    selected={false}
-                    scale={scale}
-                    onClick={
-                      onElementClick ? handleElementClick(el) : undefined
-                    }
-                  />
-                );
               case "door":
                 return (
                   <Door
