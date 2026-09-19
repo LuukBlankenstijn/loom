@@ -101,6 +101,10 @@ export function MapEditor({ initialElements, onSave }: MapEditorProps) {
           e.preventDefault();
           if (modifiersRef.current.ctrl) s.selectAll();
           break;
+        case "d":
+          e.preventDefault();
+          if (modifiersRef.current.ctrl) s.clearSelection();
+          break;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
