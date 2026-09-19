@@ -87,7 +87,11 @@ export function Seat({
         strokeWidth={1.5 * scale}
       />
       <Line
-        points={[-laptopW / 2, verticalShift, -laptopW / 4, 2 * verticalShift, 3 * laptopW / 4, 2 * verticalShift, laptopW / 2, verticalShift]}
+        points={[
+            -laptopW / 2, laptopH / 2, 
+            -laptopW / 4, 3 * laptopH / 4, 
+            3 * laptopW / 4, 3 * laptopH / 4, 
+            laptopW / 2, laptopH / 2]}
         stroke={LAPTOP_COLOR}
         strokeWidth={1.5 * scale}
       />
