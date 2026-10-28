@@ -73,8 +73,8 @@ impl MapRepository for MapRepo {
                     })?;
                     MapElement::Wall(Wall {
                         id,
-                        start: Point::new(p.x_start, p.x_end),
-                        end: Point::new(p.y_start, p.y_end),
+                        start: Point::new(p.x_start, p.y_start),
+                        end: Point::new(p.x_end, p.y_end),
                     })
                 }
                 "Door" => {
