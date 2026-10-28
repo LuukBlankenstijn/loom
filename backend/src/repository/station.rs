@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use loom_core::station::Station;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 use crate::domain::StationRepository;
 use crate::error::AppError;
@@ -22,10 +22,10 @@ impl From<StationRow> for Station {
     }
 }
 
-pub struct StationRepo(PgPool);
+pub struct StationRepo(SqlitePool);
 
 impl StationRepo {
-    pub fn new(pool: PgPool) -> Self {
+    pub fn new(pool: SqlitePool) -> Self {
         Self(pool)
     }
 }

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE map_element\n                SET station_id = NULL\n                WHERE map_id = $1 AND station_id = $2\n                RETURNING id AS \"id: Uuid\"\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f7134c96c904e191f5661d87812ff072e1bac7d43c5bf66cd1e5a75de8a460d4"
+}

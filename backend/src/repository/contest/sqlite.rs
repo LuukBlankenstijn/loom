@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use loom_core::contest::Contest;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 use super::InnerRepo;
 use crate::error::AppError;
@@ -25,23 +25,26 @@ impl From<ContestRow> for Contest {
     }
 }
 
-pub struct PgContestRepo(PgPool);
+pub struct SqliteContestRepo(SqlitePool);
 
-impl PgContestRepo {
-    pub fn new(pool: PgPool) -> Self {
+impl SqliteContestRepo {
+    pub fn new(pool: SqlitePool) -> Self {
         Self(pool)
     }
 }
 
 #[async_trait]
-impl InnerRepo for PgContestRepo {
+impl InnerRepo for SqliteContestRepo {
     async fn get_next_contest(&self) -> Result<Option<Contest>, AppError> {
         let row = sqlx::query_as!(
             ContestRow,
-            "SELECT id, name, start_time, end_time FROM contests
-             WHERE end_time > NOW()
-             ORDER BY start_time ASC
-             LIMIT 1"
+            r#"SELECT id, name,
+                      start_time AS "start_time: DateTime<Utc>",
+                      end_time AS "end_time: DateTime<Utc>"
+               FROM contests
+               WHERE unixepoch(end_time) > unixepoch()
+               ORDER BY unixepoch(start_time) ASC NULLS LAST
+               LIMIT 1"#
         )
         .fetch_optional(&self.0)
         .await?;

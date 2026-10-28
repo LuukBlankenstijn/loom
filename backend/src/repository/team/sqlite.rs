@@ -1,20 +1,20 @@
 use async_trait::async_trait;
 use loom_core::team::Team;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 use crate::domain::{IpChange, TeamRepository};
 use crate::error::AppError;
 
-pub struct PgTeamRepo(PgPool);
+pub struct SqliteTeamRepo(SqlitePool);
 
-impl PgTeamRepo {
-    pub fn new(pool: PgPool) -> Self {
+impl SqliteTeamRepo {
+    pub fn new(pool: SqlitePool) -> Self {
         Self(pool)
     }
 }
 
 #[async_trait]
-impl TeamRepository for PgTeamRepo {
+impl TeamRepository for SqliteTeamRepo {
     async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<IpChange, AppError> {
         let old_ip = sqlx::query!(
             "SELECT s.ip FROM teams t

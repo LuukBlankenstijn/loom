@@ -1,28 +1,26 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "SELECT w.mime_type, w.text_color, w.data\n             FROM wallpapers w\n             JOIN contest_wallpaper c ON c.wallpaper_id = w.id\n             WHERE c.contest_id = $1",
   "describe": {
     "columns": [
       {
-        "ordinal": 0,
         "name": "mime_type",
+        "ordinal": 0,
         "type_info": "Text"
       },
       {
-        "ordinal": 1,
         "name": "text_color",
+        "ordinal": 1,
         "type_info": "Text"
       },
       {
-        "ordinal": 2,
         "name": "data",
-        "type_info": "Bytea"
+        "ordinal": 2,
+        "type_info": "Blob"
       }
     ],
     "parameters": {
-      "Left": [
-        "Text"
-      ]
+      "Right": 1
     },
     "nullable": [
       false,

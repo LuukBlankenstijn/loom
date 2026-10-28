@@ -1,12 +1,10 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "UPDATE wallpapers SET text_color = $1\n             WHERE id = (SELECT default_wallpaper_id FROM system_settings)",
   "describe": {
     "columns": [],
     "parameters": {
-      "Left": [
-        "Text"
-      ]
+      "Right": 1
     },
     "nullable": []
   },

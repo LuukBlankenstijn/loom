@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contest_map_contest (contest_id, map_id) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "da9db120276179ad03f3a77fa361572a1ffa886c3ef643641374ed2644b9dac8"
+}

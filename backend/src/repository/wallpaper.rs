@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use derive_more::derive::Constructor;
 use futures::stream;
-use sqlx::{FromRow, PgConnection, PgPool};
+use sqlx::{FromRow, SqliteConnection, SqlitePool};
 
 use crate::{
     domain::{WallpaperRepository, WallpaperStream},
@@ -28,15 +28,15 @@ impl From<WallpaperRow> for WallpaperStream {
 
 #[derive(Constructor)]
 pub struct WallpaperRepo {
-    pool: PgPool,
+    pool: SqlitePool,
 }
 
 async fn insert_asset(
-    conn: &mut PgConnection,
+    conn: &mut SqliteConnection,
     data: &[u8],
     mime_type: &str,
     text_color: Option<String>,
-) -> Result<i32, AppError> {
+) -> Result<i64, AppError> {
     let id = sqlx::query_scalar!(
         "INSERT INTO wallpapers (data, mime_type) VALUES ($1, $2) RETURNING id",
         data,
@@ -58,7 +58,7 @@ async fn insert_asset(
     Ok(id)
 }
 
-async fn delete_unreferenced_assets(conn: &mut PgConnection) -> Result<(), AppError> {
+async fn delete_unreferenced_assets(conn: &mut SqliteConnection) -> Result<(), AppError> {
     sqlx::query!(
         "DELETE FROM wallpapers AS w
          WHERE NOT EXISTS (SELECT 1 FROM contest_wallpaper c WHERE c.wallpaper_id = w.id)
@@ -92,7 +92,7 @@ impl WallpaperRepository for WallpaperRepo {
         data: &[u8],
         mime_type: &str,
     ) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
         let previous_color = sqlx::query_scalar!(
             "SELECT w.text_color
              FROM wallpapers w
@@ -117,7 +117,7 @@ impl WallpaperRepository for WallpaperRepo {
     }
 
     async fn clear_for_contest(&self, contest_id: &str) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
         sqlx::query!(
             "DELETE FROM contest_wallpaper WHERE contest_id = $1",
             contest_id
@@ -155,7 +155,7 @@ impl WallpaperRepository for WallpaperRepo {
     }
 
     async fn set_default(&self, data: &[u8], mime_type: &str) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
         let previous_color = sqlx::query_scalar!(
             "SELECT w.text_color
              FROM wallpapers w
@@ -165,7 +165,7 @@ impl WallpaperRepository for WallpaperRepo {
         .await?;
         let wallpaper_id = insert_asset(&mut tx, data, mime_type, previous_color).await?;
         sqlx::query!(
-            "INSERT INTO system_settings (id, default_wallpaper_id) VALUES (TRUE, $1)
+            "INSERT INTO system_settings (id, default_wallpaper_id) VALUES (1, $1)
              ON CONFLICT (id) DO UPDATE SET default_wallpaper_id = $1",
             wallpaper_id
         )
@@ -177,7 +177,7 @@ impl WallpaperRepository for WallpaperRepo {
     }
 
     async fn clear_default(&self) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
+        let mut tx = self.pool.begin_with("BEGIN IMMEDIATE").await?;
         sqlx::query!("UPDATE system_settings SET default_wallpaper_id = NULL")
             .execute(&mut *tx)
             .await?;

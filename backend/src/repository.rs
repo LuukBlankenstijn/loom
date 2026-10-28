@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 use crate::{
     config::IcpcApiConfig,
@@ -19,14 +19,14 @@ mod utils;
 
 #[derive(Clone)]
 pub struct Repositories {
-    pool: PgPool,
+    pool: SqlitePool,
     http_client: reqwest::Client,
 
     icpc_config: Option<IcpcApiConfig>,
 }
 
 impl Repositories {
-    pub async fn new(pool: PgPool, icpc_config: Option<IcpcApiConfig>) -> Repositories {
+    pub async fn new(pool: SqlitePool, icpc_config: Option<IcpcApiConfig>) -> Repositories {
         let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(100))
             .build()

@@ -10,8 +10,11 @@ use loom_rpc::{
     map::v1::map_service_server::MapServiceServer,
     station::v1::station_service_server,
 };
-use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::CorsLayer;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
+use tower_http::{
+    cors::CorsLayer,
+    services::{ServeDir, ServeFile},
+};
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
@@ -41,13 +44,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(filter)
         .init();
 
-    let config = Config::load();
+    let config = Config::load()?;
 
-    let pool = PgPoolOptions::new()
-        .max_connections(100)
-        .connect(&config.database_url())
-        .await
-        .expect("Failed to build pgPool");
+    let pool = SqlitePool::connect_with(
+        SqliteConnectOptions::new()
+            .filename(&config.database_path)
+            .create_if_missing(true)
+            .journal_mode(SqliteJournalMode::Wal),
+    )
+    .await?;
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
@@ -141,8 +146,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let routes = Router::new()
         .merge(http_routes)
         .merge(Scalar::with_url("/api/docs", openapi))
-        .merge(grpc_router)
-        .layer(CorsLayer::permissive());
+        .nest("/rpc", grpc_router.clone())
+        .merge(grpc_router);
+
+    let routes = match &config.dashboard_dir {
+        Some(dir) => routes
+            .fallback_service(ServeDir::new(dir).fallback(ServeFile::new(dir.join("index.html")))),
+        None => routes,
+    }
+    .layer(CorsLayer::permissive());
 
     tracing::info!(addr = %config.listen, "starting server");
 

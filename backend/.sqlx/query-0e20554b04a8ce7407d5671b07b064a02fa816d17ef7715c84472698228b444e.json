@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO wallpapers (id, data, mime_type, text_color) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "0e20554b04a8ce7407d5671b07b064a02fa816d17ef7715c84472698228b444e"
+}

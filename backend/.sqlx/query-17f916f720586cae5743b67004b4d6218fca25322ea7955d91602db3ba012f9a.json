@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id: i32\", name FROM contest_map",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: i32",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "17f916f720586cae5743b67004b4d6218fca25322ea7955d91602db3ba012f9a"
+}

@@ -15,20 +15,15 @@ impl From<sqlx::Error> for AppError {
                 Self::Database("database pool timed out - server under heavy load".into())
             }
             sqlx::Error::PoolClosed => Self::Internal("database pool was closed".into()),
-            sqlx::Error::Database(db_err) => {
-                if let Some(code) = db_err.code() {
-                    if code == "23505" {
-                        return Self::AlreadyExists(db_err.message().into());
-                    }
-                    if code == "23503" {
-                        return Self::FailedPrecondition(format!(
-                            "foreign key violation: {}",
-                            db_err.message()
-                        ));
-                    }
+            sqlx::Error::Database(db_err) => match db_err.kind() {
+                sqlx::error::ErrorKind::UniqueViolation => {
+                    Self::AlreadyExists(db_err.message().into())
                 }
-                Self::Database(db_err.message().into())
-            }
+                sqlx::error::ErrorKind::ForeignKeyViolation => {
+                    Self::FailedPrecondition(format!("foreign key violation: {}", db_err.message()))
+                }
+                _ => Self::Database(db_err.message().into()),
+            },
             sqlx::Error::Io(e) => Self::Database(format!("IO error: {}", e)),
             sqlx::Error::Tls(e) => Self::Internal(format!("TLS error: {}", e)),
             sqlx::Error::Protocol(e) => Self::Internal(format!("protocol error: {}", e)),

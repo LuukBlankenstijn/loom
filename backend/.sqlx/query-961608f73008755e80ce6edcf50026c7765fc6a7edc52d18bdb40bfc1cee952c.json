@@ -1,13 +1,10 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "INSERT INTO contest_wallpaper (contest_id, wallpaper_id) VALUES ($1, $2)\n             ON CONFLICT (contest_id) DO UPDATE SET wallpaper_id = $2",
   "describe": {
     "columns": [],
     "parameters": {
-      "Left": [
-        "Text",
-        "Int4"
-      ]
+      "Right": 2
     },
     "nullable": []
   },

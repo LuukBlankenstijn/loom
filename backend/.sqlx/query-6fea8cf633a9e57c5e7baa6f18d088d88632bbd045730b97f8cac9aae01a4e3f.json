@@ -1,10 +1,10 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "DELETE FROM wallpapers AS w\n         WHERE NOT EXISTS (SELECT 1 FROM contest_wallpaper c WHERE c.wallpaper_id = w.id)\n           AND NOT EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)",
   "describe": {
     "columns": [],
     "parameters": {
-      "Left": []
+      "Right": 0
     },
     "nullable": []
   },

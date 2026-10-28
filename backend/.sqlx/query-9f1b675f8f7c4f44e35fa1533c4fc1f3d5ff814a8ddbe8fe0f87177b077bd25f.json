@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id AS \"id: Uuid\", map_id FROM map_element WHERE id = $1 AND element_type = 'Seat'",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "map_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "9f1b675f8f7c4f44e35fa1533c4fc1f3d5ff814a8ddbe8fe0f87177b077bd25f"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO system_settings (id, default_wallpaper_id) VALUES (1, $1)\n             ON CONFLICT (id) DO UPDATE SET default_wallpaper_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "0ac7b5a3a81dfa0808eee2f28774a9b9e8680caebdeb0506d5f3a59d09c76795"
+}

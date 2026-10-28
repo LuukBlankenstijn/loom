@@ -1,13 +1,10 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "INSERT INTO stations (ip, reported_label) VALUES ($1, $2)\n             ON CONFLICT (ip) DO UPDATE SET reported_label = EXCLUDED.reported_label",
   "describe": {
     "columns": [],
     "parameters": {
-      "Left": [
-        "Text",
-        "Text"
-      ]
+      "Right": 2
     },
     "nullable": []
   },
