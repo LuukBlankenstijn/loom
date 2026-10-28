@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO stations (ip, reported_label) VALUES ($1, $2)\n             ON CONFLICT (ip) DO UPDATE SET reported_label = EXCLUDED.reported_label",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "764f6f8a4ea7ea824867dd47afc6b0a7dc846aa7e596008f45f53321f2e628d9"
+}

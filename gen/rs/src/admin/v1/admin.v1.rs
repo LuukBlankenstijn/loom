@@ -38,6 +38,21 @@ pub struct SetMapRequest {
 pub struct Station {
     #[prost(string, tag="2")]
     pub ip: ::prost::alloc::string::String,
+    /// Label shown in the dashboard: the admin override if set, otherwise the one the agent reported
+    #[prost(string, optional, tag="3")]
+    pub label: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
+    pub reported_label: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, tag="5")]
+    pub label_overridden: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetStationLabelRequest {
+    #[prost(string, tag="1")]
+    pub ip: ::prost::alloc::string::String,
+    /// Absent or empty clears the override so the agent-reported label is used again
+    #[prost(string, optional, tag="2")]
+    pub label: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StationsResponse {

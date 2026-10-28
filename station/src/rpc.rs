@@ -79,9 +79,7 @@ impl TryFrom<StationCommand> for Message {
                 station_command::Message::StartRegistrationTool(_) => {
                     Message::StartRegistrationTool
                 }
-                station_command::Message::StopRegistrationTool(_) => {
-                    Message::StopRegistrationTool
-                }
+                station_command::Message::StopRegistrationTool(_) => Message::StopRegistrationTool,
             },
             None => return Err(anyhow::anyhow!("Message is none")),
         };
@@ -92,6 +90,7 @@ impl TryFrom<StationCommand> for Message {
 pub struct RpcClient {
     address: String,
     auth_token: Option<String>,
+    label: Option<String>,
     sender: broadcast::Sender<Message>,
     receiver: broadcast::Receiver<Message>,
 }
@@ -100,12 +99,14 @@ impl RpcClient {
     pub fn new(
         address: String,
         auth_token: Option<String>,
+        label: Option<String>,
         sender: broadcast::Sender<Message>,
     ) -> Self {
         let receiver = sender.subscribe();
         Self {
             address,
             auth_token,
+            label,
             sender,
             receiver,
         }
@@ -176,6 +177,15 @@ impl RpcClient {
         request
             .metadata_mut()
             .insert("x-loom-station-ip", header_value);
+
+        if let Some(label) = &self.label {
+            let header_value = label
+                .parse()
+                .context("Failed to parse station label into a valid header value")?;
+            request
+                .metadata_mut()
+                .insert("x-loom-station-label", header_value);
+        }
 
         let response = client.subscribe(request).await?;
         Ok((tx, response.into_inner()))

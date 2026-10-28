@@ -128,6 +128,9 @@ export const adminClient = {
   deleteStation: async (ip: string): Promise<void> => {
     await station_client.deleteStation({ ip });
   },
+  setStationLabel: async (ip: string, label?: string): Promise<void> => {
+    await station_client.setStationLabel({ ip, label });
+  },
   assignTeam: async (ips: string[]): Promise<void> => {
     await station_client.assignTeam({ ips });
   },

@@ -7,6 +7,7 @@ use crate::error::AppError;
 pub trait StationRepository: Send + Sync {
     async fn get(&self, ip: &str) -> Result<Station, AppError>;
     async fn get_all(&self) -> Result<Vec<Station>, AppError>;
-    async fn upsert(&self, ip: &str) -> Result<(), AppError>;
+    async fn upsert(&self, ip: &str, reported_label: Option<&str>) -> Result<(), AppError>;
+    async fn set_label_override(&self, ip: &str, label: Option<&str>) -> Result<(), AppError>;
     async fn delete(&self, ip: &str) -> Result<(), AppError>;
 }

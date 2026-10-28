@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE stations SET label_override = $2 WHERE ip = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "94553d61f8e4d5838ed2b0bca8b2fe8ad75684a790ec1154d51e585fdbaf9110"
+}

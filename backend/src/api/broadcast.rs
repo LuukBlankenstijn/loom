@@ -75,9 +75,8 @@ impl BroadcastService for BroadcastHandler {
                 })
                 .collect();
 
-            let stream = tokio_stream::once(Ok(
-                BroadcastEvent::Assignment(assignments).into_proto()
-            ));
+            let stream =
+                tokio_stream::once(Ok(BroadcastEvent::Assignment(assignments).into_proto()));
             broadcast_stream = stream.chain(broadcast_stream).boxed();
         }
 

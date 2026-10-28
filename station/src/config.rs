@@ -23,12 +23,28 @@ pub struct Args {
     /// loomd launches into the active graphical session on request.
     #[arg(long, default_value = "loom-station-registration")]
     pub registration_tool: String,
+
+    /// Free-form label reported to the backend, e.g. "team" or "judgehost".
+    /// Trimmed and lowercased; an empty value means no label.
+    #[arg(long)]
+    pub label: Option<String>,
+
+    /// Disable the greeter integration: no dbus connection to the greeter,
+    /// the station always reports itself as logged in and logout requests
+    /// are ignored.
+    #[arg(long)]
+    pub no_greeter: bool,
+
+    /// Disable launching the registration tool on request.
+    #[arg(long)]
+    pub no_registration_tool: bool,
 }
 
 impl Args {
-    /// Parse and resolve the auth token
+    /// Parse the arguments, normalise the label and resolve the auth token
     pub fn parse_and_resolve() -> anyhow::Result<Self> {
         let mut args = Self::parse();
+        args.label = args.label.as_deref().and_then(normalize_label);
         args.resolve_auth().context("failed to resolve auth")?;
         Ok(args)
     }
@@ -49,4 +65,9 @@ impl Args {
             Ok(())
         }
     }
+}
+
+fn normalize_label(label: &str) -> Option<String> {
+    let label = label.trim().to_lowercase();
+    (!label.is_empty()).then_some(label)
 }

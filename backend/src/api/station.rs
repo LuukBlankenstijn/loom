@@ -2,6 +2,7 @@ use std::{pin::Pin, sync::Arc};
 
 use derive_more::derive::Constructor;
 use futures::{Stream, StreamExt};
+use loom_core::station::normalize_label;
 use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::station::v1::{self as pb, station_service_server::StationService};
 use tonic::{Request, Response, Status, Streaming, metadata::MetadataMap};
@@ -28,7 +29,8 @@ impl StationService for StationHandler {
     ) -> Result<Response<Self::SubscribeStream>, Status> {
         // get ip and save in database
         let ip = get_ip(request.metadata())?;
-        self.station_repo.upsert(&ip).await?;
+        let label = get_label(request.metadata());
+        self.station_repo.upsert(&ip, label.as_deref()).await?;
 
         let domain_stream = self.orchestrator.register_station(&ip).await?;
 
@@ -79,4 +81,11 @@ fn get_ip(metadata: &MetadataMap) -> Result<String, AppError> {
             "ip not found on meta data".to_string(),
         )),
     }
+}
+
+fn get_label(metadata: &MetadataMap) -> Option<String> {
+    metadata
+        .get("x-loom-station-label")
+        .and_then(|label| label.to_str().ok())
+        .and_then(normalize_label)
 }

@@ -12,6 +12,16 @@
         "ordinal": 1,
         "name": "ip",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "reported_label",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "label_override",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -21,7 +31,9 @@
     },
     "nullable": [
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
   "hash": "193c5c63d0844bb315ca82ca57cb4cb9fd497c3524746caa5fadc859c7c24f94"
