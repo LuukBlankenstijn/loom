@@ -87,6 +87,7 @@ impl From<AppError> for Status {
 
 pub fn combined_auth_interceptor(
     secret_option: Option<String>,
+    trusted_proxy_header: bool,
 ) -> impl Fn(Request<()>) -> Result<Request<()>, Status> + Clone {
     let expected_header = secret_option.map(|s| format!("Bearer {}", s));
     move |req: Request<()>| {
@@ -97,7 +98,7 @@ pub fn combined_auth_interceptor(
 
         let metadata = req.metadata();
 
-        if metadata.contains_key("x-proxy-authorized") {
+        if trusted_proxy_header && metadata.contains_key("x-proxy-authorized") {
             return Ok(req);
         }
 

@@ -7,6 +7,7 @@ services:
     environment:
       DATABASE_PATH: /data/loom.db
       # AUTH_TOKEN: changeme
+      # TRUSTED_PROXY_HEADER: "true"
       # DJ_BASE_URL: http://domjudge/api
       # DJ_USERNAME: admin
       # DJ_PASSWORD: secret

@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new());
 
-    let interceptor = combined_auth_interceptor(config.auth_token);
+    let interceptor = combined_auth_interceptor(config.auth_token, config.trusted_proxy_header);
 
     let contest_service = ContestServiceServer::with_interceptor(
         api::admin::ContestHandler::new(

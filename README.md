@@ -60,7 +60,7 @@ The system exist out of several components:
 
 This runs `loom-backend.service` as the `loom` user, keeps the database at `/var/lib/loom/loom.db` and serves the dashboard, the HTTP API (`/api`), gRPC-web (`/rpc`) and the station gRPC service on one port (`listenAddress`, default `0.0.0.0:8080`).
 
-The gRPC auth check lets any request with an `x-proxy-authorized` header through, and the dashboard never sends the token. With `authTokenFile` set, put the dashboard behind a reverse proxy that authenticates admins, sets that header and strips client-supplied copies.
+The dashboard never sends the auth token. With `authTokenFile` set, put the dashboard behind a reverse proxy that authenticates admins, sets an `x-proxy-authorized` header and strips client-supplied copies, and enable `trustedProxyHeader` so the backend accepts that header instead of the token. Anyone who reaches the backend port directly can send the header too, so only enable it when admin traffic cannot bypass the proxy.
 
 ### Configuration
 
@@ -71,6 +71,7 @@ listen = "0.0.0.0:8080"
 database_path = "/var/lib/loom/loom.db"
 dashboard_dir = "/path/to/dashboard/dist"
 auth_token_file = "/run/secrets/loom-auth-token"
+trusted_proxy_header = false
 
 [contest_api]
 base_url = "https://domjudge.example/domjudge"
@@ -78,7 +79,7 @@ username = "admin"
 password_file = "/run/secrets/domjudge-password"
 ```
 
-Only `database_path` is required. `auth_token` and `contest_api.password` may be given inline instead of as files. Without a config argument it reads `/etc/loom/backend.toml`, or else the environment: `DATABASE_PATH` (required), `DASHBOARD_DIR`, `AUTH_TOKEN`, `DJ_BASE_URL`, `DJ_USERNAME`, `DJ_PASSWORD`.
+Only `database_path` is required. `auth_token` and `contest_api.password` may be given inline instead of as files. `trusted_proxy_header` (default `false`) lets gRPC requests with an `x-proxy-authorized` header skip the token check. Without a config argument it reads `/etc/loom/backend.toml`, or else the environment: `DATABASE_PATH` (required), `DASHBOARD_DIR`, `AUTH_TOKEN`, `TRUSTED_PROXY_HEADER`, `DJ_BASE_URL`, `DJ_USERNAME`, `DJ_PASSWORD`.
 
 ### Moving from Postgres
 

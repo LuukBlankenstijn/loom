@@ -25,6 +25,7 @@ let
     }
     // optionalAttrs (cfg.dashboardPackage != null) { dashboard_dir = "${cfg.dashboardPackage}"; }
     // optionalAttrs (cfg.authTokenFile != null) { auth_token_file = "${credentialsDir}/auth-token"; }
+    // optionalAttrs cfg.trustedProxyHeader { trusted_proxy_header = true; }
     // optionalAttrs (cfg.contestApi != null) {
       contest_api = {
         base_url = cfg.contestApi.baseUrl;
@@ -60,10 +61,7 @@ in
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = ''
-        Open the listen port. Stations need it, but anyone reaching it can bypass authTokenFile
-        on gRPC by sending an x-proxy-authorized header.
-      '';
+      description = "Open the listen port; stations need it.";
     };
     authTokenFile = mkOption {
       type = types.nullOr (types.strMatching "/.+");
@@ -72,9 +70,16 @@ in
       description = ''
         File holding the admin bearer token. systemd passes it to the service as a credential,
         so it may be readable by root only. Without it the admin API and dashboard are unauthenticated.
-        The backend accepts any gRPC request carrying an x-proxy-authorized header and the dashboard
-        never sends the token, so with it the dashboard only works behind a reverse proxy that
-        authenticates admins, sets x-proxy-authorized and strips client-supplied copies.
+        The dashboard never sends the token, so with it the dashboard needs trustedProxyHeader.
+      '';
+    };
+    trustedProxyHeader = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Let gRPC requests carrying an x-proxy-authorized header skip the token check. Only enable this
+        when every admin request passes through a reverse proxy that authenticates admins, sets the header
+        and strips client-supplied copies; anyone reaching the listen port directly can send it too.
       '';
     };
     contestApi = mkOption {

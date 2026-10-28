@@ -13,6 +13,7 @@ pub struct Config {
     pub dashboard_dir: Option<PathBuf>,
     pub icpc_api: Option<IcpcApiConfig>,
     pub auth_token: Option<String>,
+    pub trusted_proxy_header: bool,
 }
 
 #[derive(Clone)]
@@ -31,6 +32,8 @@ struct TomlConfig {
     dashboard_dir: Option<PathBuf>,
     auth_token: Option<String>,
     auth_token_file: Option<PathBuf>,
+    #[serde(default)]
+    trusted_proxy_header: bool,
     contest_api: Option<TomlIcpcApi>,
 }
 
@@ -103,6 +106,7 @@ impl Config {
             dashboard_dir: toml.dashboard_dir,
             icpc_api,
             auth_token: read_secret("auth_token", toml.auth_token, toml.auth_token_file)?,
+            trusted_proxy_header: toml.trusted_proxy_header,
         })
     }
 
@@ -128,6 +132,15 @@ impl Config {
             dashboard_dir: env::var_os("DASHBOARD_DIR").map(PathBuf::from),
             icpc_api,
             auth_token: env::var("AUTH_TOKEN").ok(),
+            trusted_proxy_header: env::var("TRUSTED_PROXY_HEADER")
+                .ok()
+                .map(|value| {
+                    value.parse().map_err(|_| {
+                        format!("TRUSTED_PROXY_HEADER must be true or false, got {value}")
+                    })
+                })
+                .transpose()?
+                .unwrap_or(false),
         })
     }
 }
