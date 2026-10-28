@@ -24,13 +24,6 @@ struct ApiUser {
     team_id: Option<String>,
     #[serde(default)]
     ip: Option<String>,
-    name: String,
-    username: String,
-    #[serde(default)]
-    email: Option<String>,
-    enabled: bool,
-    #[serde(default)]
-    roles: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -102,7 +95,7 @@ impl TeamRepository for HttpTeamRepo {
 
     async fn set_ip(&self, team_id: &str, ip: Option<&str>) -> Result<IpChange, AppError> {
         let users = self.get_users().await?;
-        let new_ip = ip.unwrap_or("");
+        let new_ip = ip.filter(|s| !s.is_empty());
 
         let old_ip = users
             .iter()
@@ -110,7 +103,7 @@ impl TeamRepository for HttpTeamRepo {
             .and_then(|u| u.ip.clone())
             .filter(|s| !s.is_empty());
 
-        if !new_ip.is_empty() {
+        if let Some(new_ip) = new_ip {
             for u in &users {
                 if u.ip.as_deref() == Some(new_ip) && u.team_id.as_deref() != Some(team_id) {
                     return Err(AppError::AlreadyExists(
@@ -125,6 +118,7 @@ impl TeamRepository for HttpTeamRepo {
             .filter(|u| u.team_id.as_deref() == Some(team_id))
             .collect();
 
+        let body = serde_json::json!({ "ip": new_ip });
         let mut handles = Vec::new();
 
         for user in team_users {
@@ -132,36 +126,22 @@ impl TeamRepository for HttpTeamRepo {
             let url = format!("{}/api/v4/users/{}", self.config.base_url, user.id);
             let username = self.config.username.clone();
             let password = self.config.password.clone();
-
-            let mut form: Vec<(String, String)> = vec![
-                ("id".into(), user.id.clone()),
-                ("name".into(), user.name.clone()),
-                ("username".into(), user.username.clone()),
-                ("email".into(), user.email.clone().unwrap_or_default()),
-                ("ip".into(), new_ip.to_string()),
-                (
-                    "enabled".into(),
-                    if user.enabled { "1" } else { "0" }.into(),
-                ),
-            ];
-
-            for role in &user.roles {
-                form.push(("roles[]".into(), role.clone()));
-            }
+            let body = body.clone();
 
             handles.push(tokio::spawn(async move {
                 let resp = client
-                    .put(&url)
+                    .patch(&url)
                     .basic_auth(&username, Some(&password))
-                    .form(&form)
+                    .json(&body)
                     .send()
                     .await
                     .map_err(AppError::from)?;
 
-                if !resp.status().is_success() {
+                let status = resp.status();
+                if !status.is_success() {
+                    let detail = resp.text().await.unwrap_or_default();
                     return Err(AppError::Internal(format!(
-                        "contest API error: status {}",
-                        resp.status()
+                        "contest API error: status {status}: {detail}"
                     )));
                 }
                 Ok(())
