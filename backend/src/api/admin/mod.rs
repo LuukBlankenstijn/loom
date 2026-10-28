@@ -1,10 +1,10 @@
 mod contest;
 mod image;
 mod station;
-mod system;
 mod team;
+mod wallpaper;
 
 pub use contest::ContestHandler;
 pub use station::StationHandler;
-pub use system::SystemHandler;
 pub use team::TeamHandler;
+pub use wallpaper::{MAX_REQUEST_BYTES, WallpaperHandler};

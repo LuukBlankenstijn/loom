@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contest_wallpaper (contest_id, wallpaper_id)\n             SELECT $1, id FROM wallpapers WHERE id = $2\n             ON CONFLICT (contest_id) DO UPDATE SET wallpaper_id = EXCLUDED.wallpaper_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "81d39eabf181ba40157c5215f3abbe04018126ce9ebf792f5446e0144c51bb3a"
+}

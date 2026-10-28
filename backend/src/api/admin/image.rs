@@ -2,7 +2,14 @@ use image::ImageFormat;
 use std::io::Cursor;
 
 pub(super) fn mime_type(data: &[u8]) -> Result<&'static str, String> {
-    let format = image::guess_format(data).map_err(|_| "unsupported image format".to_string())?;
+    let unsupported = || "unsupported image format, use png, jpeg, webp or gif".to_string();
+    let mime_type = match image::guess_format(data).map_err(|_| unsupported())? {
+        ImageFormat::Png => "image/png",
+        ImageFormat::Jpeg => "image/jpeg",
+        ImageFormat::Gif => "image/gif",
+        ImageFormat::WebP => "image/webp",
+        _ => return Err(unsupported()),
+    };
 
     image::ImageReader::new(Cursor::new(data))
         .with_guessed_format()
@@ -10,13 +17,5 @@ pub(super) fn mime_type(data: &[u8]) -> Result<&'static str, String> {
         .into_dimensions()
         .map_err(|e| format!("invalid image data: {e}"))?;
 
-    match format {
-        ImageFormat::Png => Ok("image/png"),
-        ImageFormat::Jpeg => Ok("image/jpeg"),
-        ImageFormat::Gif => Ok("image/gif"),
-        ImageFormat::WebP => Ok("image/webp"),
-        ImageFormat::Bmp => Ok("image/bmp"),
-        ImageFormat::Tiff => Ok("image/tiff"),
-        _ => Err("unsupported image format".to_string()),
-    }
+    Ok(mime_type)
 }

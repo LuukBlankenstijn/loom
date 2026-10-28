@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT mime_type AS \"mime_type!\", data AS \"data!\"\n               FROM wallpapers\n               WHERE id = $1 AND data IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "mime_type!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "data!",
+        "ordinal": 1,
+        "type_info": "Blob"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "6d6f0e0d4b615c6db3b763ee57e905cdbdf84f68c404a6eb6be29881e2db4d9d"
+}

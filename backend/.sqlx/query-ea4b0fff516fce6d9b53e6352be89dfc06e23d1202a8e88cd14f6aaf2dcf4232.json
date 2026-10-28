@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color\n               FROM wallpapers w\n               JOIN contest_wallpaper c ON c.wallpaper_id = w.id\n               WHERE c.contest_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: i32",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "kind",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "mime_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "url",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "text_color",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "ea4b0fff516fce6d9b53e6352be89dfc06e23d1202a8e88cd14f6aaf2dcf4232"
+}

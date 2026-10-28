@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { adminClient } from "../lib/client";
+import { WallpaperMedia } from "../components/WallpaperMedia";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { useStationState } from "../context/station";
@@ -8,9 +10,6 @@ import type { Station } from "@client/v1/admin/station_pb";
 
 export function ContestPage() {
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedMapId, setSelectedMapId] = useState<number | null>(null);
-  const [textColor, setTextColor] = useState<string>("#ffffff");
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const { getState: getConnectedState } = useStationState();
 
@@ -19,11 +18,9 @@ export function ContestPage() {
     queryFn: () => adminClient.getNextContest(),
   });
 
-  const { data: wallpaper, isLoading: wallpaperLoading } = useQuery({
-    queryKey: ["wallpaper"],
-    queryFn: () => adminClient.getWallpaper(),
-    staleTime: 10 * 60 * 1000, // 10 minutes - wallpaper rarely changes
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
+  const { data: wallpapersData, isLoading: wallpapersLoading } = useQuery({
+    queryKey: ["wallpapers"],
+    queryFn: () => adminClient.listWallpapers(),
   });
 
   const { data: teamsData } = useQuery({
@@ -41,45 +38,22 @@ export function ContestPage() {
     queryFn: () => adminClient.getAllMaps(),
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: (imageData: Uint8Array) =>
-      adminClient.setWallpaper(contest?.id ?? "", imageData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["wallpaper"] });
-    },
+  const setWallpaperMutation = useMutation({
+    mutationFn: (wallpaperId?: number) =>
+      adminClient.setWallpaper(contest?.id ?? "", wallpaperId),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["contest"] }),
+        queryClient.invalidateQueries({ queryKey: ["wallpapers"] }),
+      ]),
   });
-
-  const textColorMutation = useMutation({
-    mutationFn: (color: string) =>
-      adminClient.setWallpaperTextColor(contest?.id ?? "", color),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["wallpaper"] });
-    },
-  });
-
-  // Sync text color with server state
-  useEffect(() => {
-    if (wallpaper?.color) {
-      setTextColor(wallpaper.color);
-    }
-  }, [wallpaper?.color]);
-
-  // Sync local state with server state
-  useEffect(() => {
-    if (contest?.mapId !== undefined) {
-      setSelectedMapId(contest.mapId);
-    }
-  }, [contest?.mapId]);
 
   const setMapMutation = useMutation({
     mutationFn: (mapId: number) => adminClient.setMap(contest?.id ?? "", mapId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contest"] });
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["contest"] }),
     onError: (error) => {
       console.error("Failed to set map:", error);
-      // Reset to server value on error
-      setSelectedMapId(contest?.mapId ?? null);
     },
   });
 
@@ -98,6 +72,15 @@ export function ContestPage() {
   const teams = teamsData?.teams ?? [];
   const stations = stationsData?.stations ?? [];
   const maps = mapsData?.maps ?? [];
+  const wallpapers = wallpapersData?.wallpapers ?? [];
+  const assignedWallpaper = wallpapers.find(
+    (w) => w.id === contest?.wallpaperId,
+  );
+  const defaultWallpaper = wallpapers.find((w) => w.isDefault);
+  const shownWallpaper = assignedWallpaper ?? defaultWallpaper;
+  const selectedWallpaperId = setWallpaperMutation.isPending
+    ? setWallpaperMutation.variables
+    : contest?.wallpaperId;
   const totalTeams = teams.length;
 
   const connectedTeams = teams.filter((team) => {
@@ -105,41 +88,6 @@ export function ContestPage() {
     const station = stations.find((s) => s.ip === team.ip);
     return station && isStationConnected(station);
   }).length;
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const arrayBuffer = await file.arrayBuffer();
-    uploadMutation.mutate(new Uint8Array(arrayBuffer));
-    e.target.value = "";
-  };
-
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleMapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value === "") {
-      setSelectedMapId(null);
-      return;
-    }
-    const mapId = parseInt(value, 10);
-    if (!isNaN(mapId)) {
-      setSelectedMapId(mapId); // Optimistic update
-      setMapMutation.mutate(mapId);
-    }
-  };
-
-  const handleTextColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value;
-    setTextColor(color);
-  };
-
-  const handleTextColorSave = () => {
-    textColorMutation.mutate(textColor);
-  };
 
   return (
     <div className="h-full flex">
@@ -200,8 +148,16 @@ export function ContestPage() {
                   Map
                 </p>
                 <select
-                  value={selectedMapId ?? ""}
-                  onChange={handleMapChange}
+                  value={
+                    (setMapMutation.isPending
+                      ? setMapMutation.variables
+                      : contest.mapId) ?? ""
+                  }
+                  onChange={(e) => {
+                    if (e.target.value !== "") {
+                      setMapMutation.mutate(Number(e.target.value));
+                    }
+                  }}
                   disabled={setMapMutation.isPending}
                   className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
                 >
@@ -221,157 +177,102 @@ export function ContestPage() {
                   <p className="text-gray-400 text-sm mt-2">Saving...</p>
                 )}
               </div>
-            </div>
-          ) : (
-            <p className="text-gray-400">No active contest</p>
-          )}
 
-          <div className="mt-6 pt-6 border-t border-surface-600">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/gif,image/webp,image/bmp,image/svg+xml"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              onClick={openFilePicker}
-              disabled={!contest || uploadMutation.isPending}
-              className="w-full px-4 py-3 bg-linear-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:from-surface-600 disabled:to-surface-600 disabled:text-gray-500 text-white rounded-lg transition-all font-medium flex items-center justify-center gap-2"
-            >
-              {uploadMutation.isPending ? (
-                <>
-                  <svg
-                    className="w-5 h-5 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Upload Wallpaper
-                </>
-              )}
-            </button>
-            {uploadMutation.isError && (
-              <p className="text-danger-500 text-sm mt-2">
-                Failed to upload image
-              </p>
-            )}
-
-            {wallpaper?.scope === "default" && (
-              <p className="text-gray-400 text-sm mt-3">
-                This contest has no wallpaper, so stations show the system
-                default. Change it under System.
-              </p>
-            )}
-
-            {wallpaper?.scope === "contest" && (
-              <div className="mt-4 p-4 rounded-lg bg-surface-700 border border-surface-600">
-                <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
-                  Text Color
+              <div className="p-4 rounded-lg bg-linear-to-br from-sky-500/10 to-cyan-500/10 border border-sky-500/20">
+                <p className="text-xs text-sky-400 mb-2 uppercase tracking-wide">
+                  Wallpaper
                 </p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={textColor}
-                    onChange={handleTextColorChange}
-                    className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
-                  />
-                  <input
-                    type="text"
-                    value={textColor}
-                    onChange={handleTextColorChange}
-                    className="flex-1 bg-surface-600 border border-surface-500 rounded px-3 py-2 text-gray-200 text-sm font-mono"
-                    placeholder="#ffffff"
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-3">
-                  <button
-                    onClick={handleTextColorSave}
-                    disabled={
-                      textColorMutation.isPending ||
-                      textColor === wallpaper?.color
-                    }
-                    className="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-600 disabled:text-gray-500 text-white rounded text-sm transition-colors"
-                  >
-                    {textColorMutation.isPending ? "Saving..." : "Save Color"}
-                  </button>
+                <select
+                  value={selectedWallpaperId ?? ""}
+                  onChange={(e) =>
+                    setWallpaperMutation.mutate(
+                      e.target.value === ""
+                        ? undefined
+                        : Number(e.target.value),
+                    )
+                  }
+                  disabled={setWallpaperMutation.isPending}
+                  className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                >
+                  <option value="">None (use default)</option>
+                  {wallpapers.map((wallpaper) => (
+                    <option key={wallpaper.id} value={wallpaper.id}>
+                      {wallpaper.name}
+                    </option>
+                  ))}
+                </select>
+                {setWallpaperMutation.isError && (
+                  <p className="text-danger-500 text-sm mt-2">
+                    Failed to set wallpaper
+                  </p>
+                )}
+                {setWallpaperMutation.isPending && (
+                  <p className="text-gray-400 text-sm mt-2">Saving...</p>
+                )}
+                {!assignedWallpaper && defaultWallpaper && (
+                  <p className="text-gray-400 text-sm mt-2">
+                    Using the system default. Manage it under{" "}
+                    <Link
+                      to="/wallpapers"
+                      className="text-sky-400 hover:text-sky-300 underline"
+                    >
+                      Wallpapers
+                    </Link>
+                    .
+                  </p>
+                )}
+                {shownWallpaper && (
                   <button
                     onClick={() => setShowPreview(!showPreview)}
-                    className={`px-3 py-2 rounded text-sm transition-colors ${
+                    className={`w-full mt-3 px-3 py-2 rounded text-sm transition-colors ${
                       showPreview
                         ? "bg-primary-500 text-white"
                         : "bg-surface-600 text-gray-300 hover:bg-surface-500"
                     }`}
                   >
-                    Preview
+                    Preview team name
                   </button>
-                </div>
-                {textColorMutation.isError && (
-                  <p className="text-danger-500 text-sm mt-2">
-                    Failed to save color
-                  </p>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <p className="text-gray-400">No active contest</p>
+          )}
+
         </div>
       </aside>
       <div className="flex-1 bg-surface-700 flex items-center justify-center relative overflow-hidden">
-        {wallpaperLoading ? (
+        {isLoading || wallpapersLoading ? (
           <p className="text-gray-400 text-lg">Loading wallpaper...</p>
-        ) : wallpaper?.url ? (
+        ) : shownWallpaper ? (
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div className="relative inline-flex items-center justify-center max-w-full max-h-full">
-              <img
-                src={wallpaper.url}
-                alt={
-                  wallpaper.scope === "contest"
-                    ? "Contest wallpaper"
-                    : "Default wallpaper"
-                }
+              <WallpaperMedia
+                wallpaper={shownWallpaper}
                 className="max-w-full max-h-full w-auto h-auto object-contain block"
               />
               {showPreview && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <span
                     className="text-4xl font-bold drop-shadow-lg text-center px-4"
-                    style={{ color: textColor }}
+                    style={{ color: shownWallpaper.textColor }}
                   >
                     Team Name
                   </span>
                 </div>
               )}
             </div>
+            {!assignedWallpaper && (
+              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-surface-900/80 backdrop-blur text-sm text-gray-300">
+                Using the system default ·{" "}
+                <Link
+                  to="/wallpapers"
+                  className="text-sky-400 hover:text-sky-300 underline"
+                >
+                  Manage wallpapers
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center">
@@ -392,7 +293,13 @@ export function ContestPage() {
             </div>
             <p className="text-gray-500 text-lg">No wallpaper set</p>
             <p className="text-gray-600 text-sm mt-1">
-              Upload an image to set the contest wallpaper
+              Pick a wallpaper for this contest or set a system default under{" "}
+              <Link
+                to="/wallpapers"
+                className="text-sky-400 hover:text-sky-300 underline"
+              >
+                Wallpapers
+              </Link>
             </p>
           </div>
         )}

@@ -4,13 +4,14 @@ use axum::Router;
 use loom_rpc::{
     admin::v1::{
         contest_service_server::ContestServiceServer, station_service_server::StationServiceServer,
-        system_service_server::SystemServiceServer, team_service_server::TeamServiceServer,
+        team_service_server::TeamServiceServer, wallpaper_service_server::WallpaperServiceServer,
     },
     broadcast::v1::broadcast_service_server::BroadcastServiceServer,
     map::v1::map_service_server::MapServiceServer,
     station::v1::station_service_server,
 };
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
+use tonic::service::interceptor::InterceptedService;
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},
@@ -76,8 +77,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
         interceptor.clone(),
     );
-    let system_service = SystemServiceServer::with_interceptor(
-        api::admin::SystemHandler::new(wallpaper_repo.clone(), orchestrator.clone()),
+    let wallpaper_service = InterceptedService::new(
+        WallpaperServiceServer::new(api::admin::WallpaperHandler::new(
+            wallpaper_repo.clone(),
+            orchestrator.clone(),
+        ))
+        .max_decoding_message_size(api::admin::MAX_REQUEST_BYTES),
         interceptor.clone(),
     );
     let station_service = StationServiceServer::with_interceptor(
@@ -128,7 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let grpc_router = tonic::service::Routes::builder()
         .add_service(contest_service)
-        .add_service(system_service)
+        .add_service(wallpaper_service)
         .add_service(station_service)
         .add_service(team_service)
         .add_service(map_service)

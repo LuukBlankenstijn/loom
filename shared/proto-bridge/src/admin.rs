@@ -39,6 +39,7 @@ impl IntoProto<pb::Contest> for Contest {
             start_time: self.start_time.map(to_timestamp),
             end_time: Some(to_timestamp(self.end_time)),
             map_id: None,
+            wallpaper_id: None,
         }
     }
 }

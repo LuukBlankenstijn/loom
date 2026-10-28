@@ -1,15 +1,33 @@
+use std::borrow::Cow;
 use std::error::Error;
 use std::path::Path;
 use std::process::ExitCode;
 
 use chrono::{DateTime, Utc};
 use futures::TryStreamExt;
+use sqlx::migrate::Migrator;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
 use sqlx::{Connection, PgConnection, SqliteConnection};
 use uuid::Uuid;
 
 const V0_5_MIGRATION: i64 = 20260913174500;
 const V0_6_MIGRATION: i64 = 20261028120000;
+const SQLITE_BASELINE_MIGRATION: i64 = 20261028180000;
+
+static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
+
+fn baseline_migrator() -> Migrator {
+    Migrator {
+        migrations: Cow::Owned(
+            MIGRATOR
+                .iter()
+                .filter(|migration| migration.version <= SQLITE_BASELINE_MIGRATION)
+                .cloned()
+                .collect(),
+        ),
+        ..Migrator::DEFAULT
+    }
+}
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -79,7 +97,7 @@ async fn copy(
             .journal_mode(SqliteJournalMode::Wal),
     )
     .await?;
-    sqlx::migrate!("./migrations").run(&mut sqlite).await?;
+    baseline_migrator().run(&mut sqlite).await?;
 
     let mut tx = sqlite.begin().await?;
 
@@ -238,6 +256,7 @@ async fn copy(
     .await?;
 
     tx.commit().await?;
+    MIGRATOR.run(&mut sqlite).await?;
     sqlite.close().await?;
 
     println!("imported into {}", sqlite_path.display());

@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/empty.proto";
+
+enum WallpaperKind {
+  WALLPAPER_KIND_UNSPECIFIED = 0;
+  WALLPAPER_KIND_IMAGE = 1;
+  WALLPAPER_KIND_VIDEO = 2;
+}
+
+message Wallpaper {
+  int32 id = 1;
+  string name = 2;
+  WallpaperKind kind = 3;
+  string text_color = 4;
+  oneof source {
+    // Served from /api/wallpapers/{id}/content
+    string mime_type = 5;
+    string url = 6;
+  }
+  bool is_default = 7;
+  repeated string contest_ids = 8;
+}
+
+message ListWallpapersResponse {
+  repeated Wallpaper wallpapers = 1;
+}
+
+message UrlSource {
+  string url = 1 [(buf.validate.field).string.uri = true, (buf.validate.field).string.pattern = "^https?://"];
+  WallpaperKind kind = 2 [(buf.validate.field).enum = {defined_only: true, not_in: [0]}];
+}
+
+message CreateWallpaperRequest {
+  string name = 1 [(buf.validate.field).string.min_len = 1];
+  oneof source {
+    option (buf.validate.oneof).required = true;
+    bytes image_data = 2 [(buf.validate.field).bytes.min_len = 1];
+    UrlSource url = 3;
+  }
+}
+
+message UpdateWallpaperRequest {
+  int32 id = 1;
+  optional string name = 2 [(buf.validate.field).string.min_len = 1];
+  optional string text_color = 3 [(buf.validate.field).string.pattern = "^#?([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"];
+}
+
+message DeleteWallpaperRequest {
+  int32 id = 1;
+}
+
+message SetDefaultWallpaperRequest {
+  optional int32 wallpaper_id = 1;
+}
+
+service WallpaperService {
+  // Lists every wallpaper in the library with where it is in use
+  rpc ListWallpapers(google.protobuf.Empty) returns (ListWallpapersResponse) {}
+  // Adds an uploaded image or a streamed URL to the library
+  rpc CreateWallpaper(CreateWallpaperRequest) returns (Wallpaper) {}
+  // Renames a wallpaper or changes the colour of text drawn over it
+  rpc UpdateWallpaper(UpdateWallpaperRequest) returns (google.protobuf.Empty) {}
+  // Deletes a wallpaper, unassigning it from contests and the system default
+  rpc DeleteWallpaper(DeleteWallpaperRequest) returns (google.protobuf.Empty) {}
+  // Sets the wallpaper served when a contest has none, clearing it when wallpaper_id is absent
+  rpc SetDefaultWallpaper(SetDefaultWallpaperRequest) returns (google.protobuf.Empty) {}
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT contest_id, wallpaper_id AS \"wallpaper_id: i32\"\n               FROM contest_wallpaper\n               ORDER BY contest_id",
+  "describe": {
+    "columns": [
+      {
+        "name": "contest_id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "wallpaper_id: i32",
+        "ordinal": 1,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "9fe9952ee28a13675be4a66ebae3fcf95490c2b2e9f262fdc82e2980006f3a2d"
+}

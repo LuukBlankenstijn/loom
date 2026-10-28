@@ -4,10 +4,7 @@ use loom_rpc::admin::v1::{self as pb, contest_service_server::ContestService};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::{
-    api::admin::image,
-    domain::{ContestRepository, MapRepository, Orchestrator, WallpaperRepository},
-};
+use crate::domain::{ContestRepository, MapRepository, Orchestrator, WallpaperRepository};
 
 #[derive(Constructor)]
 pub struct ContestHandler {
@@ -37,40 +34,25 @@ impl ContestService for ContestHandler {
             .flatten()
             .map(|m| m.id);
 
+        let wallpaper_id = self
+            .wallpaper_repo
+            .get_for_contest(&contest.id)
+            .await?
+            .map(|w| w.id);
+
         let mut pb_contest: pb::Contest = contest.into_proto();
         pb_contest.map_id = map_id;
+        pb_contest.wallpaper_id = wallpaper_id;
         Ok(Response::new(pb_contest))
     }
 
     async fn set_wallpaper(
         &self,
-        request: Request<pb::UploadWallpaperRequest>,
-    ) -> Result<Response<()>, Status> {
-        let req = request.into_inner();
-        match req.image_data.filter(|d| !d.is_empty()) {
-            Some(data) => {
-                let mime_type = image::mime_type(&data).map_err(Status::invalid_argument)?;
-                self.wallpaper_repo
-                    .set_for_contest(&req.contest_id, &data, mime_type)
-                    .await?;
-            }
-            None => {
-                self.wallpaper_repo
-                    .clear_for_contest(&req.contest_id)
-                    .await?;
-            }
-        }
-        self.orchestrator.sync_stations(&[]);
-        Ok(Response::new(()))
-    }
-
-    async fn set_wallpaper_text_color(
-        &self,
-        request: Request<pb::SetWallpaperTextColorRequest>,
+        request: Request<pb::SetWallpaperRequest>,
     ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
         self.wallpaper_repo
-            .set_contest_text_color(&req.contest_id, &req.color)
+            .assign_contest(&req.contest_id, req.wallpaper_id)
             .await?;
         self.orchestrator.sync_stations(&[]);
         Ok(Response::new(()))

@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO wallpapers (name, kind, url) VALUES ($1, $2, $3)\n               RETURNING id AS \"id: i32\", name, kind, mime_type, url, text_color",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: i32",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "kind",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "mime_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "url",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "text_color",
+        "ordinal": 5,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "216ec1d43c2f86a32836d0f453ad307b86eeae1c24ee61e5b07688f7100d1d37"
+}
