@@ -35,7 +35,7 @@ export function TeamsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-2 h-8 bg-linear-to-b from-primary-400 to-primary-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Teams</h1>
@@ -102,7 +102,7 @@ export function TeamsPage() {
                     ) : (
                       <button
                         onClick={() => openAssignModal(team)}
-                        className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
                       >
                         Assign IP
                       </button>

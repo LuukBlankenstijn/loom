@@ -120,7 +120,8 @@ fn content_body(content: WallpaperStream) -> Body {
          headers(
             ("x-wallpaper-text-color" = String, description = "Colour for text drawn over the wallpaper"),
             ("x-wallpaper-text" = String, description = "Team name; absent when no team matches ip"),
-            ("x-wallpaper-stream" = String, description = "udp://group:port of the multicast MPEG-TS stream; only for YouTube wallpapers")
+            ("x-wallpaper-stream" = String, description = "udp://group:port of the multicast MPEG-TS stream; only for YouTube wallpapers"),
+            ("x-wallpaper-audio" = String, description = "`true` when the stream carries sound the station should play; absent otherwise")
          )),
         (status = 307, description = "Wallpaper image served from an external URL",
          headers(
@@ -164,6 +165,12 @@ pub async fn wallpaper(
                 HeaderName::from_static("x-wallpaper-stream"),
                 format!("udp://{address}"),
             ));
+            if wallpaper.audio {
+                headers.push((
+                    HeaderName::from_static("x-wallpaper-audio"),
+                    "true".to_owned(),
+                ));
+            }
             Ok(AppendHeaders(headers).into_response())
         }
         (WallpaperKind::Image, WallpaperSource::Stored { .. }) => {

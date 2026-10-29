@@ -18,11 +18,19 @@ use crate::{
 const RECHECK_INTERVAL: Duration = Duration::from_secs(30);
 const RESTART_DELAY: Duration = Duration::from_secs(5);
 const RESOLVE_TIMEOUT: Duration = Duration::from_secs(30);
-const SOURCE_FORMAT: &str = "bv*[height<=1080][protocol=https]/b[height<=1080][protocol=https]/bv*[protocol=https]/b[protocol=https]";
+const VIDEO_FORMAT: &str = "bv*[height<=1080][protocol=https]/b[height<=1080][protocol=https]/bv*[protocol=https]/b[protocol=https]";
+const VIDEO_AND_AUDIO_FORMAT: &str = "bv*[height<=1080][protocol=https]+ba[protocol=https]/b[height<=1080][protocol=https]/bv*[protocol=https]+ba[protocol=https]/b[protocol=https]";
 const VIDEO_FILTER: &str = "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,fps=30,format=yuv420p";
+
+struct Wanted {
+    id: i32,
+    url: String,
+    audio: bool,
+}
 
 struct Stream {
     id: i32,
+    audio: bool,
     process: Child,
 }
 
@@ -94,9 +102,10 @@ impl Streamer {
                 return;
             }
         };
-        let wanted_id = wanted.as_ref().map(|(id, _)| *id);
+        let wanted_id = wanted.as_ref().map(|wanted| wanted.id);
         self.state.lock().current = wanted_id;
-        if self.stream.as_ref().map(|stream| stream.id) == wanted_id {
+        let streaming = self.stream.as_ref().map(|stream| (stream.id, stream.audio));
+        if streaming == wanted.as_ref().map(|wanted| (wanted.id, wanted.audio)) {
             return;
         }
 
@@ -104,14 +113,14 @@ impl Streamer {
             let _ = stream.process.kill().await;
             tracing::info!(id = stream.id, "stopped streaming video");
         }
-        let Some((id, url)) = wanted else {
+        let Some(Wanted { id, url, audio }) = wanted else {
             return;
         };
-        match self.start(&url).await {
+        match self.start(&url, audio).await {
             Ok(process) => {
-                tracing::info!(id, %url, address = %self.config.multicast_address, "streaming video");
+                tracing::info!(id, %url, audio, address = %self.config.multicast_address, "streaming video");
                 self.state.lock().errors.remove(&id);
-                self.set_stream(Some(Stream { id, process }));
+                self.set_stream(Some(Stream { id, audio, process }));
             }
             Err(error) => {
                 tracing::warn!(id, %url, %error, "failed to stream video");
@@ -120,11 +129,15 @@ impl Streamer {
         }
     }
 
-    async fn wanted(&self) -> Result<Option<(i32, String)>, AppError> {
+    async fn wanted(&self) -> Result<Option<Wanted>, AppError> {
         let wallpaper = resolve_wallpaper(&*self.contest_repo, &*self.wallpaper_repo, None).await?;
         Ok(
             wallpaper.and_then(|wallpaper| match (wallpaper.kind, wallpaper.source) {
-                (WallpaperKind::Youtube, WallpaperSource::Url(url)) => Some((wallpaper.id, url)),
+                (WallpaperKind::Youtube, WallpaperSource::Url(url)) => Some(Wanted {
+                    id: wallpaper.id,
+                    url,
+                    audio: wallpaper.audio,
+                }),
                 _ => None,
             }),
         )
@@ -135,8 +148,8 @@ impl Streamer {
         std::mem::replace(&mut self.stream, stream)
     }
 
-    async fn start(&self, url: &str) -> Result<Child, String> {
-        let source = resolve_source(url).await?;
+    async fn start(&self, url: &str, audio: bool) -> Result<Child, String> {
+        let sources = resolve_sources(url, audio).await?;
 
         let mut destination = format!(
             "udp://{}?ttl={}&pkt_size=1316&bitrate=8000000",
@@ -146,10 +159,21 @@ impl Streamer {
             destination.push_str(&format!("&localaddr={interface}"));
         }
 
-        Command::new("ffmpeg")
-            .args(["-nostdin", "-hide_banner", "-loglevel", "error"])
-            .args(["-re", "-stream_loop", "-1", "-i", &source])
-            .args(["-map", "0:v:0", "-an", "-sn", "-dn", "-vf", VIDEO_FILTER])
+        let mut command = Command::new("ffmpeg");
+        command.args(["-nostdin", "-hide_banner", "-loglevel", "error"]);
+        for source in &sources {
+            command.args(["-re", "-stream_loop", "-1", "-i", source]);
+        }
+        command.args(["-map", "0:v:0", "-sn", "-dn", "-vf", VIDEO_FILTER]);
+        if audio {
+            let audio_input = format!("{}:a:0", sources.len() - 1);
+            command
+                .args(["-map", &audio_input])
+                .args(["-c:a", "aac", "-b:a", "128k", "-ac", "2", "-ar", "48000"]);
+        } else {
+            command.arg("-an");
+        }
+        command
             .args(["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"])
             .args([
                 "-maxrate",
@@ -169,17 +193,15 @@ impl Streamer {
     }
 }
 
-async fn resolve_source(url: &str) -> Result<String, String> {
+async fn resolve_sources(url: &str, audio: bool) -> Result<Vec<String>, String> {
+    let format = if audio {
+        VIDEO_AND_AUDIO_FORMAT
+    } else {
+        VIDEO_FORMAT
+    };
     let output = Command::new("yt-dlp")
         .args(["--no-playlist", "--no-cache-dir", "--get-url"])
-        .args([
-            "--format",
-            SOURCE_FORMAT,
-            "--format-sort",
-            "hdr:SDR",
-            "--",
-            url,
-        ])
+        .args(["--format", format, "--format-sort", "hdr:SDR", "--", url])
         .stdin(Stdio::null())
         .kill_on_drop(true)
         .output();
@@ -197,11 +219,15 @@ async fn resolve_source(url: &str) -> Result<String, String> {
             .unwrap_or("no error output");
         return Err(format!("yt-dlp failed ({}): {reason}", output.status));
     }
-    String::from_utf8_lossy(&output.stdout)
+    let sources: Vec<String> = String::from_utf8_lossy(&output.stdout)
         .lines()
-        .next()
+        .filter(|line| !line.trim().is_empty())
         .map(str::to_owned)
-        .ok_or_else(|| "yt-dlp returned no video URL".to_owned())
+        .collect();
+    if sources.is_empty() {
+        return Err("yt-dlp returned no video URL".to_owned());
+    }
+    Ok(sources)
 }
 
 async fn exited(stream: &mut Option<Stream>) -> (i32, std::io::Result<std::process::ExitStatus>) {

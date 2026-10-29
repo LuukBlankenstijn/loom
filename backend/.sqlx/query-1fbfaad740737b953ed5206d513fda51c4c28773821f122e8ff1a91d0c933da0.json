@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE wallpapers\n             SET name = COALESCE($2, name), text_color = COALESCE($3, text_color),\n                 audio = COALESCE($4, audio)\n             WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "1fbfaad740737b953ed5206d513fda51c4c28773821f122e8ff1a91d0c933da0"
+}

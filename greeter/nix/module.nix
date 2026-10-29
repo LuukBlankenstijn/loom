@@ -168,6 +168,7 @@ in
           };
         };
         boot.kernel.sysctl."net.core.rmem_max" = mkDefault 4194304;
+        users.users.greeter.extraGroups = [ "audio" ];
       }
       (mkIf cfg.openFirewall {
         networking.firewall.allowedUDPPorts = [ cfg.videoStreamPort ];

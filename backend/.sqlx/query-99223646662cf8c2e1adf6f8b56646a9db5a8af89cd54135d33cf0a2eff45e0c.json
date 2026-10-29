@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color\n               FROM wallpapers w\n               JOIN contest_wallpaper c ON c.wallpaper_id = w.id\n               WHERE c.contest_id = $1",
+  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS \"audio: bool\"\n               FROM wallpapers w\n               JOIN system_settings s ON s.default_wallpaper_id = w.id",
   "describe": {
     "columns": [
       {
@@ -32,10 +32,15 @@
         "name": "text_color",
         "ordinal": 5,
         "type_info": "Text"
+      },
+      {
+        "name": "audio: bool",
+        "ordinal": 6,
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 0
     },
     "nullable": [
       false,
@@ -43,8 +48,9 @@
       false,
       true,
       true,
+      false,
       false
     ]
   },
-  "hash": "ea4b0fff516fce6d9b53e6352be89dfc06e23d1202a8e88cd14f6aaf2dcf4232"
+  "hash": "99223646662cf8c2e1adf6f8b56646a9db5a8af89cd54135d33cf0a2eff45e0c"
 }

@@ -157,6 +157,9 @@ pub struct Wallpaper {
     /// Set for youtube wallpapers
     #[prost(message, optional, tag="9")]
     pub video: ::core::option::Option<VideoStatus>,
+    /// Whether stations play the sound of a youtube wallpaper
+    #[prost(bool, tag="10")]
+    pub audio: bool,
     #[prost(oneof="wallpaper::Source", tags="5, 6")]
     pub source: ::core::option::Option<wallpaper::Source>,
 }
@@ -208,6 +211,8 @@ pub struct UpdateWallpaperRequest {
     pub name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag="3")]
     pub text_color: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, optional, tag="4")]
+    pub audio: ::core::option::Option<bool>,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct DeleteWallpaperRequest {

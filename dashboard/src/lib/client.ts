@@ -100,7 +100,7 @@ export const adminClient = {
   },
   updateWallpaper: async (
     id: number,
-    changes: { name?: string; textColor?: string },
+    changes: { name?: string; textColor?: string; audio?: boolean },
   ): Promise<void> => {
     await wallpaper_client.updateWallpaper({ id, ...changes });
   },

@@ -32,6 +32,8 @@ message Wallpaper {
   repeated string contest_ids = 8;
   // Set for youtube wallpapers
   VideoStatus video = 9;
+  // Whether stations play the sound of a youtube wallpaper
+  bool audio = 10;
 }
 
 message ListWallpapersResponse {
@@ -56,6 +58,7 @@ message UpdateWallpaperRequest {
   int32 id = 1;
   optional string name = 2 [(buf.validate.field).string.min_len = 1];
   optional string text_color = 3 [(buf.validate.field).string.pattern = "^#?([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"];
+  optional bool audio = 4;
 }
 
 message DeleteWallpaperRequest {
@@ -71,7 +74,7 @@ service WallpaperService {
   rpc ListWallpapers(google.protobuf.Empty) returns (ListWallpapersResponse) {}
   // Adds an uploaded image, an image URL or a YouTube video to the library
   rpc CreateWallpaper(CreateWallpaperRequest) returns (Wallpaper) {}
-  // Renames a wallpaper or changes the colour of text drawn over it
+  // Renames a wallpaper, changes the colour of text drawn over it or turns its sound on or off
   rpc UpdateWallpaper(UpdateWallpaperRequest) returns (google.protobuf.Empty) {}
   // Deletes a wallpaper, unassigning it from contests and the system default
   rpc DeleteWallpaper(DeleteWallpaperRequest) returns (google.protobuf.Empty) {}

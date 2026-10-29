@@ -31,6 +31,7 @@ pub struct Wallpaper {
     pub kind: WallpaperKind,
     pub source: WallpaperSource,
     pub text_color: String,
+    pub audio: bool,
 }
 
 pub struct WallpaperListing {
@@ -59,6 +60,7 @@ pub trait WallpaperRepository: Send + Sync {
         id: i32,
         name: Option<&str>,
         text_color: Option<&str>,
+        audio: Option<bool>,
     ) -> Result<(), AppError>;
     async fn delete(&self, id: i32) -> Result<(), AppError>;
     async fn get_content(&self, id: i32) -> Result<Option<WallpaperStream>, AppError>;

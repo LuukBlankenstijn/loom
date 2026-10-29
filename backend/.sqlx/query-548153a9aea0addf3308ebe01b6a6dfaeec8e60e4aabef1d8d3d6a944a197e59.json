@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "INSERT INTO wallpapers (name, kind, url) VALUES ($1, $2, $3)\n               RETURNING id AS \"id: i32\", name, kind, mime_type, url, text_color",
+  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS \"audio: bool\"\n               FROM wallpapers w\n               JOIN contest_wallpaper c ON c.wallpaper_id = w.id\n               WHERE c.contest_id = $1",
   "describe": {
     "columns": [
       {
@@ -32,10 +32,15 @@
         "name": "text_color",
         "ordinal": 5,
         "type_info": "Text"
+      },
+      {
+        "name": "audio: bool",
+        "ordinal": 6,
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Right": 3
+      "Right": 1
     },
     "nullable": [
       false,
@@ -43,8 +48,9 @@
       false,
       true,
       true,
+      false,
       false
     ]
   },
-  "hash": "216ec1d43c2f86a32836d0f453ad307b86eeae1c24ee61e5b07688f7100d1d37"
+  "hash": "548153a9aea0addf3308ebe01b6a6dfaeec8e60e4aabef1d8d3d6a944a197e59"
 }

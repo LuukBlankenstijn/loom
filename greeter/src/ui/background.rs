@@ -12,7 +12,7 @@ use url::Url;
 
 use crate::ui::{
     Message,
-    background::media::{Media, MediaMessage, MediaSource},
+    background::media::{Media, MediaMessage, MediaSource, Stream},
 };
 
 #[derive(Debug, Clone)]
@@ -253,7 +253,10 @@ fn fetch_remote(source: &str) -> (Option<MediaSource>, Option<Label>) {
 
     if let Some(stream) = header("X-Wallpaper-Stream") {
         return match Url::parse(&stream) {
-            Ok(url) => (Some(MediaSource::Stream(url)), label),
+            Ok(url) => {
+                let audio = header("X-Wallpaper-Audio").is_some_and(|value| value == "true");
+                (Some(MediaSource::Stream(Stream { url, audio })), label)
+            }
             Err(e) => {
                 warn!("Invalid wallpaper stream url {}: {}", stream, e);
                 (None, label)

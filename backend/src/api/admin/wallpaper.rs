@@ -52,6 +52,7 @@ impl WallpaperHandler {
             name: wallpaper.name,
             kind: kind.into(),
             text_color: wallpaper.text_color,
+            audio: wallpaper.audio,
             source: Some(source),
             is_default,
             contest_ids,
@@ -181,8 +182,10 @@ impl WallpaperService for WallpaperHandler {
         let req = request.into_inner();
         let name = req.name.as_deref().map(validate_name).transpose()?;
         let text_color = req.text_color.as_deref().map(validate_color).transpose()?;
-        self.wallpaper_repo.update(req.id, name, text_color).await?;
-        self.orchestrator.sync_stations(&[]);
+        self.wallpaper_repo
+            .update(req.id, name, text_color, req.audio)
+            .await?;
+        self.sync_stations().await;
         Ok(Response::new(()))
     }
 

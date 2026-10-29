@@ -339,7 +339,7 @@ export function StationsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-2 h-8 bg-linear-to-b from-emerald-400 to-emerald-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Stations</h1>
@@ -385,7 +385,7 @@ export function StationsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search IP or label"
-            className="w-44 bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+            className="w-56 bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500"
           />
         </div>
         <select
@@ -568,7 +568,7 @@ export function StationsPage() {
                         ) : (
                           <button
                             onClick={() => openAssignModal(station)}
-                            className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors"
+                            className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
                           >
                             Assign Team
                           </button>

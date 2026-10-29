@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color,\n                      EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)\n                          AS \"is_default: bool\"\n               FROM wallpapers w\n               ORDER BY w.id DESC",
+  "query": "INSERT INTO wallpapers (name, kind, url) VALUES ($1, $2, $3)\n               RETURNING id AS \"id: i32\", name, kind, mime_type, url, text_color, audio AS \"audio: bool\"",
   "describe": {
     "columns": [
       {
@@ -34,13 +34,13 @@
         "type_info": "Text"
       },
       {
-        "name": "is_default: bool",
+        "name": "audio: bool",
         "ordinal": 6,
-        "type_info": "Integer"
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 3
     },
     "nullable": [
       false,
@@ -52,5 +52,5 @@
       false
     ]
   },
-  "hash": "a6a907dd9fe3e32e00909cbdd69a5ebffe07ddae9c7ac4945044e51eca384572"
+  "hash": "09b70752066bf7ac3137696ebd46792ba0efd8f3d5a2fa08424775d673c63a38"
 }

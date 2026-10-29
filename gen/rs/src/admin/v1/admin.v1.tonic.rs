@@ -1589,7 +1589,7 @@ pub mod wallpaper_service_client {
                 .insert(GrpcMethod::new("admin.v1.WallpaperService", "CreateWallpaper"));
             self.inner.unary(req, path, codec).await
         }
-        /** Renames a wallpaper or changes the colour of text drawn over it
+        /** Renames a wallpaper, changes the colour of text drawn over it or turns its sound on or off
 */
         pub async fn update_wallpaper(
             &mut self,
@@ -1690,7 +1690,7 @@ pub mod wallpaper_service_server {
             &self,
             request: tonic::Request<super::CreateWallpaperRequest>,
         ) -> std::result::Result<tonic::Response<super::Wallpaper>, tonic::Status>;
-        /** Renames a wallpaper or changes the colour of text drawn over it
+        /** Renames a wallpaper, changes the colour of text drawn over it or turns its sound on or off
 */
         async fn update_wallpaper(
             &self,

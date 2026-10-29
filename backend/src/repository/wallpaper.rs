@@ -21,6 +21,7 @@ struct WallpaperRow {
     mime_type: Option<String>,
     url: Option<String>,
     text_color: String,
+    audio: bool,
 }
 
 impl TryFrom<WallpaperRow> for Wallpaper {
@@ -52,6 +53,7 @@ impl TryFrom<WallpaperRow> for Wallpaper {
             kind,
             source,
             text_color: row.text_color,
+            audio: row.audio,
         })
     }
 }
@@ -79,7 +81,7 @@ pub struct WallpaperRepo {
 impl WallpaperRepository for WallpaperRepo {
     async fn list(&self) -> Result<Vec<WallpaperListing>, AppError> {
         let rows = sqlx::query!(
-            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color,
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool",
                       EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)
                           AS "is_default: bool"
                FROM wallpapers w
@@ -112,6 +114,7 @@ impl WallpaperRepository for WallpaperRepo {
                     mime_type: row.mime_type,
                     url: row.url,
                     text_color: row.text_color,
+                    audio: row.audio,
                 })?;
                 Ok(WallpaperListing {
                     contest_ids: contest_ids.remove(&wallpaper.id).unwrap_or_default(),
@@ -131,7 +134,7 @@ impl WallpaperRepository for WallpaperRepo {
         sqlx::query_as!(
             WallpaperRow,
             r#"INSERT INTO wallpapers (name, kind, data, mime_type) VALUES ($1, 'image', $2, $3)
-               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color"#,
+               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color, audio AS "audio: bool""#,
             name,
             data,
             mime_type
@@ -151,7 +154,7 @@ impl WallpaperRepository for WallpaperRepo {
         sqlx::query_as!(
             WallpaperRow,
             r#"INSERT INTO wallpapers (name, kind, url) VALUES ($1, $2, $3)
-               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color"#,
+               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color, audio AS "audio: bool""#,
             name,
             kind,
             url
@@ -166,14 +169,17 @@ impl WallpaperRepository for WallpaperRepo {
         id: i32,
         name: Option<&str>,
         text_color: Option<&str>,
+        audio: Option<bool>,
     ) -> Result<(), AppError> {
         let result = sqlx::query!(
             "UPDATE wallpapers
-             SET name = COALESCE($2, name), text_color = COALESCE($3, text_color)
+             SET name = COALESCE($2, name), text_color = COALESCE($3, text_color),
+                 audio = COALESCE($4, audio)
              WHERE id = $1",
             id,
             name,
-            text_color
+            text_color,
+            audio
         )
         .execute(&self.pool)
         .await?;
@@ -209,7 +215,7 @@ impl WallpaperRepository for WallpaperRepo {
     async fn get_for_contest(&self, contest_id: &str) -> Result<Option<Wallpaper>, AppError> {
         sqlx::query_as!(
             WallpaperRow,
-            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool"
                FROM wallpapers w
                JOIN contest_wallpaper c ON c.wallpaper_id = w.id
                WHERE c.contest_id = $1"#,
@@ -247,7 +253,7 @@ impl WallpaperRepository for WallpaperRepo {
     async fn get_default(&self) -> Result<Option<Wallpaper>, AppError> {
         sqlx::query_as!(
             WallpaperRow,
-            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool"
                FROM wallpapers w
                JOIN system_settings s ON s.default_wallpaper_id = w.id"#
         )

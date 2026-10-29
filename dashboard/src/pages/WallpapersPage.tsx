@@ -314,6 +314,12 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
     },
   });
 
+  const audioMutation = useMutation({
+    mutationFn: (audio: boolean) =>
+      adminClient.updateWallpaper(wallpaper.id, { audio }),
+    onSuccess: invalidateWallpapers,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => adminClient.deleteWallpaper(wallpaper.id),
     onSuccess: invalidateWallpapers,
@@ -440,6 +446,25 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
           </p>
         )}
         {wallpaper.video && <VideoStatusPanel video={wallpaper.video} />}
+        {isYoutube && (
+          <label className="flex items-center justify-between gap-3 p-3 rounded-lg bg-surface-700 border border-surface-600 cursor-pointer">
+            <span>
+              <span className="block text-xs text-gray-400 uppercase tracking-wide">
+                Sound
+              </span>
+              <span className="block text-sm text-gray-300">
+                Stations play the video's audio
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={wallpaper.audio}
+              disabled={audioMutation.isPending}
+              onChange={(e) => audioMutation.mutate(e.target.checked)}
+              className="w-5 h-5 accent-sky-500 cursor-pointer"
+            />
+          </label>
+        )}
 
         <div className="p-3 rounded-lg bg-surface-700 border border-surface-600">
           <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
