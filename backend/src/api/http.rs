@@ -191,7 +191,7 @@ pub async fn wallpaper(
     tag = "wallpaper",
     params(("id" = i32, Path, description = "Wallpaper id")),
     responses(
-        (status = 200, description = "Stored wallpaper image bytes; immutable per id", content_type = "image/*"),
+        (status = 200, description = "Stored wallpaper image bytes", content_type = "image/*"),
         (status = 404, description = "Unknown wallpaper, or one streamed from an external URL", body = ErrorResponse),
     )
 )]
@@ -202,10 +202,7 @@ pub async fn wallpaper_content(
     let content = state.stored_content(id).await?;
     let headers = [
         (header::CONTENT_TYPE, content.mime_type.clone()),
-        (
-            header::CACHE_CONTROL,
-            "public, max-age=31536000, immutable".to_string(),
-        ),
+        (header::CACHE_CONTROL, "no-cache".to_string()),
     ];
     Ok((AppendHeaders(headers), content_body(content)))
 }

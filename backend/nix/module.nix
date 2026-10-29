@@ -199,7 +199,7 @@ in
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
         LockPersonality = true;
-        MemoryDenyWriteExecute = true;
+        MemoryDenyWriteExecute = false;
         SystemCallArchitectures = "native";
         SystemCallFilter = [
           "@system-service"

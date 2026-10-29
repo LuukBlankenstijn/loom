@@ -88,13 +88,13 @@ Only `database_path` is required. `auth_token` and `contest_api.password` may be
 
 ### YouTube wallpapers
 
-Nothing is downloaded ahead of time. While a YouTube wallpaper is the current wallpaper (the next contest's wallpaper, or else the default), the backend asks `yt-dlp` for the video's URL. `ffmpeg` then reads the video from YouTube, transcodes it to 1920x1080 30 fps H.264 without audio and loops it. The result goes out as MPEG-TS over UDP multicast to `video.multicast_address`. The live transcode costs about 1.3 CPU cores while it runs. When the current wallpaper changes, the backend switches or stops the stream. `GET /api/wallpaper` returns the stream as an `x-wallpaper-stream: udp://group:port` header, which the greeter plays.
+Nothing is downloaded ahead of time. While a YouTube wallpaper is the current wallpaper (the next contest's wallpaper, or else the default), the backend asks `yt-dlp` for the video's URL. `ffmpeg` then reads the video from YouTube, transcodes it to 1920x1080 30 fps H.264 and loops it. Sound is off by default; turn on "Sound" on a YouTube wallpaper to add its audio as stereo AAC, and the response then also carries `x-wallpaper-audio: true`. The result goes out as MPEG-TS over UDP multicast to `video.multicast_address`. The live video transcode cost about 1.3 CPU cores in testing while it runs. Failed streams are retried with a growing delay, up to 5 minutes. When the current wallpaper changes, the backend switches or stops the stream. `GET /api/wallpaper` returns the stream as an `x-wallpaper-stream: udp://group:port` header, which the greeter plays.
 
-- `yt-dlp` and `ffmpeg` must be on the backend's `PATH`. The NixOS module and the Docker image provide them. Keep `yt-dlp` recent, because YouTube changes break old versions.
+- `yt-dlp` (with `deno` for YouTube's JavaScript challenges) and `ffmpeg` must be on the backend's `PATH`. The NixOS module and the Docker image provide them. Keep `yt-dlp` recent, because YouTube changes break old versions; on NixOS swap it with `services.loom-backend.video.ytDlpPackage`.
 - The backend needs internet access to YouTube.
 - The stations must be able to receive the multicast stream:
   - The default TTL of 1 keeps the stream on the backend's network segment, so stations on other subnets also need multicast routing.
-  - The stations' firewalls must accept UDP on the stream port: set `services.greetd.loom-greeter.openFirewall = true`, with `videoStreamPort` matching the port.
+  - The stations' firewalls must accept UDP on the stream port: set `services.greetd.loom-greeter.openFirewall = true`, with `videoStreamPort` matching the port. That also accepts IGMP, so switches with IGMP snooping keep forwarding the stream.
   - Docker's bridge network does not carry multicast to the LAN. Run the backend container with `network_mode: host` to stream.
 
 ### Moving from Postgres

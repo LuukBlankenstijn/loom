@@ -172,6 +172,8 @@ in
       }
       (mkIf cfg.openFirewall {
         networking.firewall.allowedUDPPorts = [ cfg.videoStreamPort ];
+        networking.firewall.extraInputRules = mkIf config.networking.nftables.enable "ip protocol igmp accept";
+        networking.firewall.extraCommands = mkIf (!config.networking.nftables.enable) "iptables -A nixos-fw -p igmp -j nixos-fw-accept";
       })
       # Only add D-Bus if enabled
       (mkIf cfg.enableDbus {

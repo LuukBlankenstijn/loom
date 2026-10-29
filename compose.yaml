@@ -11,6 +11,10 @@ services:
       # DJ_BASE_URL: http://domjudge/api
       # DJ_USERNAME: admin
       # DJ_PASSWORD: secret
+      # VIDEO_MULTICAST_ADDRESS: 239.255.76.1:5004
+      # VIDEO_MULTICAST_TTL: "1"
+      # VIDEO_MULTICAST_INTERFACE: 10.0.0.1
+    # network_mode: host
     ports:
       - "8080:8080"
     volumes:

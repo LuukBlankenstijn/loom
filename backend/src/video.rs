@@ -63,6 +63,10 @@ impl VideoStreamer for VideoMulticast {
         }
     }
 
+    fn forget(&self, id: i32) {
+        self.state.lock().errors.remove(&id);
+    }
+
     fn stream_address(&self, id: i32) -> Option<SocketAddrV4> {
         (self.state.lock().current == Some(id)).then_some(self.address)
     }

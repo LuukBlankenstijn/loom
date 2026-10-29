@@ -227,7 +227,11 @@ fn fetch_local_image(path: &str) -> Option<Vec<u8>> {
 }
 
 fn fetch_remote(source: &str) -> (Option<MediaSource>, Option<Label>) {
-    let response = match ureq::get(source).call() {
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .max_redirects(0)
+        .build()
+        .into();
+    let response = match agent.get(source).call() {
         Ok(resp) => resp,
         Err(e) => {
             error!("Failed to fetch {}: {}", source, e);
@@ -264,10 +268,16 @@ fn fetch_remote(source: &str) -> (Option<MediaSource>, Option<Label>) {
         };
     }
 
-    match response.into_body().read_to_vec() {
+    let image = match header("Location").filter(|_| response.status().is_redirection()) {
+        Some(location) => ureq::get(&location)
+            .call()
+            .and_then(|response| response.into_body().read_to_vec()),
+        None => response.into_body().read_to_vec(),
+    };
+    match image {
         Ok(bytes) => (Some(MediaSource::Image(bytes)), label),
         Err(e) => {
-            error!("Failed to read bytes from {}: {}", source, e);
+            error!("Failed to read wallpaper image from {}: {}", source, e);
             (None, None)
         }
     }

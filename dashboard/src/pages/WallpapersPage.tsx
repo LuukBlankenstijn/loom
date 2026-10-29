@@ -31,6 +31,12 @@ export function WallpapersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["wallpapers"],
     queryFn: () => adminClient.listWallpapers(),
+    refetchInterval: (query) =>
+      query.state.data?.wallpapers.some(
+        (wallpaper) => wallpaper.kind === WallpaperKind.YOUTUBE,
+      )
+        ? 5000
+        : false,
   });
 
   const setDefaultMutation = useMutation({
@@ -224,7 +230,12 @@ function AddWallpaperForm() {
           <button
             key={value}
             type="button"
-            onClick={() => setMode(value)}
+            onClick={() => {
+              setMode(value);
+              setFile(null);
+              setFileError(null);
+              setFileInputKey((key) => key + 1);
+            }}
             className={`flex-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
               mode === value
                 ? "bg-sky-500 text-white"
@@ -464,6 +475,9 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
               className="w-5 h-5 accent-sky-500 cursor-pointer"
             />
           </label>
+        )}
+        {audioMutation.isError && (
+          <p className="text-danger-500 text-sm">Failed to change sound</p>
         )}
 
         <div className="p-3 rounded-lg bg-surface-700 border border-surface-600">

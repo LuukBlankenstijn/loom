@@ -6,6 +6,7 @@ use tonic::{Request, Response, Status};
 
 use crate::domain::{
     ContestRepository, MapRepository, Orchestrator, VideoStreamer, WallpaperRepository,
+    resync_wallpapers,
 };
 
 #[derive(Constructor)]
@@ -57,8 +58,7 @@ impl ContestService for ContestHandler {
         self.wallpaper_repo
             .assign_contest(&req.contest_id, req.wallpaper_id)
             .await?;
-        self.video_streamer.refresh().await;
-        self.orchestrator.sync_stations(&[]);
+        resync_wallpapers(self.video_streamer.clone(), self.orchestrator.clone());
         Ok(Response::new(()))
     }
 

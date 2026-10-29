@@ -10,7 +10,7 @@ use crate::{
     api::admin::image,
     domain::{
         Orchestrator, VideoStreamer, Wallpaper, WallpaperKind, WallpaperListing,
-        WallpaperRepository, WallpaperSource,
+        WallpaperRepository, WallpaperSource, resync_wallpapers,
     },
 };
 
@@ -60,9 +60,8 @@ impl WallpaperHandler {
         }
     }
 
-    async fn sync_stations(&self) {
-        self.video_streamer.refresh().await;
-        self.orchestrator.sync_stations(&[]);
+    fn sync_stations(&self) {
+        resync_wallpapers(self.video_streamer.clone(), self.orchestrator.clone());
     }
 }
 
@@ -185,7 +184,7 @@ impl WallpaperService for WallpaperHandler {
         self.wallpaper_repo
             .update(req.id, name, text_color, req.audio)
             .await?;
-        self.sync_stations().await;
+        self.sync_stations();
         Ok(Response::new(()))
     }
 
@@ -193,8 +192,10 @@ impl WallpaperService for WallpaperHandler {
         &self,
         request: Request<pb::DeleteWallpaperRequest>,
     ) -> Result<Response<()>, Status> {
-        self.wallpaper_repo.delete(request.into_inner().id).await?;
-        self.sync_stations().await;
+        let id = request.into_inner().id;
+        self.wallpaper_repo.delete(id).await?;
+        self.video_streamer.forget(id);
+        self.sync_stations();
         Ok(Response::new(()))
     }
 
@@ -205,7 +206,7 @@ impl WallpaperService for WallpaperHandler {
         self.wallpaper_repo
             .set_default(request.into_inner().wallpaper_id)
             .await?;
-        self.sync_stations().await;
+        self.sync_stations();
         Ok(Response::new(()))
     }
 }

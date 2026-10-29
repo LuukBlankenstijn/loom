@@ -1,8 +1,15 @@
-use std::{process::Stdio, sync::Arc, time::Duration};
+use std::{
+    process::{ExitStatus, Stdio},
+    sync::Arc,
+    time::Duration,
+};
 
+use parking_lot::Mutex;
 use tokio::{
-    process::{Child, Command},
+    io::{AsyncBufReadExt, BufReader},
+    process::{Child, ChildStderr, Command},
     sync::{mpsc, oneshot},
+    time::{Instant, MissedTickBehavior},
 };
 
 use crate::{
@@ -16,11 +23,15 @@ use crate::{
 };
 
 const RECHECK_INTERVAL: Duration = Duration::from_secs(30);
-const RESTART_DELAY: Duration = Duration::from_secs(5);
+const FIRST_RETRY_DELAY: Duration = Duration::from_secs(5);
+const MAX_RETRY_DELAY: Duration = Duration::from_secs(300);
+const HEALTHY_RUN: Duration = Duration::from_secs(60);
 const RESOLVE_TIMEOUT: Duration = Duration::from_secs(30);
 const VIDEO_FORMAT: &str = "bv*[height<=1080][protocol=https]/b[height<=1080][protocol=https]/bv*[protocol=https]/b[protocol=https]";
 const VIDEO_AND_AUDIO_FORMAT: &str = "bv*[height<=1080][protocol=https]+ba[protocol=https]/b[height<=1080][protocol=https]/bv*[protocol=https]+ba[protocol=https]/b[protocol=https]";
 const VIDEO_FILTER: &str = "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,fps=30,format=yuv420p";
+
+type ErrorLine = Arc<Mutex<Option<String>>>;
 
 struct Wanted {
     id: i32,
@@ -32,6 +43,14 @@ struct Stream {
     id: i32,
     audio: bool,
     process: Child,
+    started: Instant,
+    last_error: ErrorLine,
+}
+
+struct Backoff {
+    id: i32,
+    failures: u32,
+    retry_at: Option<Instant>,
 }
 
 pub(super) struct Streamer {
@@ -41,6 +60,7 @@ pub(super) struct Streamer {
     wallpaper_repo: Arc<dyn WallpaperRepository>,
     orchestrator: Arc<dyn Orchestrator>,
     stream: Option<Stream>,
+    backoff: Option<Backoff>,
 }
 
 impl Streamer {
@@ -58,25 +78,27 @@ impl Streamer {
             wallpaper_repo,
             orchestrator,
             stream: None,
+            backoff: None,
         }
     }
 
     pub async fn run(mut self, mut requests: mpsc::Receiver<oneshot::Sender<()>>) {
         let mut announced = None;
         let mut recheck = tokio::time::interval(RECHECK_INTERVAL);
+        recheck.set_missed_tick_behavior(MissedTickBehavior::Delay);
         loop {
+            let retry_at = self.backoff.as_ref().and_then(|backoff| backoff.retry_at);
             let requested = tokio::select! {
                 Some(done) = requests.recv() => Some(done),
                 _ = recheck.tick() => None,
-                (id, status) = exited(&mut self.stream) => {
-                    let error = match status {
-                        Ok(status) => format!("ffmpeg stopped streaming ({status})"),
-                        Err(e) => format!("failed to wait for ffmpeg: {e}"),
-                    };
-                    tracing::warn!(id, %error, "video stream stopped, restarting");
-                    self.set_stream(None);
-                    self.state.lock().errors.insert(id, error);
-                    tokio::time::sleep(RESTART_DELAY).await;
+                _ = sleep_until(retry_at) => {
+                    if let Some(backoff) = &mut self.backoff {
+                        backoff.retry_at = None;
+                    }
+                    None
+                }
+                status = exited(&mut self.stream) => {
+                    self.handle_exit(status);
                     None
                 }
             };
@@ -94,6 +116,37 @@ impl Streamer {
         }
     }
 
+    fn handle_exit(&mut self, status: std::io::Result<ExitStatus>) {
+        let Some(stream) = self.set_stream(None) else {
+            return;
+        };
+        let reason = stream.last_error.lock().take();
+        let error = match (status, reason) {
+            (_, Some(reason)) => format!("ffmpeg stopped streaming: {reason}"),
+            (Ok(status), None) => format!("ffmpeg stopped streaming ({status})"),
+            (Err(e), None) => format!("failed to wait for ffmpeg: {e}"),
+        };
+        tracing::warn!(id = stream.id, %error, "video stream stopped");
+        self.state.lock().errors.insert(stream.id, error);
+        self.fail(stream.id, stream.started.elapsed() >= HEALTHY_RUN);
+    }
+
+    fn fail(&mut self, id: i32, after_healthy_run: bool) {
+        let failures = match &self.backoff {
+            Some(backoff) if backoff.id == id && !after_healthy_run => backoff.failures + 1,
+            _ => 1,
+        };
+        let delay = FIRST_RETRY_DELAY
+            .saturating_mul(2u32.saturating_pow(failures - 1))
+            .min(MAX_RETRY_DELAY);
+        tracing::info!(id, ?delay, "retrying video stream later");
+        self.backoff = Some(Backoff {
+            id,
+            failures,
+            retry_at: Some(Instant::now() + delay),
+        });
+    }
+
     async fn reconcile(&mut self) {
         let wanted = match self.wanted().await {
             Ok(wanted) => wanted,
@@ -104,8 +157,14 @@ impl Streamer {
         };
         let wanted_id = wanted.as_ref().map(|wanted| wanted.id);
         self.state.lock().current = wanted_id;
-        let streaming = self.stream.as_ref().map(|stream| (stream.id, stream.audio));
-        if streaming == wanted.as_ref().map(|wanted| (wanted.id, wanted.audio)) {
+
+        if let Some(stream) = &self.stream
+            && Some((stream.id, stream.audio)) == wanted.as_ref().map(|w| (w.id, w.audio))
+        {
+            if stream.started.elapsed() >= HEALTHY_RUN {
+                self.state.lock().errors.remove(&stream.id);
+                self.backoff = None;
+            }
             return;
         }
 
@@ -116,15 +175,32 @@ impl Streamer {
         let Some(Wanted { id, url, audio }) = wanted else {
             return;
         };
-        match self.start(&url, audio).await {
-            Ok(process) => {
+        if let Some(backoff) = &self.backoff
+            && backoff.id == id
+            && backoff.retry_at.is_some()
+        {
+            return;
+        }
+
+        let started = match resolve_sources(&url, audio).await {
+            Ok(sources) => self.spawn(&sources, audio),
+            Err(error) => Err(error),
+        };
+        match started {
+            Ok((process, last_error)) => {
                 tracing::info!(id, %url, audio, address = %self.config.multicast_address, "streaming video");
-                self.state.lock().errors.remove(&id);
-                self.set_stream(Some(Stream { id, audio, process }));
+                self.set_stream(Some(Stream {
+                    id,
+                    audio,
+                    process,
+                    started: Instant::now(),
+                    last_error,
+                }));
             }
             Err(error) => {
                 tracing::warn!(id, %url, %error, "failed to stream video");
                 self.state.lock().errors.insert(id, error);
+                self.fail(id, false);
             }
         }
     }
@@ -148,9 +224,7 @@ impl Streamer {
         std::mem::replace(&mut self.stream, stream)
     }
 
-    async fn start(&self, url: &str, audio: bool) -> Result<Child, String> {
-        let sources = resolve_sources(url, audio).await?;
-
+    fn spawn(&self, sources: &[String], audio: bool) -> Result<(Child, ErrorLine), String> {
         let mut destination = format!(
             "udp://{}?ttl={}&pkt_size=1316&bitrate=8000000",
             self.config.multicast_address, self.config.multicast_ttl
@@ -161,7 +235,7 @@ impl Streamer {
 
         let mut command = Command::new("ffmpeg");
         command.args(["-nostdin", "-hide_banner", "-loglevel", "error"]);
-        for source in &sources {
+        for source in sources {
             command.args(["-re", "-stream_loop", "-1", "-i", source]);
         }
         command.args(["-map", "0:v:0", "-sn", "-dn", "-vf", VIDEO_FILTER]);
@@ -173,7 +247,7 @@ impl Streamer {
         } else {
             command.arg("-an");
         }
-        command
+        let mut process = command
             .args(["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"])
             .args([
                 "-maxrate",
@@ -187,9 +261,27 @@ impl Streamer {
             ])
             .args(["-f", "mpegts", &destination])
             .stdin(Stdio::null())
+            .stderr(Stdio::piped())
             .kill_on_drop(true)
             .spawn()
-            .map_err(|e| format!("failed to run ffmpeg: {e}"))
+            .map_err(|e| format!("failed to run ffmpeg: {e}"))?;
+
+        let last_error = Arc::new(Mutex::new(None));
+        if let Some(stderr) = process.stderr.take() {
+            tokio::spawn(collect_errors(stderr, last_error.clone()));
+        }
+        Ok((process, last_error))
+    }
+}
+
+async fn collect_errors(stderr: ChildStderr, last_error: ErrorLine) {
+    let mut lines = BufReader::new(stderr).lines();
+    while let Ok(Some(line)) = lines.next_line().await {
+        let line = line.trim();
+        if !line.is_empty() {
+            tracing::warn!(target: "loom_backend::video::ffmpeg", "{line}");
+            *last_error.lock() = Some(line.to_owned());
+        }
     }
 }
 
@@ -230,9 +322,16 @@ async fn resolve_sources(url: &str, audio: bool) -> Result<Vec<String>, String> 
     Ok(sources)
 }
 
-async fn exited(stream: &mut Option<Stream>) -> (i32, std::io::Result<std::process::ExitStatus>) {
+async fn sleep_until(deadline: Option<Instant>) {
+    match deadline {
+        Some(deadline) => tokio::time::sleep_until(deadline).await,
+        None => std::future::pending().await,
+    }
+}
+
+async fn exited(stream: &mut Option<Stream>) -> std::io::Result<ExitStatus> {
     match stream {
-        Some(stream) => (stream.id, stream.process.wait().await),
+        Some(stream) => stream.process.wait().await,
         None => std::future::pending().await,
     }
 }
