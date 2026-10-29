@@ -22,6 +22,13 @@ let
     {
       listen = cfg.listenAddress;
       database_path = "${cfg.dataDir}/loom.db";
+      video = {
+        multicast_address = cfg.video.multicastAddress;
+        multicast_ttl = cfg.video.multicastTtl;
+      }
+      // optionalAttrs (cfg.video.multicastInterface != null) {
+        multicast_interface = cfg.video.multicastInterface;
+      };
     }
     // optionalAttrs (cfg.dashboardPackage != null) { dashboard_dir = "${cfg.dashboardPackage}"; }
     // optionalAttrs (cfg.authTokenFile != null) { auth_token_file = "${credentialsDir}/auth-token"; }
@@ -109,6 +116,29 @@ in
       default = null;
       description = "DOMjudge contest API to sync with; null runs in local mode.";
     };
+    video = {
+      multicastAddress = mkOption {
+        type = types.str;
+        default = "239.255.76.1:5004";
+        description = ''
+          group:port the current YouTube wallpaper is multicast to as MPEG-TS. Stations must accept
+          UDP on this port (services.greetd.loom-greeter.openFirewall with a matching videoStreamPort).
+        '';
+      };
+      multicastTtl = mkOption {
+        type = types.ints.u8;
+        default = 1;
+        description = "TTL of the multicast packets; 1 keeps the stream on the local network segment.";
+      };
+      multicastInterface = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        example = "10.0.0.1";
+        description = "Local IPv4 address of the interface to send the stream from; null lets the routing table decide.";
+      };
+      ytDlpPackage = mkPackageOption pkgs "yt-dlp" { };
+      ffmpegPackage = mkPackageOption pkgs "ffmpeg-headless" { };
+    };
   };
 
   config = mkIf cfg.enable {
@@ -124,6 +154,10 @@ in
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
+      path = [
+        cfg.video.ytDlpPackage
+        cfg.video.ffmpegPackage
+      ];
       serviceConfig = {
         ExecStart = utils.escapeSystemdExecArgs [
           (getExe cfg.package)

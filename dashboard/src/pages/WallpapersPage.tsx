@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   WallpaperKind,
+  type VideoStatus,
   type Wallpaper,
 } from "@client/v1/admin/wallpaper_pb";
 import { adminClient } from "../lib/client";
@@ -114,7 +115,8 @@ export function WallpapersPage() {
           </div>
           <p className="text-gray-400 text-lg">No wallpapers yet</p>
           <p className="text-gray-500 text-sm mt-1">
-            Upload an image or add a URL to build the library
+            Upload an image, or add an image URL or YouTube video to build the
+            library
           </p>
         </div>
       ) : (
@@ -128,7 +130,13 @@ export function WallpapersPage() {
   );
 }
 
-type SourceMode = "upload" | "url";
+type SourceMode = "upload" | "imageUrl" | "youtube";
+
+const SOURCE_MODES: [SourceMode, string][] = [
+  ["upload", "Upload image"],
+  ["imageUrl", "Image URL"],
+  ["youtube", "YouTube"],
+];
 
 function AddWallpaperForm() {
   const invalidateWallpapers = useInvalidateWallpapers();
@@ -137,17 +145,16 @@ function AddWallpaperForm() {
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [url, setUrl] = useState("");
-  const [kind, setKind] = useState<WallpaperKind>(WallpaperKind.IMAGE);
   const [fileInputKey, setFileInputKey] = useState(0);
 
   const createMutation = useMutation({
     mutationFn: async () => {
       const trimmedName = name.trim();
-      if (mode === "url") {
+      if (mode !== "upload") {
         return adminClient.createWallpaperFromUrl(
           trimmedName,
           url.trim(),
-          kind,
+          mode === "youtube" ? WallpaperKind.YOUTUBE : WallpaperKind.IMAGE,
         );
       }
       if (!file) throw new Error("No file selected");
@@ -158,7 +165,6 @@ function AddWallpaperForm() {
       setName("");
       setFile(null);
       setUrl("");
-      setKind(WallpaperKind.IMAGE);
       setFileInputKey((key) => key + 1);
       return invalidateWallpapers();
     },
@@ -214,12 +220,7 @@ function AddWallpaperForm() {
         className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
       />
       <div className="flex gap-1 p-1 bg-surface-700 rounded-lg">
-        {(
-          [
-            ["upload", "Upload image"],
-            ["url", "From URL"],
-          ] as const
-        ).map(([value, label]) => (
+        {SOURCE_MODES.map(([value, label]) => (
           <button
             key={value}
             type="button"
@@ -252,22 +253,24 @@ function AddWallpaperForm() {
           )}
         </div>
       ) : (
-        <div className="flex gap-2">
+        <div>
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://..."
-            className="flex-1 min-w-0 bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            placeholder={
+              mode === "youtube"
+                ? "https://www.youtube.com/watch?v=…"
+                : "https://..."
+            }
+            className="w-full bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           />
-          <select
-            value={kind}
-            onChange={(e) => setKind(Number(e.target.value) as WallpaperKind)}
-            className="bg-surface-700 border border-surface-500 rounded-lg px-3 py-2 text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value={WallpaperKind.IMAGE}>Image</option>
-            <option value={WallpaperKind.VIDEO}>Video</option>
-          </select>
+          {mode === "youtube" && (
+            <p className="text-xs text-gray-500 mt-1">
+              The server streams the video to stations while it is the current
+              wallpaper.
+            </p>
+          )}
         </div>
       )}
 
@@ -318,7 +321,7 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
 
   const textColor = editedColor ?? wallpaper.textColor;
   const isUpload = wallpaper.source.case === "mimeType";
-  const isVideo = wallpaper.kind === WallpaperKind.VIDEO;
+  const isYoutube = wallpaper.kind === WallpaperKind.YOUTUBE;
   const usage = [
     ...(wallpaper.isDefault ? ["Default"] : []),
     ...wallpaper.contestIds.map((id) => `Contest ${id}`),
@@ -362,19 +365,27 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
           </div>
         )}
         <div className="absolute top-2 left-2 flex gap-1.5">
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur ${
-              isVideo
-                ? "bg-rose-500/30 text-rose-200"
-                : "bg-sky-500/30 text-sky-200"
-            }`}
-          >
-            {isVideo ? "Video" : "Image"}
-          </span>
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface-900/60 text-gray-200 backdrop-blur">
-            {isUpload ? "Upload" : "URL"}
-          </span>
+          {isYoutube ? (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur bg-rose-500/30 text-rose-200">
+              YouTube
+            </span>
+          ) : (
+            <>
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur bg-sky-500/30 text-sky-200">
+                Image
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-surface-900/60 text-gray-200 backdrop-blur">
+                {isUpload ? "Upload" : "URL"}
+              </span>
+            </>
+          )}
         </div>
+        {wallpaper.video?.streaming && (
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-danger-500/80 text-white backdrop-blur">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            Streaming
+          </div>
+        )}
       </div>
 
       <div className="p-4 flex flex-col gap-3 flex-1">
@@ -428,6 +439,7 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
             {wallpaper.source.value}
           </p>
         )}
+        {wallpaper.video && <VideoStatusPanel video={wallpaper.video} />}
 
         <div className="p-3 rounded-lg bg-surface-700 border border-surface-600">
           <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
@@ -491,6 +503,32 @@ function WallpaperCard({ wallpaper }: { wallpaper: Wallpaper }) {
           <p className="text-danger-500 text-sm">Failed to delete wallpaper</p>
         )}
       </div>
+    </div>
+  );
+}
+
+function VideoStatusPanel({ video }: { video: VideoStatus }) {
+  return (
+    <div className="p-3 rounded-lg bg-surface-700 border border-surface-600 space-y-2">
+      <p className="text-xs text-gray-400 uppercase tracking-wide">Video</p>
+      {video.streaming && (
+        <p className="text-sm font-medium text-rose-300">
+          Streaming to stations
+        </p>
+      )}
+      {video.error && (
+        <p
+          className="text-xs text-danger-500 bg-danger-500/10 rounded px-2 py-1 font-mono line-clamp-3 break-words"
+          title={video.error}
+        >
+          {video.error}
+        </p>
+      )}
+      {!video.streaming && !video.error && (
+        <p className="text-sm text-gray-500">
+          Streams while this is the current wallpaper
+        </p>
+      )}
     </div>
   );
 }

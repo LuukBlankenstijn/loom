@@ -1,7 +1,7 @@
 CREATE TABLE wallpaper_library (
     id         INTEGER PRIMARY KEY NOT NULL,
     name       TEXT    NOT NULL,
-    kind       TEXT    NOT NULL CHECK (kind IN ('image', 'video')),
+    kind       TEXT    NOT NULL CHECK (kind IN ('image', 'youtube')),
     data       BLOB,
     mime_type  TEXT,
     url        TEXT,
@@ -10,7 +10,7 @@ CREATE TABLE wallpaper_library (
         (data IS NOT NULL AND mime_type IS NOT NULL AND url IS NULL)
         OR (data IS NULL AND mime_type IS NULL AND url IS NOT NULL)
     ),
-    CHECK (kind <> 'video' OR url IS NOT NULL)
+    CHECK (kind <> 'youtube' OR url IS NOT NULL)
 );
 
 INSERT INTO wallpaper_library (id, name, kind, data, mime_type, text_color)

@@ -13,7 +13,33 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/wallpaper.proto.
  */
 export const file_v1_admin_wallpaper: GenFile = /*@__PURE__*/
-  fileDesc("Chh2MS9hZG1pbi93YWxscGFwZXIucHJvdG8SCGFkbWluLnYxIrcBCglXYWxscGFwZXISCgoCaWQYASABKAUSDAoEbmFtZRgCIAEoCRIlCgRraW5kGAMgASgOMhcuYWRtaW4udjEuV2FsbHBhcGVyS2luZBISCgp0ZXh0X2NvbG9yGAQgASgJEhMKCW1pbWVfdHlwZRgFIAEoCUgAEg0KA3VybBgGIAEoCUgAEhIKCmlzX2RlZmF1bHQYByABKAgSEwoLY29udGVzdF9pZHMYCCADKAlCCAoGc291cmNlIkEKFkxpc3RXYWxscGFwZXJzUmVzcG9uc2USJwoKd2FsbHBhcGVycxgBIAMoCzITLmFkbWluLnYxLldhbGxwYXBlciJhCglVcmxTb3VyY2USIQoDdXJsGAEgASgJQhS6SBFyDzIKXmh0dHBzPzovL4gBARIxCgRraW5kGAIgASgOMhcuYWRtaW4udjEuV2FsbHBhcGVyS2luZEIKukgHggEEEAEgACKDAQoWQ3JlYXRlV2FsbHBhcGVyUmVxdWVzdBIVCgRuYW1lGAEgASgJQge6SARyAhABEh0KCmltYWdlX2RhdGEYAiABKAxCB7pIBHoCEAFIABIiCgN1cmwYAyABKAsyEy5hZG1pbi52MS5VcmxTb3VyY2VIAEIPCgZzb3VyY2USBbpIAggBIp0BChZVcGRhdGVXYWxscGFwZXJSZXF1ZXN0EgoKAmlkGAEgASgFEhoKBG5hbWUYAiABKAlCB7pIBHICEAFIAIgBARJDCgp0ZXh0X2NvbG9yGAMgASgJQiq6SCdyJTIjXiM/KFtBLUZhLWYwLTldezN9fFtBLUZhLWYwLTldezZ9KSRIAYgBAUIHCgVfbmFtZUINCgtfdGV4dF9jb2xvciIkChZEZWxldGVXYWxscGFwZXJSZXF1ZXN0EgoKAmlkGAEgASgFIkgKGlNldERlZmF1bHRXYWxscGFwZXJSZXF1ZXN0EhkKDHdhbGxwYXBlcl9pZBgBIAEoBUgAiAEBQg8KDV93YWxscGFwZXJfaWQqYwoNV2FsbHBhcGVyS2luZBIeChpXQUxMUEFQRVJfS0lORF9VTlNQRUNJRklFRBAAEhgKFFdBTExQQVBFUl9LSU5EX0lNQUdFEAESGAoUV0FMTFBBUEVSX0tJTkRfVklERU8QAjKhAwoQV2FsbHBhcGVyU2VydmljZRJMCg5MaXN0V2FsbHBhcGVycxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRogLmFkbWluLnYxLkxpc3RXYWxscGFwZXJzUmVzcG9uc2UiABJKCg9DcmVhdGVXYWxscGFwZXISIC5hZG1pbi52MS5DcmVhdGVXYWxscGFwZXJSZXF1ZXN0GhMuYWRtaW4udjEuV2FsbHBhcGVyIgASTQoPVXBkYXRlV2FsbHBhcGVyEiAuYWRtaW4udjEuVXBkYXRlV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEk0KD0RlbGV0ZVdhbGxwYXBlchIgLmFkbWluLnYxLkRlbGV0ZVdhbGxwYXBlclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJVChNTZXREZWZhdWx0V2FsbHBhcGVyEiQuYWRtaW4udjEuU2V0RGVmYXVsdFdhbGxwYXBlclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiAEKZAQoMY29tLmFkbWluLnYxQg5XYWxscGFwZXJQcm90b1ABWjhnaXRodWIuY29tL0x1dWtCbGFua2Vuc3Rpam4vbG9vbS9nZW4vZ28vdjEvYWRtaW47YWRtaW52MaICA0FYWKoCCEFkbWluLlYxygIIQWRtaW5cVjHiAhRBZG1pblxWMVxHUEJNZXRhZGF0YeoCCUFkbWluOjpWMWIGcHJvdG8z", [file_buf_validate_validate, file_google_protobuf_empty]);
+  fileDesc("Chh2MS9hZG1pbi93YWxscGFwZXIucHJvdG8SCGFkbWluLnYxIi8KC1ZpZGVvU3RhdHVzEhEKCXN0cmVhbWluZxgBIAEoCBINCgVlcnJvchgCIAEoCSLdAQoJV2FsbHBhcGVyEgoKAmlkGAEgASgFEgwKBG5hbWUYAiABKAkSJQoEa2luZBgDIAEoDjIXLmFkbWluLnYxLldhbGxwYXBlcktpbmQSEgoKdGV4dF9jb2xvchgEIAEoCRITCgltaW1lX3R5cGUYBSABKAlIABINCgN1cmwYBiABKAlIABISCgppc19kZWZhdWx0GAcgASgIEhMKC2NvbnRlc3RfaWRzGAggAygJEiQKBXZpZGVvGAkgASgLMhUuYWRtaW4udjEuVmlkZW9TdGF0dXNCCAoGc291cmNlIkEKFkxpc3RXYWxscGFwZXJzUmVzcG9uc2USJwoKd2FsbHBhcGVycxgBIAMoCzITLmFkbWluLnYxLldhbGxwYXBlciJhCglVcmxTb3VyY2USIQoDdXJsGAEgASgJQhS6SBFyDzIKXmh0dHBzPzovL4gBARIxCgRraW5kGAIgASgOMhcuYWRtaW4udjEuV2FsbHBhcGVyS2luZEIKukgHggEEEAEgACKDAQoWQ3JlYXRlV2FsbHBhcGVyUmVxdWVzdBIVCgRuYW1lGAEgASgJQge6SARyAhABEh0KCmltYWdlX2RhdGEYAiABKAxCB7pIBHoCEAFIABIiCgN1cmwYAyABKAsyEy5hZG1pbi52MS5VcmxTb3VyY2VIAEIPCgZzb3VyY2USBbpIAggBIp0BChZVcGRhdGVXYWxscGFwZXJSZXF1ZXN0EgoKAmlkGAEgASgFEhoKBG5hbWUYAiABKAlCB7pIBHICEAFIAIgBARJDCgp0ZXh0X2NvbG9yGAMgASgJQiq6SCdyJTIjXiM/KFtBLUZhLWYwLTldezN9fFtBLUZhLWYwLTldezZ9KSRIAYgBAUIHCgVfbmFtZUINCgtfdGV4dF9jb2xvciIkChZEZWxldGVXYWxscGFwZXJSZXF1ZXN0EgoKAmlkGAEgASgFIkgKGlNldERlZmF1bHRXYWxscGFwZXJSZXF1ZXN0EhkKDHdhbGxwYXBlcl9pZBgBIAEoBUgAiAEBQg8KDV93YWxscGFwZXJfaWQqZQoNV2FsbHBhcGVyS2luZBIeChpXQUxMUEFQRVJfS0lORF9VTlNQRUNJRklFRBAAEhgKFFdBTExQQVBFUl9LSU5EX0lNQUdFEAESGgoWV0FMTFBBUEVSX0tJTkRfWU9VVFVCRRACMqEDChBXYWxscGFwZXJTZXJ2aWNlEkwKDkxpc3RXYWxscGFwZXJzEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GiAuYWRtaW4udjEuTGlzdFdhbGxwYXBlcnNSZXNwb25zZSIAEkoKD0NyZWF0ZVdhbGxwYXBlchIgLmFkbWluLnYxLkNyZWF0ZVdhbGxwYXBlclJlcXVlc3QaEy5hZG1pbi52MS5XYWxscGFwZXIiABJNCg9VcGRhdGVXYWxscGFwZXISIC5hZG1pbi52MS5VcGRhdGVXYWxscGFwZXJSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgASTQoPRGVsZXRlV2FsbHBhcGVyEiAuYWRtaW4udjEuRGVsZXRlV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAElUKE1NldERlZmF1bHRXYWxscGFwZXISJC5hZG1pbi52MS5TZXREZWZhdWx0V2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAQpkBCgxjb20uYWRtaW4udjFCDldhbGxwYXBlclByb3RvUAFaOGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9hZG1pbjthZG1pbnYxogIDQVhYqgIIQWRtaW4uVjHKAghBZG1pblxWMeICFEFkbWluXFYxXEdQQk1ldGFkYXRh6gIJQWRtaW46OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_empty]);
+
+/**
+ * @generated from message admin.v1.VideoStatus
+ */
+export type VideoStatus = Message<"admin.v1.VideoStatus"> & {
+  /**
+   * Whether stations are receiving this video over multicast right now
+   *
+   * @generated from field: bool streaming = 1;
+   */
+  streaming: boolean;
+
+  /**
+   * Why the last attempt to stream this video failed; empty when it did not
+   *
+   * @generated from field: string error = 2;
+   */
+  error: string;
+};
+
+/**
+ * Describes the message admin.v1.VideoStatus.
+ * Use `create(VideoStatusSchema)` to create a new message.
+ */
+export const VideoStatusSchema: GenMessage<VideoStatus> = /*@__PURE__*/
+  messageDesc(file_v1_admin_wallpaper, 0);
 
 /**
  * @generated from message admin.v1.Wallpaper
@@ -67,6 +93,13 @@ export type Wallpaper = Message<"admin.v1.Wallpaper"> & {
    * @generated from field: repeated string contest_ids = 8;
    */
   contestIds: string[];
+
+  /**
+   * Set for youtube wallpapers
+   *
+   * @generated from field: admin.v1.VideoStatus video = 9;
+   */
+  video?: VideoStatus | undefined;
 };
 
 /**
@@ -74,7 +107,7 @@ export type Wallpaper = Message<"admin.v1.Wallpaper"> & {
  * Use `create(WallpaperSchema)` to create a new message.
  */
 export const WallpaperSchema: GenMessage<Wallpaper> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 0);
+  messageDesc(file_v1_admin_wallpaper, 1);
 
 /**
  * @generated from message admin.v1.ListWallpapersResponse
@@ -91,7 +124,7 @@ export type ListWallpapersResponse = Message<"admin.v1.ListWallpapersResponse"> 
  * Use `create(ListWallpapersResponseSchema)` to create a new message.
  */
 export const ListWallpapersResponseSchema: GenMessage<ListWallpapersResponse> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 1);
+  messageDesc(file_v1_admin_wallpaper, 2);
 
 /**
  * @generated from message admin.v1.UrlSource
@@ -113,7 +146,7 @@ export type UrlSource = Message<"admin.v1.UrlSource"> & {
  * Use `create(UrlSourceSchema)` to create a new message.
  */
 export const UrlSourceSchema: GenMessage<UrlSource> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 2);
+  messageDesc(file_v1_admin_wallpaper, 3);
 
 /**
  * @generated from message admin.v1.CreateWallpaperRequest
@@ -147,7 +180,7 @@ export type CreateWallpaperRequest = Message<"admin.v1.CreateWallpaperRequest"> 
  * Use `create(CreateWallpaperRequestSchema)` to create a new message.
  */
 export const CreateWallpaperRequestSchema: GenMessage<CreateWallpaperRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 3);
+  messageDesc(file_v1_admin_wallpaper, 4);
 
 /**
  * @generated from message admin.v1.UpdateWallpaperRequest
@@ -174,7 +207,7 @@ export type UpdateWallpaperRequest = Message<"admin.v1.UpdateWallpaperRequest"> 
  * Use `create(UpdateWallpaperRequestSchema)` to create a new message.
  */
 export const UpdateWallpaperRequestSchema: GenMessage<UpdateWallpaperRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 4);
+  messageDesc(file_v1_admin_wallpaper, 5);
 
 /**
  * @generated from message admin.v1.DeleteWallpaperRequest
@@ -191,7 +224,7 @@ export type DeleteWallpaperRequest = Message<"admin.v1.DeleteWallpaperRequest"> 
  * Use `create(DeleteWallpaperRequestSchema)` to create a new message.
  */
 export const DeleteWallpaperRequestSchema: GenMessage<DeleteWallpaperRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 5);
+  messageDesc(file_v1_admin_wallpaper, 6);
 
 /**
  * @generated from message admin.v1.SetDefaultWallpaperRequest
@@ -208,7 +241,7 @@ export type SetDefaultWallpaperRequest = Message<"admin.v1.SetDefaultWallpaperRe
  * Use `create(SetDefaultWallpaperRequestSchema)` to create a new message.
  */
 export const SetDefaultWallpaperRequestSchema: GenMessage<SetDefaultWallpaperRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_wallpaper, 6);
+  messageDesc(file_v1_admin_wallpaper, 7);
 
 /**
  * @generated from enum admin.v1.WallpaperKind
@@ -225,9 +258,9 @@ export enum WallpaperKind {
   IMAGE = 1,
 
   /**
-   * @generated from enum value: WALLPAPER_KIND_VIDEO = 2;
+   * @generated from enum value: WALLPAPER_KIND_YOUTUBE = 2;
    */
-  VIDEO = 2,
+  YOUTUBE = 2,
 }
 
 /**
@@ -251,7 +284,7 @@ export const WallpaperService: GenService<{
     output: typeof ListWallpapersResponseSchema;
   },
   /**
-   * Adds an uploaded image or a streamed URL to the library
+   * Adds an uploaded image, an image URL or a YouTube video to the library
    *
    * @generated from rpc admin.v1.WallpaperService.CreateWallpaper
    */

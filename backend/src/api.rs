@@ -41,6 +41,7 @@ impl IntoResponse for AppError {
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::InvalidArgument(msg) => (StatusCode::BAD_REQUEST, msg),
             AppError::FailedPrecondition(msg) => (StatusCode::PRECONDITION_FAILED, msg),
+            AppError::Unavailable(msg) => (StatusCode::SERVICE_UNAVAILABLE, msg),
             AppError::Internal(msg) => {
                 tracing::error!("Internal server error: {}", msg);
                 (
@@ -73,6 +74,7 @@ impl From<AppError> for Status {
             AppError::InvalidArgument(msg) => Status::invalid_argument(msg.clone()),
             AppError::AlreadyExists(msg) => Status::already_exists(msg.clone()),
             AppError::FailedPrecondition(msg) => Status::failed_precondition(msg.clone()),
+            AppError::Unavailable(msg) => Status::unavailable(msg.clone()),
             AppError::Internal(msg) => {
                 tracing::error!(error = %msg, "internal error");
                 Status::internal("internal server error")

@@ -19,8 +19,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 FROM debian:bookworm-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get install -y --no-install-recommends ca-certificates ffmpeg && \
     rm -rf /var/lib/apt/lists/*
+
+ADD --chmod=755 https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux /usr/local/bin/yt-dlp
 
 COPY --from=builder /usr/local/bin/loom-backend /usr/local/bin/loom-import-postgres /usr/local/bin/
 

@@ -21,8 +21,8 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{
     api::ErrorResponse,
     domain::{
-        ContestRepository, MapRepository, Orchestrator, TeamRepository, Wallpaper,
-        WallpaperRepository, WallpaperSource, WallpaperStream,
+        ContestRepository, MapRepository, Orchestrator, TeamRepository, VideoStreamer, Wallpaper,
+        WallpaperKind, WallpaperRepository, WallpaperSource, WallpaperStream, resolve_wallpaper,
     },
     error::AppError,
     render,
@@ -36,6 +36,7 @@ pub struct HttpHandlerState {
     team_repo: Arc<dyn TeamRepository>,
     map_repo: Arc<dyn MapRepository>,
     wallpaper_repo: Arc<dyn WallpaperRepository>,
+    video_streamer: Arc<dyn VideoStreamer>,
     orchestrator: Arc<dyn Orchestrator>,
 }
 
@@ -52,19 +53,7 @@ impl HttpHandlerState {
     }
 
     async fn resolve_wallpaper(&self, requested: Option<String>) -> Result<Wallpaper, AppError> {
-        let contest_id = match requested {
-            Some(id) => Some(id),
-            None => self.contest_repo.get_next_contest().await?.map(|c| c.id),
-        };
-
-        if let Some(contest_id) = contest_id
-            && let Some(wallpaper) = self.wallpaper_repo.get_for_contest(&contest_id).await?
-        {
-            return Ok(wallpaper);
-        }
-
-        self.wallpaper_repo
-            .get_default()
+        resolve_wallpaper(&*self.contest_repo, &*self.wallpaper_repo, requested)
             .await?
             .ok_or_else(|| AppError::NotFound("no wallpaper found".to_string()))
     }
@@ -127,18 +116,20 @@ fn content_body(content: WallpaperStream) -> Body {
     tag = "station",
     params(WallpaperParams),
     responses(
-        (status = 200, description = "Stored wallpaper image bytes", content_type = "image/*",
+        (status = 200, description = "Stored wallpaper image bytes, or an empty body with x-wallpaper-stream for a YouTube wallpaper", content_type = "image/*",
          headers(
             ("x-wallpaper-text-color" = String, description = "Colour for text drawn over the wallpaper"),
-            ("x-wallpaper-text" = String, description = "Team name; absent when no team matches ip")
+            ("x-wallpaper-text" = String, description = "Team name; absent when no team matches ip"),
+            ("x-wallpaper-stream" = String, description = "udp://group:port of the multicast MPEG-TS stream; only for YouTube wallpapers")
          )),
-        (status = 307, description = "Wallpaper streamed from an external URL",
+        (status = 307, description = "Wallpaper image served from an external URL",
          headers(
             ("location" = String, description = "External wallpaper URL"),
             ("x-wallpaper-text-color" = String, description = "Colour for text drawn over the wallpaper"),
             ("x-wallpaper-text" = String, description = "Team name; absent when no team matches ip")
          )),
         (status = 404, description = "Neither the contest nor the system has a wallpaper", body = ErrorResponse),
+        (status = 503, description = "YouTube wallpaper that is not the current wallpaper, so it is not multicast", body = ErrorResponse),
     )
 )]
 pub async fn wallpaper(
@@ -158,13 +149,29 @@ pub async fn wallpaper(
         headers.push((HeaderName::from_static("x-wallpaper-text"), team.name));
     }
 
-    match wallpaper.source {
-        WallpaperSource::Stored { .. } => {
+    match (wallpaper.kind, wallpaper.source) {
+        (WallpaperKind::Youtube, _) => {
+            let address = state
+                .video_streamer
+                .stream_address(wallpaper.id)
+                .ok_or_else(|| {
+                    AppError::Unavailable(format!(
+                        "video of wallpaper {} is not being streamed",
+                        wallpaper.id
+                    ))
+                })?;
+            headers.push((
+                HeaderName::from_static("x-wallpaper-stream"),
+                format!("udp://{address}"),
+            ));
+            Ok(AppendHeaders(headers).into_response())
+        }
+        (WallpaperKind::Image, WallpaperSource::Stored { .. }) => {
             let content = state.stored_content(wallpaper.id).await?;
             headers.push((header::CONTENT_TYPE, content.mime_type.clone()));
             Ok((AppendHeaders(headers), content_body(content)).into_response())
         }
-        WallpaperSource::Url(url) => {
+        (WallpaperKind::Image, WallpaperSource::Url(url)) => {
             headers.push((header::LOCATION, url));
             Ok((StatusCode::TEMPORARY_REDIRECT, AppendHeaders(headers)).into_response())
         }

@@ -1566,7 +1566,7 @@ pub mod wallpaper_service_client {
                 .insert(GrpcMethod::new("admin.v1.WallpaperService", "ListWallpapers"));
             self.inner.unary(req, path, codec).await
         }
-        /** Adds an uploaded image or a streamed URL to the library
+        /** Adds an uploaded image, an image URL or a YouTube video to the library
 */
         pub async fn create_wallpaper(
             &mut self,
@@ -1684,7 +1684,7 @@ pub mod wallpaper_service_server {
             tonic::Response<super::ListWallpapersResponse>,
             tonic::Status,
         >;
-        /** Adds an uploaded image or a streamed URL to the library
+        /** Adds an uploaded image, an image URL or a YouTube video to the library
 */
         async fn create_wallpaper(
             &self,

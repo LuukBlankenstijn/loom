@@ -14,6 +14,9 @@ pub enum AppError {
     #[error("failed precondition: {0}")]
     FailedPrecondition(String),
 
+    #[error("unavailable: {0}")]
+    Unavailable(String),
+
     #[error("internal: {0}")]
     Internal(String),
 

@@ -4,13 +4,16 @@ use loom_rpc::admin::v1::{self as pb, contest_service_server::ContestService};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
-use crate::domain::{ContestRepository, MapRepository, Orchestrator, WallpaperRepository};
+use crate::domain::{
+    ContestRepository, MapRepository, Orchestrator, VideoStreamer, WallpaperRepository,
+};
 
 #[derive(Constructor)]
 pub struct ContestHandler {
     contest_repo: Arc<dyn ContestRepository>,
     map_repo: Arc<dyn MapRepository>,
     wallpaper_repo: Arc<dyn WallpaperRepository>,
+    video_streamer: Arc<dyn VideoStreamer>,
     orchestrator: Arc<dyn Orchestrator>,
 }
 
@@ -54,6 +57,7 @@ impl ContestService for ContestHandler {
         self.wallpaper_repo
             .assign_contest(&req.contest_id, req.wallpaper_id)
             .await?;
+        self.video_streamer.refresh().await;
         self.orchestrator.sync_stations(&[]);
         Ok(Response::new(()))
     }

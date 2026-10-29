@@ -3,7 +3,7 @@ use std::pin::Pin;
 use async_trait::async_trait;
 use futures::Stream;
 
-use crate::error::AppError;
+use crate::{domain::ContestRepository, error::AppError};
 
 pub type ByteStream = Pin<Box<dyn Stream<Item = Result<Vec<u8>, AppError>> + Send>>;
 
@@ -15,7 +15,7 @@ pub struct WallpaperStream {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WallpaperKind {
     Image,
-    Video,
+    Youtube,
 }
 
 #[derive(Debug, Clone)]
@@ -68,4 +68,23 @@ pub trait WallpaperRepository: Send + Sync {
 
     async fn get_default(&self) -> Result<Option<Wallpaper>, AppError>;
     async fn set_default(&self, id: Option<i32>) -> Result<(), AppError>;
+}
+
+pub async fn resolve_wallpaper(
+    contest_repo: &dyn ContestRepository,
+    wallpaper_repo: &dyn WallpaperRepository,
+    contest_id: Option<String>,
+) -> Result<Option<Wallpaper>, AppError> {
+    let contest_id = match contest_id {
+        Some(id) => Some(id),
+        None => contest_repo.get_next_contest().await?.map(|c| c.id),
+    };
+
+    if let Some(contest_id) = contest_id
+        && let Some(wallpaper) = wallpaper_repo.get_for_contest(&contest_id).await?
+    {
+        return Ok(Some(wallpaper));
+    }
+
+    wallpaper_repo.get_default().await
 }

@@ -5,9 +5,13 @@ edition = "2024"
 
 [dependencies]
 iced = { version = "0.14", features = ["image-without-codecs", "tokio"] }
-tokio = { version = "1.49.0", features = ["sync", "rt"] }
+tokio = { version = "1.49.0", features = ["sync", "rt", "time"] }
 ureq = { version = "3.2.0", features = ["json"] }
 zbus = { version = "5", default-features = false, features = ["tokio"] }
+iced_video_player = "0.6"
+gstreamer = "0.23"
+gstreamer-app = "0.23"
+url = "2"
 
 greetd_ipc = { version = "0.10.3", features = ["sync-codec"] } 
 greeter-dbus = { path = "../shared/greeter-dbus" }

@@ -1,23 +1,19 @@
-use image::GenericImageView;
-use log::error;
+mod media;
+
+use log::{error, warn};
 use std::{path::Path, str::FromStr};
 
 use iced::{
-    Color, ContentFit, Element, Font, Length, Padding, Task, alignment,
+    Color, Element, Font, Length, Padding, Task, alignment,
     font::Weight,
     widget::{container, stack, text},
 };
+use url::Url;
 
-use crate::ui::Message;
-
-#[derive(Debug, Clone, Default)]
-enum ImageStatus {
-    Loading,
-    Ready,
-    #[default]
-    Invalid,
-    Empty,
-}
+use crate::ui::{
+    Message,
+    background::media::{Media, MediaMessage, MediaSource},
+};
 
 #[derive(Debug, Clone)]
 pub struct Label {
@@ -25,19 +21,24 @@ pub struct Label {
     color: iced::Color,
 }
 
+#[derive(Debug, Clone)]
+pub enum Fetched {
+    Local(Option<MediaSource>),
+    Remote(Option<MediaSource>, Option<Label>),
+}
+
 #[derive(Debug, Default)]
 pub struct Background {
-    handle: Option<iced::widget::image::Handle>,
-    image_status: ImageStatus,
+    media: Media,
     label: Option<Label>,
+    request: u64,
 }
 
 #[derive(Debug, Clone)]
 pub enum BackgroundMessage {
     Source(Option<String>),
-    Data((Option<iced::widget::image::Handle>, Option<Label>)),
-    Handle(Option<iced::widget::image::Handle>),
-    Label(Option<Label>),
+    Fetched(u64, Fetched),
+    Media(MediaMessage),
     GotColor(Option<Color>),
 }
 
@@ -78,34 +79,9 @@ impl Background {
         Element<'_, BackgroundMessage>,
         Option<Element<'_, BackgroundMessage>>,
     ) {
-        let (image_element, is_wallpaper_valid) = match &self.image_status {
-            ImageStatus::Ready if self.handle.is_some() => {
-                let handle = self.handle.clone().unwrap();
-                let img = container(
-                    iced::widget::image(handle)
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .content_fit(ContentFit::Cover),
-                )
-                .into();
-                (img, true)
-            }
-            ImageStatus::Loading => (no_background_container("Loading...".to_string()), false),
-            ImageStatus::Empty => (
-                no_background_container("No background configured".to_string()),
-                false,
-            ),
-            ImageStatus::Invalid => (
-                no_background_container("Invalid background...".to_string()),
-                false,
-            ),
-            _ => (
-                no_background_container("Invalid image handle".to_string()),
-                false,
-            ),
-        };
+        let media_element = self.media.view().map(BackgroundMessage::Media);
 
-        let label_element = if is_wallpaper_valid {
+        let label_element = if self.media.is_showing() {
             self.label.as_ref().map(|label| {
                 container(outlined_text(
                     &label.text,
@@ -121,64 +97,55 @@ impl Background {
             None
         };
 
-        (image_element, label_element)
+        (media_element, label_element)
     }
 
     pub fn update(&mut self, msg: BackgroundMessage) -> Task<BackgroundMessage> {
         match msg {
             BackgroundMessage::Source(source) => {
-                if let Some(source) = source {
-                    self.image_status = ImageStatus::Loading;
-                    if is_http_url(&source) {
-                        return Task::perform(
-                            async move {
-                                let (bytes, label) = fetch_remote_image(&source);
-                                let handle = bytes.and_then(create_handle);
-                                (handle, label)
-                            },
-                            BackgroundMessage::Data,
-                        );
-                    } else {
-                        return Task::perform(
-                            async move { fetch_local_image(&source).and_then(create_handle) },
-                            BackgroundMessage::Handle,
-                        );
+                self.request += 1;
+                let Some(source) = source else {
+                    return self.update_media(MediaMessage::Clear);
+                };
+                let request = self.request;
+                let fetch = Task::perform(
+                    async move {
+                        tokio::task::spawn_blocking(move || fetch(&source))
+                            .await
+                            .unwrap_or(Fetched::Local(None))
+                    },
+                    move |fetched| BackgroundMessage::Fetched(request, fetched),
+                );
+                Task::batch(vec![self.update_media(MediaMessage::Loading), fetch])
+            }
+            BackgroundMessage::Fetched(request, fetched) if request == self.request => {
+                match fetched {
+                    Fetched::Local(source) => self.load(source),
+                    Fetched::Remote(source, label) => {
+                        let color = label.as_ref().map(|l| l.color);
+                        self.label = label;
+                        Task::batch(vec![
+                            self.load(source),
+                            Task::done(BackgroundMessage::GotColor(color)),
+                        ])
                     }
-                } else {
-                    self.image_status = ImageStatus::Empty;
                 }
             }
-            BackgroundMessage::Handle(handle) => {
-                match handle {
-                    Some(handle) => {
-                        self.handle = Some(handle);
-                        self.image_status = ImageStatus::Ready;
-                    }
-                    None => {
-                        self.handle = None;
-                        self.image_status = ImageStatus::Invalid;
-                    }
-                };
-            }
-            BackgroundMessage::Label(label) => self.label = label,
-            BackgroundMessage::Data((handle, label)) => {
-                return Task::batch(vec![
-                    Task::done(BackgroundMessage::Handle(handle)),
-                    Task::done(BackgroundMessage::Label(label.clone())),
-                    Task::done(BackgroundMessage::GotColor(label.map(|l| l.color))),
-                ]);
-            }
-            BackgroundMessage::GotColor(_) => {} // handled by parent
+            BackgroundMessage::Media(msg) => self.update_media(msg),
+            BackgroundMessage::Fetched(..) | BackgroundMessage::GotColor(_) => Task::none(),
         }
-        Task::none()
     }
-}
 
-fn no_background_container<'a>(label: String) -> Element<'a, BackgroundMessage> {
-    container(text(label).size(24).color(Color::WHITE))
-        .height(Length::Fill)
-        .center(Length::Fill)
-        .into()
+    fn load(&mut self, source: Option<MediaSource>) -> Task<BackgroundMessage> {
+        self.update_media(match source {
+            Some(source) => MediaMessage::Load(source),
+            None => MediaMessage::Invalid,
+        })
+    }
+
+    fn update_media(&mut self, msg: MediaMessage) -> Task<BackgroundMessage> {
+        self.media.update(msg).map(BackgroundMessage::Media)
+    }
 }
 
 fn outlined_text<'a>(
@@ -235,6 +202,15 @@ fn is_http_url(source: &str) -> bool {
     source.starts_with("http://") || source.starts_with("https://")
 }
 
+fn fetch(source: &str) -> Fetched {
+    if is_http_url(source) {
+        let (media, label) = fetch_remote(source);
+        Fetched::Remote(media, label)
+    } else {
+        Fetched::Local(fetch_local_image(source).map(MediaSource::Image))
+    }
+}
+
 fn fetch_local_image(path: &str) -> Option<Vec<u8>> {
     if !Path::new(path).exists() {
         error!("Path does not exist: {}", path);
@@ -250,12 +226,7 @@ fn fetch_local_image(path: &str) -> Option<Vec<u8>> {
     }
 }
 
-fn fetch_remote_image(source: &str) -> (Option<Vec<u8>>, Option<Label>) {
-    if !is_http_url(source) {
-        error!("Invalid URL format: {}", source);
-        return (None, None);
-    }
-
+fn fetch_remote(source: &str) -> (Option<MediaSource>, Option<Label>) {
     let response = match ureq::get(source).call() {
         Ok(resp) => resp,
         Err(e) => {
@@ -264,43 +235,37 @@ fn fetch_remote_image(source: &str) -> (Option<Vec<u8>>, Option<Label>) {
         }
     };
 
-    let label_text = response.headers().get("X-Wallpaper-Text");
-    let color = response.headers().get("X-Wallpaper-Text-Color");
+    let header = |name: &str| {
+        response
+            .headers()
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string)
+    };
 
-    let label = label_text.map(|t| {
-        let color = color
-            .and_then(|h| Color::from_str(h.to_str().unwrap_or_default()).ok())
+    let label = header("X-Wallpaper-Text").map(|text| {
+        let color = header("X-Wallpaper-Text-Color")
+            .and_then(|h| Color::from_str(&h).ok())
             .unwrap_or(Color::WHITE);
 
-        Label {
-            text: t.to_str().unwrap_or_default().to_string(),
-            color,
-        }
+        Label { text, color }
     });
 
+    if let Some(stream) = header("X-Wallpaper-Stream") {
+        return match Url::parse(&stream) {
+            Ok(url) => (Some(MediaSource::Stream(url)), label),
+            Err(e) => {
+                warn!("Invalid wallpaper stream url {}: {}", stream, e);
+                (None, label)
+            }
+        };
+    }
+
     match response.into_body().read_to_vec() {
-        Ok(bytes) => (Some(bytes), label),
+        Ok(bytes) => (Some(MediaSource::Image(bytes)), label),
         Err(e) => {
             error!("Failed to read bytes from {}: {}", source, e);
             (None, None)
         }
     }
-}
-
-fn create_handle(bytes: Vec<u8>) -> Option<iced::widget::image::Handle> {
-    let img = image::load_from_memory(&bytes)
-        .map_err(|e| {
-            error!("Failed to decode image: {}", e);
-            e
-        })
-        .ok()?;
-
-    let resized = img.thumbnail(1920, 1080);
-    let (width, height) = resized.dimensions();
-
-    let rgba_bytes = resized.to_rgba8().into_raw();
-
-    Some(iced::widget::image::Handle::from_rgba(
-        width, height, rgba_bytes,
-    ))
 }

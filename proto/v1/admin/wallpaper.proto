@@ -8,7 +8,14 @@ import "google/protobuf/empty.proto";
 enum WallpaperKind {
   WALLPAPER_KIND_UNSPECIFIED = 0;
   WALLPAPER_KIND_IMAGE = 1;
-  WALLPAPER_KIND_VIDEO = 2;
+  WALLPAPER_KIND_YOUTUBE = 2;
+}
+
+message VideoStatus {
+  // Whether stations are receiving this video over multicast right now
+  bool streaming = 1;
+  // Why the last attempt to stream this video failed; empty when it did not
+  string error = 2;
 }
 
 message Wallpaper {
@@ -23,6 +30,8 @@ message Wallpaper {
   }
   bool is_default = 7;
   repeated string contest_ids = 8;
+  // Set for youtube wallpapers
+  VideoStatus video = 9;
 }
 
 message ListWallpapersResponse {
@@ -60,7 +69,7 @@ message SetDefaultWallpaperRequest {
 service WallpaperService {
   // Lists every wallpaper in the library with where it is in use
   rpc ListWallpapers(google.protobuf.Empty) returns (ListWallpapersResponse) {}
-  // Adds an uploaded image or a streamed URL to the library
+  // Adds an uploaded image, an image URL or a YouTube video to the library
   rpc CreateWallpaper(CreateWallpaperRequest) returns (Wallpaper) {}
   // Renames a wallpaper or changes the colour of text drawn over it
   rpc UpdateWallpaper(UpdateWallpaperRequest) returns (google.protobuf.Empty) {}

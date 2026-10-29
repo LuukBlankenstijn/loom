@@ -31,6 +31,7 @@ mod error;
 mod orchestrator;
 mod render;
 mod repository;
+mod video;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -65,6 +66,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wallpaper_repo = repositories.get_wallpaper();
 
     let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new());
+    let video_streamer: Arc<dyn domain::VideoStreamer> = Arc::new(video::VideoMulticast::start(
+        config.video.clone(),
+        contest_repo.clone(),
+        wallpaper_repo.clone(),
+        orchestrator.clone(),
+    ));
 
     let interceptor = combined_auth_interceptor(config.auth_token, config.trusted_proxy_header);
 
@@ -73,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             contest_repo.clone(),
             map_repo.clone(),
             wallpaper_repo.clone(),
+            video_streamer.clone(),
             orchestrator.clone(),
         ),
         interceptor.clone(),
@@ -80,6 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wallpaper_service = InterceptedService::new(
         WallpaperServiceServer::new(api::admin::WallpaperHandler::new(
             wallpaper_repo.clone(),
+            video_streamer.clone(),
             orchestrator.clone(),
         ))
         .max_decoding_message_size(api::admin::MAX_REQUEST_BYTES),
@@ -128,6 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         team_repo,
         map_repo,
         wallpaper_repo,
+        video_streamer,
         orchestrator.clone(),
     );
 

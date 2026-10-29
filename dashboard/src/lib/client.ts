@@ -50,10 +50,14 @@ const map_client = createClient(MapService, transport);
 const broadcast_client = createClient(BroadcastService, transport);
 const wallpaper_client = createClient(WallpaperService, transport);
 
-export const wallpaperPreviewUrl = (wallpaper: Wallpaper): string =>
-  wallpaper.source.case === "url"
-    ? wallpaper.source.value
-    : `/api/wallpapers/${wallpaper.id}/content`;
+export const wallpaperPreviewUrl = (wallpaper: Wallpaper): string => {
+  if (wallpaper.source.case !== "url") {
+    return `/api/wallpapers/${wallpaper.id}/content`;
+  }
+  return wallpaper.kind === WallpaperKind.YOUTUBE
+    ? `https://i.ytimg.com/vi/${new URL(wallpaper.source.value).searchParams.get("v")}/hqdefault.jpg`
+    : wallpaper.source.value;
+};
 
 export const adminClient = {
   // contest

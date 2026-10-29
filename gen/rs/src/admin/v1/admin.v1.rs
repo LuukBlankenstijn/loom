@@ -132,6 +132,15 @@ pub struct SetIpRequest {
     pub ip: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct VideoStatus {
+    /// Whether stations are receiving this video over multicast right now
+    #[prost(bool, tag="1")]
+    pub streaming: bool,
+    /// Why the last attempt to stream this video failed; empty when it did not
+    #[prost(string, tag="2")]
+    pub error: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Wallpaper {
     #[prost(int32, tag="1")]
     pub id: i32,
@@ -145,6 +154,9 @@ pub struct Wallpaper {
     pub is_default: bool,
     #[prost(string, repeated, tag="8")]
     pub contest_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Set for youtube wallpapers
+    #[prost(message, optional, tag="9")]
+    pub video: ::core::option::Option<VideoStatus>,
     #[prost(oneof="wallpaper::Source", tags="5, 6")]
     pub source: ::core::option::Option<wallpaper::Source>,
 }
@@ -212,7 +224,7 @@ pub struct SetDefaultWallpaperRequest {
 pub enum WallpaperKind {
     Unspecified = 0,
     Image = 1,
-    Video = 2,
+    Youtube = 2,
 }
 impl WallpaperKind {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -223,7 +235,7 @@ impl WallpaperKind {
         match self {
             Self::Unspecified => "WALLPAPER_KIND_UNSPECIFIED",
             Self::Image => "WALLPAPER_KIND_IMAGE",
-            Self::Video => "WALLPAPER_KIND_VIDEO",
+            Self::Youtube => "WALLPAPER_KIND_YOUTUBE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -231,7 +243,7 @@ impl WallpaperKind {
         match value {
             "WALLPAPER_KIND_UNSPECIFIED" => Some(Self::Unspecified),
             "WALLPAPER_KIND_IMAGE" => Some(Self::Image),
-            "WALLPAPER_KIND_VIDEO" => Some(Self::Video),
+            "WALLPAPER_KIND_YOUTUBE" => Some(Self::Youtube),
             _ => None,
         }
     }

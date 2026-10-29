@@ -29,8 +29,12 @@ impl TryFrom<WallpaperRow> for Wallpaper {
     fn try_from(row: WallpaperRow) -> Result<Self, AppError> {
         let kind = match row.kind.as_str() {
             "image" => WallpaperKind::Image,
-            "video" => WallpaperKind::Video,
-            other => return Err(AppError::Internal(format!("unknown wallpaper kind {other}"))),
+            "youtube" => WallpaperKind::Youtube,
+            other => {
+                return Err(AppError::Internal(format!(
+                    "unknown wallpaper kind {other}"
+                )));
+            }
         };
         let source = match (row.mime_type, row.url) {
             (Some(mime_type), None) => WallpaperSource::Stored { mime_type },
@@ -55,7 +59,7 @@ impl TryFrom<WallpaperRow> for Wallpaper {
 fn kind_column(kind: WallpaperKind) -> &'static str {
     match kind {
         WallpaperKind::Image => "image",
-        WallpaperKind::Video => "video",
+        WallpaperKind::Youtube => "youtube",
     }
 }
 

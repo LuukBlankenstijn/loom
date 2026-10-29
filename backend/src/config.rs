@@ -1,10 +1,15 @@
 use std::env;
-use std::net::SocketAddr;
+use std::fmt::Display;
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use serde::Deserialize;
 
 const DEFAULT_CONFIG_PATH: &str = "/etc/loom/backend.toml";
+const DEFAULT_MULTICAST_ADDRESS: SocketAddrV4 =
+    SocketAddrV4::new(Ipv4Addr::new(239, 255, 76, 1), 5004);
+const DEFAULT_MULTICAST_TTL: u8 = 1;
 
 #[derive(Clone)]
 pub struct Config {
@@ -14,6 +19,7 @@ pub struct Config {
     pub icpc_api: Option<IcpcApiConfig>,
     pub auth_token: Option<String>,
     pub trusted_proxy_header: bool,
+    pub video: VideoConfig,
 }
 
 #[derive(Clone)]
@@ -21,6 +27,13 @@ pub struct IcpcApiConfig {
     pub base_url: String,
     pub username: String,
     pub password: String,
+}
+
+#[derive(Clone)]
+pub struct VideoConfig {
+    pub multicast_address: SocketAddrV4,
+    pub multicast_ttl: u8,
+    pub multicast_interface: Option<Ipv4Addr>,
 }
 
 #[derive(Deserialize)]
@@ -35,6 +48,8 @@ struct TomlConfig {
     #[serde(default)]
     trusted_proxy_header: bool,
     contest_api: Option<TomlIcpcApi>,
+    #[serde(default)]
+    video: TomlVideo,
 }
 
 #[derive(Deserialize)]
@@ -46,8 +61,47 @@ struct TomlIcpcApi {
     password_file: Option<PathBuf>,
 }
 
+#[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+struct TomlVideo {
+    multicast_address: Option<SocketAddrV4>,
+    multicast_ttl: Option<u8>,
+    multicast_interface: Option<Ipv4Addr>,
+}
+
+impl TomlVideo {
+    fn into_config(self) -> Result<VideoConfig, String> {
+        let multicast_address = self.multicast_address.unwrap_or(DEFAULT_MULTICAST_ADDRESS);
+        if !multicast_address.ip().is_multicast() {
+            return Err(format!(
+                "video multicast_address {multicast_address} is not a multicast address"
+            ));
+        }
+        Ok(VideoConfig {
+            multicast_address,
+            multicast_ttl: self.multicast_ttl.unwrap_or(DEFAULT_MULTICAST_TTL),
+            multicast_interface: self.multicast_interface,
+        })
+    }
+}
+
 fn default_listen() -> SocketAddr {
     SocketAddr::from(([0, 0, 0, 0], 8080))
+}
+
+fn parse_env<T>(key: &str) -> Result<Option<T>, String>
+where
+    T: FromStr,
+    T::Err: Display,
+{
+    env::var(key)
+        .ok()
+        .map(|value| {
+            value
+                .parse()
+                .map_err(|e| format!("{key} has invalid value {value}: {e}"))
+        })
+        .transpose()
 }
 
 fn read_secret(
@@ -107,6 +161,7 @@ impl Config {
             icpc_api,
             auth_token: read_secret("auth_token", toml.auth_token, toml.auth_token_file)?,
             trusted_proxy_header: toml.trusted_proxy_header,
+            video: toml.video.into_config()?,
         })
     }
 
@@ -124,6 +179,12 @@ impl Config {
             })
             .transpose()?;
 
+        let video = TomlVideo {
+            multicast_address: parse_env("VIDEO_MULTICAST_ADDRESS")?,
+            multicast_ttl: parse_env("VIDEO_MULTICAST_TTL")?,
+            multicast_interface: parse_env("VIDEO_MULTICAST_INTERFACE")?,
+        };
+
         Ok(Self {
             listen: default_listen(),
             database_path: env::var_os("DATABASE_PATH")
@@ -132,15 +193,8 @@ impl Config {
             dashboard_dir: env::var_os("DASHBOARD_DIR").map(PathBuf::from),
             icpc_api,
             auth_token: env::var("AUTH_TOKEN").ok(),
-            trusted_proxy_header: env::var("TRUSTED_PROXY_HEADER")
-                .ok()
-                .map(|value| {
-                    value.parse().map_err(|_| {
-                        format!("TRUSTED_PROXY_HEADER must be true or false, got {value}")
-                    })
-                })
-                .transpose()?
-                .unwrap_or(false),
+            trusted_proxy_header: parse_env("TRUSTED_PROXY_HEADER")?.unwrap_or(false),
+            video: video.into_config()?,
         })
     }
 }

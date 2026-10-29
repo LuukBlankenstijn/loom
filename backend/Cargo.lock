@@ -1185,6 +1185,7 @@ dependencies = [
  "loom-core",
  "loom-proto-bridge",
  "loom-rpc",
+ "parking_lot",
  "prost-types",
  "reqwest",
  "serde",
