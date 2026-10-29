@@ -133,8 +133,8 @@ in
       multicastInterface = mkOption {
         type = types.nullOr types.str;
         default = null;
-        example = "10.0.0.1";
-        description = "Local IPv4 address of the interface to send the stream from; null lets the routing table decide.";
+        example = "eth1";
+        description = "Network interface to send the stream on, e.g. the one on the station network; null lets the routing table decide.";
       };
       ytDlpPackage = mkPackageOption pkgs "yt-dlp" { };
       ffmpegPackage = mkPackageOption pkgs "ffmpeg-headless" { };

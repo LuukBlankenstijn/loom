@@ -33,7 +33,7 @@ pub struct IcpcApiConfig {
 pub struct VideoConfig {
     pub multicast_address: SocketAddrV4,
     pub multicast_ttl: u8,
-    pub multicast_interface: Option<Ipv4Addr>,
+    pub multicast_interface: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -66,7 +66,7 @@ struct TomlIcpcApi {
 struct TomlVideo {
     multicast_address: Option<SocketAddrV4>,
     multicast_ttl: Option<u8>,
-    multicast_interface: Option<Ipv4Addr>,
+    multicast_interface: Option<String>,
 }
 
 impl TomlVideo {
@@ -182,7 +182,7 @@ impl Config {
         let video = TomlVideo {
             multicast_address: parse_env("VIDEO_MULTICAST_ADDRESS")?,
             multicast_ttl: parse_env("VIDEO_MULTICAST_TTL")?,
-            multicast_interface: parse_env("VIDEO_MULTICAST_INTERFACE")?,
+            multicast_interface: env::var("VIDEO_MULTICAST_INTERFACE").ok(),
         };
 
         Ok(Self {

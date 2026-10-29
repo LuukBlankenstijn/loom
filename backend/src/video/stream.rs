@@ -1,4 +1,5 @@
 use std::{
+    net::{IpAddr, Ipv4Addr},
     process::{ExitStatus, Stdio},
     sync::Arc,
     time::Duration,
@@ -229,8 +230,9 @@ impl Streamer {
             "udp://{}?ttl={}&pkt_size=1316&bitrate=8000000",
             self.config.multicast_address, self.config.multicast_ttl
         );
-        if let Some(interface) = self.config.multicast_interface {
-            destination.push_str(&format!("&localaddr={interface}"));
+        if let Some(interface) = &self.config.multicast_interface {
+            let address = interface_address(interface)?;
+            destination.push_str(&format!("&localaddr={address}"));
         }
 
         let mut command = Command::new("ffmpeg");
@@ -334,4 +336,15 @@ async fn exited(stream: &mut Option<Stream>) -> std::io::Result<ExitStatus> {
         Some(stream) => stream.process.wait().await,
         None => std::future::pending().await,
     }
+}
+
+fn interface_address(name: &str) -> Result<Ipv4Addr, String> {
+    local_ip_address::list_afinet_netifas()
+        .map_err(|e| format!("failed to list network interfaces: {e}"))?
+        .into_iter()
+        .find_map(|(interface, address)| match address {
+            IpAddr::V4(address) if interface == name => Some(address),
+            _ => None,
+        })
+        .ok_or_else(|| format!("multicast interface {name} has no IPv4 address"))
 }

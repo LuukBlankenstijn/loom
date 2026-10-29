@@ -41,6 +41,7 @@ utoipa-scalar = { version = "0.3", features = ["axum"] }
 simple-dns = "0.12.0"
 base64 = "0.23"
 parking_lot = "0.12"
+local-ip-address = "0.6"
 
 [profile.dev.package.image]
 opt-level = 3

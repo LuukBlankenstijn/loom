@@ -81,7 +81,7 @@ password_file = "/run/secrets/domjudge-password"
 [video]
 multicast_address = "239.255.76.1:5004"
 multicast_ttl = 1
-multicast_interface = "10.0.0.1"
+multicast_interface = "eth1"
 ```
 
 Only `database_path` is required. `auth_token` and `contest_api.password` may be given inline instead of as files. `trusted_proxy_header` (default `false`) lets gRPC requests with an `x-proxy-authorized` header skip the token check. The `[video]` values above are the defaults, except `multicast_interface`, which is unset by default. Without a config argument it reads `/etc/loom/backend.toml`, or else the environment: `DATABASE_PATH` (required), `DASHBOARD_DIR`, `AUTH_TOKEN`, `TRUSTED_PROXY_HEADER`, `DJ_BASE_URL`, `DJ_USERNAME`, `DJ_PASSWORD`, `VIDEO_MULTICAST_ADDRESS`, `VIDEO_MULTICAST_TTL`, `VIDEO_MULTICAST_INTERFACE`.
