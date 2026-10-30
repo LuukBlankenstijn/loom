@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO stations (id, ip, reported_label, label_override) VALUES ($1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "3ee55c3e08a886eb0a6e7bc8007937cacf8160a85e334bf8f8e6af81850bfd0c"
+}

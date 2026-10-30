@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT e.id AS \"id: Uuid\", s.ip FROM map_element AS e\n            INNER JOIN stations AS s ON s.id = e.station_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "ip",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e9936a30ea443b26cfeb6fd657a75e98868dbfbaa5ed657d5268b2f455c1ee77"
+}

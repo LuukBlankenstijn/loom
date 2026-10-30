@@ -78,6 +78,46 @@
               ];
             };
           };
+          loom-backend = pkgs.callPackage ./backend/nix/package.nix {
+            inherit craneLib;
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = pkgs.lib.fileset.unions [
+                (pkgs.lib.fileset.intersection
+                  (pkgs.lib.fileset.fromSource (
+                    pkgs.lib.cleanSourceWith {
+                      src = ./.;
+                      filter = craneLib.filterCargoSources;
+                    }
+                  ))
+                  (
+                    pkgs.lib.fileset.unions [
+                      ./backend
+                      ./gen/rs
+                      ./shared/core
+                      ./shared/proto-bridge
+                    ]
+                  )
+                )
+                ./backend/migrations
+                ./backend/.sqlx
+              ];
+            };
+            cargoLock = ./backend/Cargo.lock;
+          };
+          loom-dashboard = pkgs.callPackage ./dashboard/nix/package.nix {
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = pkgs.lib.fileset.unions [
+                (pkgs.lib.fileset.difference ./dashboard ./dashboard/pnpm-lock.yaml)
+                ./gen/ts
+                ./shared/map-react
+                ./station-registration/package.json
+                ./pnpm-workspace.yaml
+                ./pnpm-lock.yaml
+              ];
+            };
+          };
         };
       }
     )
@@ -85,6 +125,7 @@
       nixosModules = {
         loom-greeter = import ./greeter/nix/module.nix self;
         loomd = import ./station/nix/module.nix self;
+        loom-backend = import ./backend/nix/module.nix self;
 
         default =
           { ... }:
@@ -101,6 +142,8 @@
           loom-greeter
           loomd
           loom-station-registration
+          loom-backend
+          loom-dashboard
           ;
       };
     };

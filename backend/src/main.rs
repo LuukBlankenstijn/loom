@@ -4,14 +4,18 @@ use axum::Router;
 use loom_rpc::{
     admin::v1::{
         contest_service_server::ContestServiceServer, station_service_server::StationServiceServer,
-        system_service_server::SystemServiceServer, team_service_server::TeamServiceServer,
+        team_service_server::TeamServiceServer, wallpaper_service_server::WallpaperServiceServer,
     },
     broadcast::v1::broadcast_service_server::BroadcastServiceServer,
     map::v1::map_service_server::MapServiceServer,
     station::v1::station_service_server,
 };
-use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::CorsLayer;
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool};
+use tonic::service::interceptor::InterceptedService;
+use tower_http::{
+    cors::CorsLayer,
+    services::{ServeDir, ServeFile},
+};
 use tracing::Level;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
@@ -27,6 +31,7 @@ mod error;
 mod orchestrator;
 mod render;
 mod repository;
+mod video;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,13 +46,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(filter)
         .init();
 
-    let config = Config::load();
+    let config = Config::load()?;
 
-    let pool = PgPoolOptions::new()
-        .max_connections(100)
-        .connect(&config.database_url())
-        .await
-        .expect("Failed to build pgPool");
+    let pool = SqlitePool::connect_with(
+        SqliteConnectOptions::new()
+            .filename(&config.database_path)
+            .create_if_missing(true)
+            .journal_mode(SqliteJournalMode::Wal),
+    )
+    .await?;
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
@@ -59,20 +66,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wallpaper_repo = repositories.get_wallpaper();
 
     let orchestrator: Arc<dyn domain::Orchestrator> = Arc::new(Orchestrator::new());
+    let video_streamer: Arc<dyn domain::VideoStreamer> = Arc::new(video::VideoMulticast::start(
+        config.video.clone(),
+        contest_repo.clone(),
+        wallpaper_repo.clone(),
+        orchestrator.clone(),
+    ));
 
-    let interceptor = combined_auth_interceptor(config.auth_token);
+    let interceptor = combined_auth_interceptor(config.auth_token, config.trusted_proxy_header);
 
     let contest_service = ContestServiceServer::with_interceptor(
         api::admin::ContestHandler::new(
             contest_repo.clone(),
             map_repo.clone(),
             wallpaper_repo.clone(),
+            video_streamer.clone(),
             orchestrator.clone(),
         ),
         interceptor.clone(),
     );
-    let system_service = SystemServiceServer::with_interceptor(
-        api::admin::SystemHandler::new(wallpaper_repo.clone(), orchestrator.clone()),
+    let wallpaper_service = InterceptedService::new(
+        WallpaperServiceServer::new(api::admin::WallpaperHandler::new(
+            wallpaper_repo.clone(),
+            video_streamer.clone(),
+            orchestrator.clone(),
+        ))
+        .max_decoding_message_size(api::admin::MAX_REQUEST_BYTES),
         interceptor.clone(),
     );
     let station_service = StationServiceServer::with_interceptor(
@@ -118,12 +137,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         team_repo,
         map_repo,
         wallpaper_repo,
+        video_streamer,
         orchestrator.clone(),
     );
 
     let grpc_router = tonic::service::Routes::builder()
         .add_service(contest_service)
-        .add_service(system_service)
+        .add_service(wallpaper_service)
         .add_service(station_service)
         .add_service(team_service)
         .add_service(map_service)
@@ -141,8 +161,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let routes = Router::new()
         .merge(http_routes)
         .merge(Scalar::with_url("/api/docs", openapi))
-        .merge(grpc_router)
-        .layer(CorsLayer::permissive());
+        .nest("/rpc", grpc_router.clone())
+        .merge(grpc_router);
+
+    let routes = match &config.dashboard_dir {
+        Some(dir) => routes
+            .fallback_service(ServeDir::new(dir).fallback(ServeFile::new(dir.join("index.html")))),
+        None => routes,
+    }
+    .layer(CorsLayer::permissive());
 
     tracing::info!(addr = %config.listen, "starting server");
 

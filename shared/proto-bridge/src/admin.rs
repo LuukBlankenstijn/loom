@@ -22,7 +22,12 @@ impl IntoProto<pb::Team> for Team {
 
 impl IntoProto<pb::Station> for Station {
     fn into_proto(self) -> pb::Station {
-        pb::Station { ip: self.ip }
+        pb::Station {
+            label: self.label().map(str::to_owned),
+            label_overridden: self.label_override.is_some(),
+            ip: self.ip,
+            reported_label: self.reported_label,
+        }
     }
 }
 
@@ -34,6 +39,7 @@ impl IntoProto<pb::Contest> for Contest {
             start_time: self.start_time.map(to_timestamp),
             end_time: Some(to_timestamp(self.end_time)),
             map_id: None,
+            wallpaper_id: None,
         }
     }
 }

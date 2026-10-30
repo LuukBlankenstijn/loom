@@ -7,7 +7,12 @@ import {
   SetMapRequestSchema,
   type Contest,
 } from "@client/v1/admin/contest_pb";
-import { SystemService } from "@client/v1/admin/system_pb";
+import {
+  WallpaperKind,
+  WallpaperService,
+  type ListWallpapersResponse,
+  type Wallpaper,
+} from "@client/v1/admin/wallpaper_pb";
 import {
   AdminEventSchema,
   CommandOutputRequestSchema,
@@ -43,37 +48,15 @@ const team_client = createClient(TeamService, transport);
 const station_client = createClient(StationService, transport);
 const map_client = createClient(MapService, transport);
 const broadcast_client = createClient(BroadcastService, transport);
-const system_client = createClient(SystemService, transport);
+const wallpaper_client = createClient(WallpaperService, transport);
 
-export type Wallpaper = {
-  url: string;
-  color: string;
-  scope: "contest" | "default";
-};
-
-const fetchWallpaper = async (path: string): Promise<Wallpaper | null> => {
-  const response = await fetch(path);
-
-  if (response.status === 404) {
-    return null;
+export const wallpaperPreviewUrl = (wallpaper: Wallpaper): string => {
+  if (wallpaper.source.case !== "url") {
+    return `/api/wallpapers/${wallpaper.id}/content`;
   }
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `Wallpaper fetch failed: ${response.status}`,
-    );
-  }
-
-  const blob = await response.blob();
-  return {
-    url: URL.createObjectURL(blob),
-    color: response.headers.get("X-Wallpaper-Text-Color") || "#ffffff",
-    scope:
-      response.headers.get("X-Wallpaper-Scope") === "contest"
-        ? "contest"
-        : "default",
-  };
+  return wallpaper.kind === WallpaperKind.YOUTUBE
+    ? `https://i.ytimg.com/vi/${new URL(wallpaper.source.value).searchParams.get("v")}/hqdefault.jpg`
+    : wallpaper.source.value;
 };
 
 export const adminClient = {
@@ -83,34 +66,49 @@ export const adminClient = {
   },
   setWallpaper: async (
     contestId: string,
-    imageData: Uint8Array,
+    wallpaperId?: number,
   ): Promise<void> => {
-    await contest_client.setWallpaper({ contestId, imageData });
-  },
-  setWallpaperTextColor: async (
-    contestId: string,
-    color: string,
-  ): Promise<void> => {
-    await contest_client.setWallpaperTextColor({ contestId, color });
+    await contest_client.setWallpaper({ contestId, wallpaperId });
   },
   setMap: async (contestId: string, mapId: number): Promise<void> => {
     await contest_client.setMap(
       create(SetMapRequestSchema, { contestId, mapId }),
     );
   },
-  getWallpaper: async (): Promise<Wallpaper | null> => {
-    return await fetchWallpaper("/api/wallpaper");
-  },
 
-  // system
-  getDefaultWallpaper: async (): Promise<Wallpaper | null> => {
-    return await fetchWallpaper("/api/wallpaper/default");
+  listWallpapers: async (): Promise<ListWallpapersResponse> => {
+    return await wallpaper_client.listWallpapers(create(EmptySchema));
   },
-  setDefaultWallpaper: async (imageData?: Uint8Array): Promise<void> => {
-    await system_client.setDefaultWallpaper({ imageData });
+  createWallpaperFromFile: async (
+    name: string,
+    imageData: Uint8Array,
+  ): Promise<Wallpaper> => {
+    return await wallpaper_client.createWallpaper({
+      name,
+      source: { case: "imageData", value: imageData },
+    });
   },
-  setDefaultWallpaperTextColor: async (color: string): Promise<void> => {
-    await system_client.setDefaultWallpaperTextColor({ color });
+  createWallpaperFromUrl: async (
+    name: string,
+    url: string,
+    kind: WallpaperKind,
+  ): Promise<Wallpaper> => {
+    return await wallpaper_client.createWallpaper({
+      name,
+      source: { case: "url", value: { url, kind } },
+    });
+  },
+  updateWallpaper: async (
+    id: number,
+    changes: { name?: string; textColor?: string; audio?: boolean },
+  ): Promise<void> => {
+    await wallpaper_client.updateWallpaper({ id, ...changes });
+  },
+  deleteWallpaper: async (id: number): Promise<void> => {
+    await wallpaper_client.deleteWallpaper({ id });
+  },
+  setDefaultWallpaper: async (wallpaperId?: number): Promise<void> => {
+    await wallpaper_client.setDefaultWallpaper({ wallpaperId });
   },
 
   // teams
@@ -127,6 +125,9 @@ export const adminClient = {
   },
   deleteStation: async (ip: string): Promise<void> => {
     await station_client.deleteStation({ ip });
+  },
+  setStationLabel: async (ip: string, label?: string): Promise<void> => {
+    await station_client.setStationLabel({ ip, label });
   },
   assignTeam: async (ips: string[]): Promise<void> => {
     await station_client.assignTeam({ ips });

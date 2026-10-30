@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, name,\n                      start_time AS \"start_time: DateTime<Utc>\",\n                      end_time AS \"end_time: DateTime<Utc>\"\n               FROM contests\n               WHERE unixepoch(end_time) > unixepoch()\n               ORDER BY unixepoch(start_time) ASC NULLS LAST\n               LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_time: DateTime<Utc>",
+        "ordinal": 2,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "end_time: DateTime<Utc>",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "69fe00eb8224c249116ec9a27c6485522960b58d74adf793caac42c83490b595"
+}

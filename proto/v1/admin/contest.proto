@@ -15,16 +15,12 @@ message Contest {
     (buf.validate.field).timestamp.gt_now = true
   ];
   optional int32 map_id = 5;
+  optional int32 wallpaper_id = 6;
 }
 
-message UploadWallpaperRequest {
+message SetWallpaperRequest {
   string contest_id = 1;
-  optional bytes image_data = 2;
-}
-
-message SetWallpaperTextColorRequest {
-  string contest_id = 1;
-  string color = 2 [(buf.validate.field).string.pattern = "^#?([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"];
+  optional int32 wallpaper_id = 2;
 }
 
 message SetMapRequest {
@@ -35,10 +31,8 @@ message SetMapRequest {
 service ContestService {
   // Gets the current or next active contest
   rpc GetNextContest(google.protobuf.Empty) returns (Contest) {}
-  // Sets the wallpaper for some contest
-  rpc SetWallpaper(UploadWallpaperRequest) returns (google.protobuf.Empty) {}
-  // Sets the color of the text displayed on a wallpaper for some contest
-  rpc SetWallpaperTextColor(SetWallpaperTextColorRequest) returns (google.protobuf.Empty) {}
+  // Assigns a library wallpaper to some contest, clearing it when wallpaper_id is absent
+  rpc SetWallpaper(SetWallpaperRequest) returns (google.protobuf.Empty) {}
   // Sets the map for some contest, does not error of either does not exist
   rpc SetMap(SetMapRequest) returns (google.protobuf.Empty) {}
 }

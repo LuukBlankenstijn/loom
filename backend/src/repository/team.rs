@@ -1,5 +1,5 @@
 mod http;
-mod pg;
+mod sqlite;
 
 use crate::{
     config::IcpcApiConfig,
@@ -8,18 +8,18 @@ use crate::{
 };
 use async_trait::async_trait;
 use loom_core::team::Team;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 pub struct TeamRepo {
     inner: Box<dyn TeamRepository>,
 }
 
 impl TeamRepo {
-    pub fn new(pool: PgPool, client: reqwest::Client, config: Option<IcpcApiConfig>) -> Self {
+    pub fn new(pool: SqlitePool, client: reqwest::Client, config: Option<IcpcApiConfig>) -> Self {
         let inner: Box<dyn TeamRepository> = if let Some(config) = config {
             Box::new(http::HttpTeamRepo::new(config, client))
         } else {
-            Box::new(pg::PgTeamRepo::new(pool))
+            Box::new(sqlite::SqliteTeamRepo::new(pool))
         };
         Self { inner }
     }

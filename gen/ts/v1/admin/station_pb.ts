@@ -15,7 +15,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/station.proto.
  */
 export const file_v1_admin_station: GenFile = /*@__PURE__*/
-  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSIeCgdTdGF0aW9uEhMKAmlwGAIgASgJQge6SARyAnABIjcKEFN0YXRpb25zUmVzcG9uc2USIwoIc3RhdGlvbnMYASADKAsyES5hZG1pbi52MS5TdGF0aW9uIiIKFERlbGV0ZVN0YXRpb25SZXF1ZXN0EgoKAmlwGAEgASgJIiAKEUFzc2lnblRlYW1SZXF1ZXN0EgsKA2lwcxgBIAMoCSLnAgoKQWRtaW5FdmVudBILCgNpcHMYASADKAkSSQoWbG9naW5fd2l0aF9jcmVkZW50aWFscxgCIAEoCzInLmNvbW1hbmQudjEuTG9naW5XaXRoQ3JlZGVudGlhbHNDb21tYW5kSAASKQoFbG9naW4YAyABKAsyGC5jb21tYW5kLnYxLkxvZ2luQ29tbWFuZEgAEisKBmxvZ291dBgEIAEoCzIZLmNvbW1hbmQudjEuTG9nb3V0Q29tbWFuZEgAEikKBmN1c3RvbRgFIAEoCzIXLmFkbWluLnYxLkN1c3RvbUNvbW1hbmRIABI5ChdzdGFydF9yZWdpc3RyYXRpb25fdG9vbBgGIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEjgKFnN0b3BfcmVnaXN0cmF0aW9uX3Rvb2wYByABKAsyFi5nb29nbGUucHJvdG9idWYuRW1wdHlIAEIJCgdjb21tYW5kIjsKE0N1c3RvbUNvbW1hbmRPdXRwdXQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg4KBm91dHB1dBgCIAEoCSJICg1DdXN0b21Db21tYW5kEhQKAmlkGAEgASgJQgi6SAVyA7ABARIPCgdjb21tYW5kGAIgASgJEhAKCGFkbWluX2lkGAMgASgJIigKFENvbW1hbmRPdXRwdXRSZXF1ZXN0EhAKCGFkbWluX2lkGAEgASgJMvgCCg5TdGF0aW9uU2VydmljZRJDCgtHZXRTdGF0aW9ucxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoaLmFkbWluLnYxLlN0YXRpb25zUmVzcG9uc2UiABJJCg1EZWxldGVTdGF0aW9uEh4uYWRtaW4udjEuRGVsZXRlU3RhdGlvblJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJDCgpBc3NpZ25UZWFtEhsuYWRtaW4udjEuQXNzaWduVGVhbVJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI9CgtTZW5kQ29tbWFuZBIULmFkbWluLnYxLkFkbWluRXZlbnQaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJSCg1Db21tYW5kT3V0cHV0Eh4uYWRtaW4udjEuQ29tbWFuZE91dHB1dFJlcXVlc3QaHS5hZG1pbi52MS5DdXN0b21Db21tYW5kT3V0cHV0IgAwAUKXAQoMY29tLmFkbWluLnYxQgxTdGF0aW9uUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
+  fileDesc("ChZ2MS9hZG1pbi9zdGF0aW9uLnByb3RvEghhZG1pbi52MSKGAQoHU3RhdGlvbhITCgJpcBgCIAEoCUIHukgEcgJwARISCgVsYWJlbBgDIAEoCUgAiAEBEhsKDnJlcG9ydGVkX2xhYmVsGAQgASgJSAGIAQESGAoQbGFiZWxfb3ZlcnJpZGRlbhgFIAEoCEIICgZfbGFiZWxCEQoPX3JlcG9ydGVkX2xhYmVsIkIKFlNldFN0YXRpb25MYWJlbFJlcXVlc3QSCgoCaXAYASABKAkSEgoFbGFiZWwYAiABKAlIAIgBAUIICgZfbGFiZWwiNwoQU3RhdGlvbnNSZXNwb25zZRIjCghzdGF0aW9ucxgBIAMoCzIRLmFkbWluLnYxLlN0YXRpb24iIgoURGVsZXRlU3RhdGlvblJlcXVlc3QSCgoCaXAYASABKAkiIAoRQXNzaWduVGVhbVJlcXVlc3QSCwoDaXBzGAEgAygJIucCCgpBZG1pbkV2ZW50EgsKA2lwcxgBIAMoCRJJChZsb2dpbl93aXRoX2NyZWRlbnRpYWxzGAIgASgLMicuY29tbWFuZC52MS5Mb2dpbldpdGhDcmVkZW50aWFsc0NvbW1hbmRIABIpCgVsb2dpbhgDIAEoCzIYLmNvbW1hbmQudjEuTG9naW5Db21tYW5kSAASKwoGbG9nb3V0GAQgASgLMhkuY29tbWFuZC52MS5Mb2dvdXRDb21tYW5kSAASKQoGY3VzdG9tGAUgASgLMhcuYWRtaW4udjEuQ3VzdG9tQ29tbWFuZEgAEjkKF3N0YXJ0X3JlZ2lzdHJhdGlvbl90b29sGAYgASgLMhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5SAASOAoWc3RvcF9yZWdpc3RyYXRpb25fdG9vbBgHIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAQgkKB2NvbW1hbmQiOwoTQ3VzdG9tQ29tbWFuZE91dHB1dBIUCgJpZBgBIAEoCUIIukgFcgOwAQESDgoGb3V0cHV0GAIgASgJIkgKDUN1c3RvbUNvbW1hbmQSFAoCaWQYASABKAlCCLpIBXIDsAEBEg8KB2NvbW1hbmQYAiABKAkSEAoIYWRtaW5faWQYAyABKAkiKAoUQ29tbWFuZE91dHB1dFJlcXVlc3QSEAoIYWRtaW5faWQYASABKAkyxwMKDlN0YXRpb25TZXJ2aWNlEkMKC0dldFN0YXRpb25zEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhouYWRtaW4udjEuU3RhdGlvbnNSZXNwb25zZSIAEkkKDURlbGV0ZVN0YXRpb24SHi5hZG1pbi52MS5EZWxldGVTdGF0aW9uUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEkMKCkFzc2lnblRlYW0SGy5hZG1pbi52MS5Bc3NpZ25UZWFtUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEk0KD1NldFN0YXRpb25MYWJlbBIgLmFkbWluLnYxLlNldFN0YXRpb25MYWJlbFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI9CgtTZW5kQ29tbWFuZBIULmFkbWluLnYxLkFkbWluRXZlbnQaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABJSCg1Db21tYW5kT3V0cHV0Eh4uYWRtaW4udjEuQ29tbWFuZE91dHB1dFJlcXVlc3QaHS5hZG1pbi52MS5DdXN0b21Db21tYW5kT3V0cHV0IgAwAUKXAQoMY29tLmFkbWluLnYxQgxTdGF0aW9uUHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_v1_command_command]);
 
 /**
  * @generated from message admin.v1.Station
@@ -25,6 +25,23 @@ export type Station = Message<"admin.v1.Station"> & {
    * @generated from field: string ip = 2;
    */
   ip: string;
+
+  /**
+   * Label shown in the dashboard: the admin override if set, otherwise the one the agent reported
+   *
+   * @generated from field: optional string label = 3;
+   */
+  label?: string | undefined;
+
+  /**
+   * @generated from field: optional string reported_label = 4;
+   */
+  reportedLabel?: string | undefined;
+
+  /**
+   * @generated from field: bool label_overridden = 5;
+   */
+  labelOverridden: boolean;
 };
 
 /**
@@ -33,6 +50,30 @@ export type Station = Message<"admin.v1.Station"> & {
  */
 export const StationSchema: GenMessage<Station> = /*@__PURE__*/
   messageDesc(file_v1_admin_station, 0);
+
+/**
+ * @generated from message admin.v1.SetStationLabelRequest
+ */
+export type SetStationLabelRequest = Message<"admin.v1.SetStationLabelRequest"> & {
+  /**
+   * @generated from field: string ip = 1;
+   */
+  ip: string;
+
+  /**
+   * Absent or empty clears the override so the agent-reported label is used again
+   *
+   * @generated from field: optional string label = 2;
+   */
+  label?: string | undefined;
+};
+
+/**
+ * Describes the message admin.v1.SetStationLabelRequest.
+ * Use `create(SetStationLabelRequestSchema)` to create a new message.
+ */
+export const SetStationLabelRequestSchema: GenMessage<SetStationLabelRequest> = /*@__PURE__*/
+  messageDesc(file_v1_admin_station, 1);
 
 /**
  * @generated from message admin.v1.StationsResponse
@@ -49,7 +90,7 @@ export type StationsResponse = Message<"admin.v1.StationsResponse"> & {
  * Use `create(StationsResponseSchema)` to create a new message.
  */
 export const StationsResponseSchema: GenMessage<StationsResponse> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 1);
+  messageDesc(file_v1_admin_station, 2);
 
 /**
  * @generated from message admin.v1.DeleteStationRequest
@@ -66,7 +107,7 @@ export type DeleteStationRequest = Message<"admin.v1.DeleteStationRequest"> & {
  * Use `create(DeleteStationRequestSchema)` to create a new message.
  */
 export const DeleteStationRequestSchema: GenMessage<DeleteStationRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 2);
+  messageDesc(file_v1_admin_station, 3);
 
 /**
  * @generated from message admin.v1.AssignTeamRequest
@@ -83,7 +124,7 @@ export type AssignTeamRequest = Message<"admin.v1.AssignTeamRequest"> & {
  * Use `create(AssignTeamRequestSchema)` to create a new message.
  */
 export const AssignTeamRequestSchema: GenMessage<AssignTeamRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 3);
+  messageDesc(file_v1_admin_station, 4);
 
 /**
  * @generated from message admin.v1.AdminEvent
@@ -141,7 +182,7 @@ export type AdminEvent = Message<"admin.v1.AdminEvent"> & {
  * Use `create(AdminEventSchema)` to create a new message.
  */
 export const AdminEventSchema: GenMessage<AdminEvent> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 4);
+  messageDesc(file_v1_admin_station, 5);
 
 /**
  * @generated from message admin.v1.CustomCommandOutput
@@ -163,7 +204,7 @@ export type CustomCommandOutput = Message<"admin.v1.CustomCommandOutput"> & {
  * Use `create(CustomCommandOutputSchema)` to create a new message.
  */
 export const CustomCommandOutputSchema: GenMessage<CustomCommandOutput> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 5);
+  messageDesc(file_v1_admin_station, 6);
 
 /**
  * @generated from message admin.v1.CustomCommand
@@ -190,7 +231,7 @@ export type CustomCommand = Message<"admin.v1.CustomCommand"> & {
  * Use `create(CustomCommandSchema)` to create a new message.
  */
 export const CustomCommandSchema: GenMessage<CustomCommand> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 6);
+  messageDesc(file_v1_admin_station, 7);
 
 /**
  * @generated from message admin.v1.CommandOutputRequest
@@ -207,7 +248,7 @@ export type CommandOutputRequest = Message<"admin.v1.CommandOutputRequest"> & {
  * Use `create(CommandOutputRequestSchema)` to create a new message.
  */
 export const CommandOutputRequestSchema: GenMessage<CommandOutputRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_station, 7);
+  messageDesc(file_v1_admin_station, 8);
 
 /**
  * @generated from service admin.v1.StationService
@@ -241,6 +282,16 @@ export const StationService: GenService<{
   assignTeam: {
     methodKind: "unary";
     input: typeof AssignTeamRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * Overrides the label of a station, stored lowercased
+   *
+   * @generated from rpc admin.v1.StationService.SetStationLabel
+   */
+  setStationLabel: {
+    methodKind: "unary";
+    input: typeof SetStationLabelRequestSchema;
     output: typeof EmptySchema;
   },
   /**

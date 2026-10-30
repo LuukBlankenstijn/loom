@@ -12,20 +12,15 @@ pub struct Contest {
     pub end_time: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(int32, optional, tag="5")]
     pub map_id: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag="6")]
+    pub wallpaper_id: ::core::option::Option<i32>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct UploadWallpaperRequest {
+pub struct SetWallpaperRequest {
     #[prost(string, tag="1")]
     pub contest_id: ::prost::alloc::string::String,
-    #[prost(bytes="vec", optional, tag="2")]
-    pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct SetWallpaperTextColorRequest {
-    #[prost(string, tag="1")]
-    pub contest_id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub color: ::prost::alloc::string::String,
+    #[prost(int32, optional, tag="2")]
+    pub wallpaper_id: ::core::option::Option<i32>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SetMapRequest {
@@ -38,6 +33,21 @@ pub struct SetMapRequest {
 pub struct Station {
     #[prost(string, tag="2")]
     pub ip: ::prost::alloc::string::String,
+    /// Label shown in the dashboard: the admin override if set, otherwise the one the agent reported
+    #[prost(string, optional, tag="3")]
+    pub label: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
+    pub reported_label: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, tag="5")]
+    pub label_overridden: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetStationLabelRequest {
+    #[prost(string, tag="1")]
+    pub ip: ::prost::alloc::string::String,
+    /// Absent or empty clears the override so the agent-reported label is used again
+    #[prost(string, optional, tag="2")]
+    pub label: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StationsResponse {
@@ -101,16 +111,6 @@ pub struct CommandOutputRequest {
     pub admin_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct SetDefaultWallpaperRequest {
-    #[prost(bytes="vec", optional, tag="1")]
-    pub image_data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct SetDefaultWallpaperTextColorRequest {
-    #[prost(string, tag="1")]
-    pub color: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Team {
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
@@ -130,6 +130,128 @@ pub struct SetIpRequest {
     pub team_id: ::prost::alloc::string::String,
     #[prost(string, optional, tag="2")]
     pub ip: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct VideoStatus {
+    /// Whether stations are receiving this video over multicast right now
+    #[prost(bool, tag="1")]
+    pub streaming: bool,
+    /// Why the last attempt to stream this video failed; empty when it did not
+    #[prost(string, tag="2")]
+    pub error: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Wallpaper {
+    #[prost(int32, tag="1")]
+    pub id: i32,
+    #[prost(string, tag="2")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(enumeration="WallpaperKind", tag="3")]
+    pub kind: i32,
+    #[prost(string, tag="4")]
+    pub text_color: ::prost::alloc::string::String,
+    #[prost(bool, tag="7")]
+    pub is_default: bool,
+    #[prost(string, repeated, tag="8")]
+    pub contest_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Set for youtube wallpapers
+    #[prost(message, optional, tag="9")]
+    pub video: ::core::option::Option<VideoStatus>,
+    /// Whether stations play the sound of a youtube wallpaper
+    #[prost(bool, tag="10")]
+    pub audio: bool,
+    #[prost(oneof="wallpaper::Source", tags="5, 6")]
+    pub source: ::core::option::Option<wallpaper::Source>,
+}
+/// Nested message and enum types in `Wallpaper`.
+pub mod wallpaper {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Source {
+        /// Served from /api/wallpapers/{id}/content
+        #[prost(string, tag="5")]
+        MimeType(::prost::alloc::string::String),
+        #[prost(string, tag="6")]
+        Url(::prost::alloc::string::String),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListWallpapersResponse {
+    #[prost(message, repeated, tag="1")]
+    pub wallpapers: ::prost::alloc::vec::Vec<Wallpaper>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UrlSource {
+    #[prost(string, tag="1")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(enumeration="WallpaperKind", tag="2")]
+    pub kind: i32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreateWallpaperRequest {
+    #[prost(string, tag="1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(oneof="create_wallpaper_request::Source", tags="2, 3")]
+    pub source: ::core::option::Option<create_wallpaper_request::Source>,
+}
+/// Nested message and enum types in `CreateWallpaperRequest`.
+pub mod create_wallpaper_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Source {
+        #[prost(bytes, tag="2")]
+        ImageData(::prost::alloc::vec::Vec<u8>),
+        #[prost(message, tag="3")]
+        Url(super::UrlSource),
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateWallpaperRequest {
+    #[prost(int32, tag="1")]
+    pub id: i32,
+    #[prost(string, optional, tag="2")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="3")]
+    pub text_color: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, optional, tag="4")]
+    pub audio: ::core::option::Option<bool>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteWallpaperRequest {
+    #[prost(int32, tag="1")]
+    pub id: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetDefaultWallpaperRequest {
+    #[prost(int32, optional, tag="1")]
+    pub wallpaper_id: ::core::option::Option<i32>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum WallpaperKind {
+    Unspecified = 0,
+    Image = 1,
+    Youtube = 2,
+}
+impl WallpaperKind {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "WALLPAPER_KIND_UNSPECIFIED",
+            Self::Image => "WALLPAPER_KIND_IMAGE",
+            Self::Youtube => "WALLPAPER_KIND_YOUTUBE",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "WALLPAPER_KIND_UNSPECIFIED" => Some(Self::Unspecified),
+            "WALLPAPER_KIND_IMAGE" => Some(Self::Image),
+            "WALLPAPER_KIND_YOUTUBE" => Some(Self::Youtube),
+            _ => None,
+        }
+    }
 }
 include!("admin.v1.tonic.rs");
 // @@protoc_insertion_point(module)

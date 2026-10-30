@@ -1,199 +1,283 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use derive_more::derive::Constructor;
 use futures::stream;
-use sqlx::{FromRow, PgConnection, PgPool};
+use sqlx::{FromRow, SqlitePool, sqlite::SqliteQueryResult};
 
 use crate::{
-    domain::{WallpaperRepository, WallpaperStream},
+    domain::{
+        Wallpaper, WallpaperKind, WallpaperListing, WallpaperRepository, WallpaperSource,
+        WallpaperStream,
+    },
     error::AppError,
 };
 
 #[derive(FromRow)]
 struct WallpaperRow {
-    pub mime_type: String,
-    pub text_color: String,
-    pub data: Vec<u8>,
+    id: i32,
+    name: String,
+    kind: String,
+    mime_type: Option<String>,
+    url: Option<String>,
+    text_color: String,
+    audio: bool,
 }
 
-impl From<WallpaperRow> for WallpaperStream {
-    fn from(row: WallpaperRow) -> Self {
-        let data = row.data;
-        WallpaperStream {
-            mime_type: row.mime_type,
+impl TryFrom<WallpaperRow> for Wallpaper {
+    type Error = AppError;
+
+    fn try_from(row: WallpaperRow) -> Result<Self, AppError> {
+        let kind = match row.kind.as_str() {
+            "image" => WallpaperKind::Image,
+            "youtube" => WallpaperKind::Youtube,
+            other => {
+                return Err(AppError::Internal(format!(
+                    "unknown wallpaper kind {other}"
+                )));
+            }
+        };
+        let source = match (row.mime_type, row.url) {
+            (Some(mime_type), None) => WallpaperSource::Stored { mime_type },
+            (None, Some(url)) => WallpaperSource::Url(url),
+            _ => {
+                return Err(AppError::Internal(format!(
+                    "wallpaper {} has no single source",
+                    row.id
+                )));
+            }
+        };
+        Ok(Wallpaper {
+            id: row.id,
+            name: row.name,
+            kind,
+            source,
             text_color: row.text_color,
-            stream: Box::pin(stream::once(async move { Ok(data) })),
-        }
+            audio: row.audio,
+        })
     }
+}
+
+fn kind_column(kind: WallpaperKind) -> &'static str {
+    match kind {
+        WallpaperKind::Image => "image",
+        WallpaperKind::Youtube => "youtube",
+    }
+}
+
+fn require_row(result: SqliteQueryResult, id: i32) -> Result<(), AppError> {
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound(format!("wallpaper {id} not found")));
+    }
+    Ok(())
 }
 
 #[derive(Constructor)]
 pub struct WallpaperRepo {
-    pool: PgPool,
-}
-
-async fn insert_asset(
-    conn: &mut PgConnection,
-    data: &[u8],
-    mime_type: &str,
-    text_color: Option<String>,
-) -> Result<i32, AppError> {
-    let id = sqlx::query_scalar!(
-        "INSERT INTO wallpapers (data, mime_type) VALUES ($1, $2) RETURNING id",
-        data,
-        mime_type
-    )
-    .fetch_one(&mut *conn)
-    .await?;
-
-    if let Some(text_color) = text_color {
-        sqlx::query!(
-            "UPDATE wallpapers SET text_color = $1 WHERE id = $2",
-            text_color,
-            id
-        )
-        .execute(conn)
-        .await?;
-    }
-
-    Ok(id)
-}
-
-async fn delete_unreferenced_assets(conn: &mut PgConnection) -> Result<(), AppError> {
-    sqlx::query!(
-        "DELETE FROM wallpapers AS w
-         WHERE NOT EXISTS (SELECT 1 FROM contest_wallpaper c WHERE c.wallpaper_id = w.id)
-           AND NOT EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)"
-    )
-    .execute(conn)
-    .await?;
-    Ok(())
+    pool: SqlitePool,
 }
 
 #[async_trait]
 impl WallpaperRepository for WallpaperRepo {
-    async fn get_for_contest(&self, contest_id: &str) -> Result<Option<WallpaperStream>, AppError> {
-        let row = sqlx::query_as!(
-            WallpaperRow,
-            "SELECT w.mime_type, w.text_color, w.data
-             FROM wallpapers w
-             JOIN contest_wallpaper c ON c.wallpaper_id = w.id
-             WHERE c.contest_id = $1",
-            contest_id
+    async fn list(&self) -> Result<Vec<WallpaperListing>, AppError> {
+        let rows = sqlx::query!(
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool",
+                      EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)
+                          AS "is_default: bool"
+               FROM wallpapers w
+               ORDER BY w.id DESC"#
         )
-        .fetch_optional(&self.pool)
+        .fetch_all(&self.pool)
         .await?;
 
-        Ok(row.map(WallpaperStream::from))
+        let assignments = sqlx::query!(
+            r#"SELECT contest_id, wallpaper_id AS "wallpaper_id: i32"
+               FROM contest_wallpaper
+               ORDER BY contest_id"#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        let mut contest_ids: HashMap<i32, Vec<String>> = HashMap::new();
+        for assignment in assignments {
+            contest_ids
+                .entry(assignment.wallpaper_id)
+                .or_default()
+                .push(assignment.contest_id);
+        }
+
+        rows.into_iter()
+            .map(|row| {
+                let wallpaper = Wallpaper::try_from(WallpaperRow {
+                    id: row.id,
+                    name: row.name,
+                    kind: row.kind,
+                    mime_type: row.mime_type,
+                    url: row.url,
+                    text_color: row.text_color,
+                    audio: row.audio,
+                })?;
+                Ok(WallpaperListing {
+                    contest_ids: contest_ids.remove(&wallpaper.id).unwrap_or_default(),
+                    is_default: row.is_default,
+                    wallpaper,
+                })
+            })
+            .collect()
     }
 
-    async fn set_for_contest(
+    async fn create_stored(
         &self,
-        contest_id: &str,
+        name: &str,
         data: &[u8],
         mime_type: &str,
+    ) -> Result<Wallpaper, AppError> {
+        sqlx::query_as!(
+            WallpaperRow,
+            r#"INSERT INTO wallpapers (name, kind, data, mime_type) VALUES ($1, 'image', $2, $3)
+               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color, audio AS "audio: bool""#,
+            name,
+            data,
+            mime_type
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .try_into()
+    }
+
+    async fn create_url(
+        &self,
+        name: &str,
+        url: &str,
+        kind: WallpaperKind,
+    ) -> Result<Wallpaper, AppError> {
+        let kind = kind_column(kind);
+        sqlx::query_as!(
+            WallpaperRow,
+            r#"INSERT INTO wallpapers (name, kind, url) VALUES ($1, $2, $3)
+               RETURNING id AS "id: i32", name, kind, mime_type, url, text_color, audio AS "audio: bool""#,
+            name,
+            kind,
+            url
+        )
+        .fetch_one(&self.pool)
+        .await?
+        .try_into()
+    }
+
+    async fn update(
+        &self,
+        id: i32,
+        name: Option<&str>,
+        text_color: Option<&str>,
+        audio: Option<bool>,
     ) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
-        let previous_color = sqlx::query_scalar!(
-            "SELECT w.text_color
-             FROM wallpapers w
-             JOIN contest_wallpaper c ON c.wallpaper_id = w.id
-             WHERE c.contest_id = $1",
-            contest_id
-        )
-        .fetch_optional(&mut *tx)
-        .await?;
-        let wallpaper_id = insert_asset(&mut tx, data, mime_type, previous_color).await?;
-        sqlx::query!(
-            "INSERT INTO contest_wallpaper (contest_id, wallpaper_id) VALUES ($1, $2)
-             ON CONFLICT (contest_id) DO UPDATE SET wallpaper_id = $2",
-            contest_id,
-            wallpaper_id
-        )
-        .execute(&mut *tx)
-        .await?;
-        delete_unreferenced_assets(&mut tx).await?;
-        tx.commit().await?;
-        Ok(())
-    }
-
-    async fn clear_for_contest(&self, contest_id: &str) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query!(
-            "DELETE FROM contest_wallpaper WHERE contest_id = $1",
-            contest_id
-        )
-        .execute(&mut *tx)
-        .await?;
-        delete_unreferenced_assets(&mut tx).await?;
-        tx.commit().await?;
-        Ok(())
-    }
-
-    async fn set_contest_text_color(&self, contest_id: &str, color: &str) -> Result<(), AppError> {
-        sqlx::query!(
-            "UPDATE wallpapers SET text_color = $1
-             WHERE id = (SELECT wallpaper_id FROM contest_wallpaper WHERE contest_id = $2)",
-            color,
-            contest_id
+        let result = sqlx::query!(
+            "UPDATE wallpapers
+             SET name = COALESCE($2, name), text_color = COALESCE($3, text_color),
+                 audio = COALESCE($4, audio)
+             WHERE id = $1",
+            id,
+            name,
+            text_color,
+            audio
         )
         .execute(&self.pool)
         .await?;
-        Ok(())
+        require_row(result, id)
     }
 
-    async fn get_default(&self) -> Result<Option<WallpaperStream>, AppError> {
-        let row = sqlx::query_as!(
-            WallpaperRow,
-            "SELECT w.mime_type, w.text_color, w.data
-             FROM wallpapers w
-             JOIN system_settings s ON s.default_wallpaper_id = w.id"
+    async fn delete(&self, id: i32) -> Result<(), AppError> {
+        let result = sqlx::query!("DELETE FROM wallpapers WHERE id = $1", id)
+            .execute(&self.pool)
+            .await?;
+        require_row(result, id)
+    }
+
+    async fn get_content(&self, id: i32) -> Result<Option<WallpaperStream>, AppError> {
+        let row = sqlx::query!(
+            r#"SELECT mime_type AS "mime_type!", data AS "data!"
+               FROM wallpapers
+               WHERE id = $1 AND data IS NOT NULL"#,
+            id
         )
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(row.map(WallpaperStream::from))
+        Ok(row.map(|row| {
+            let data = row.data;
+            WallpaperStream {
+                mime_type: row.mime_type,
+                stream: Box::pin(stream::once(async move { Ok(data) })),
+            }
+        }))
     }
 
-    async fn set_default(&self, data: &[u8], mime_type: &str) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
-        let previous_color = sqlx::query_scalar!(
-            "SELECT w.text_color
-             FROM wallpapers w
-             JOIN system_settings s ON s.default_wallpaper_id = w.id"
+    async fn get_for_contest(&self, contest_id: &str) -> Result<Option<Wallpaper>, AppError> {
+        sqlx::query_as!(
+            WallpaperRow,
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool"
+               FROM wallpapers w
+               JOIN contest_wallpaper c ON c.wallpaper_id = w.id
+               WHERE c.contest_id = $1"#,
+            contest_id
         )
-        .fetch_optional(&mut *tx)
-        .await?;
-        let wallpaper_id = insert_asset(&mut tx, data, mime_type, previous_color).await?;
-        sqlx::query!(
-            "INSERT INTO system_settings (id, default_wallpaper_id) VALUES (TRUE, $1)
-             ON CONFLICT (id) DO UPDATE SET default_wallpaper_id = $1",
-            wallpaper_id
-        )
-        .execute(&mut *tx)
-        .await?;
-        delete_unreferenced_assets(&mut tx).await?;
-        tx.commit().await?;
-        Ok(())
+        .fetch_optional(&self.pool)
+        .await?
+        .map(Wallpaper::try_from)
+        .transpose()
     }
 
-    async fn clear_default(&self) -> Result<(), AppError> {
-        let mut tx = self.pool.begin().await?;
-        sqlx::query!("UPDATE system_settings SET default_wallpaper_id = NULL")
-            .execute(&mut *tx)
+    async fn assign_contest(&self, contest_id: &str, id: Option<i32>) -> Result<(), AppError> {
+        let Some(id) = id else {
+            sqlx::query!(
+                "DELETE FROM contest_wallpaper WHERE contest_id = $1",
+                contest_id
+            )
+            .execute(&self.pool)
             .await?;
-        delete_unreferenced_assets(&mut tx).await?;
-        tx.commit().await?;
-        Ok(())
-    }
+            return Ok(());
+        };
 
-    async fn set_default_text_color(&self, color: &str) -> Result<(), AppError> {
-        sqlx::query!(
-            "UPDATE wallpapers SET text_color = $1
-             WHERE id = (SELECT default_wallpaper_id FROM system_settings)",
-            color
+        let result = sqlx::query!(
+            "INSERT INTO contest_wallpaper (contest_id, wallpaper_id)
+             SELECT $1, id FROM wallpapers WHERE id = $2
+             ON CONFLICT (contest_id) DO UPDATE SET wallpaper_id = EXCLUDED.wallpaper_id",
+            contest_id,
+            id
         )
         .execute(&self.pool)
         .await?;
-        Ok(())
+        require_row(result, id)
+    }
+
+    async fn get_default(&self) -> Result<Option<Wallpaper>, AppError> {
+        sqlx::query_as!(
+            WallpaperRow,
+            r#"SELECT w.id AS "id: i32", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS "audio: bool"
+               FROM wallpapers w
+               JOIN system_settings s ON s.default_wallpaper_id = w.id"#
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .map(Wallpaper::try_from)
+        .transpose()
+    }
+
+    async fn set_default(&self, id: Option<i32>) -> Result<(), AppError> {
+        let Some(id) = id else {
+            sqlx::query!("UPDATE system_settings SET default_wallpaper_id = NULL")
+                .execute(&self.pool)
+                .await?;
+            return Ok(());
+        };
+
+        let result = sqlx::query!(
+            "UPDATE system_settings SET default_wallpaper_id = $1
+             WHERE EXISTS (SELECT 1 FROM wallpapers WHERE id = $1)",
+            id
+        )
+        .execute(&self.pool)
+        .await?;
+        require_row(result, id)
     }
 }

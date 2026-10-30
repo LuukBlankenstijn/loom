@@ -5,7 +5,7 @@ const navItems = [
   { to: "/teams", label: "Teams" },
   { to: "/stations", label: "Stations" },
   { to: "/maps", label: "Maps" },
-  { to: "/settings", label: "System" },
+  { to: "/wallpapers", label: "Wallpapers" },
 ];
 
 export function Layout() {

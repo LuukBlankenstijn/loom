@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT ip, reported_label, label_override FROM stations WHERE ip = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "ip",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "reported_label",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "label_override",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "87cc6d866a8c547069ab1a072f2f368ee2bc382efd3d7da3cb289ecae9fa77ac"
+}

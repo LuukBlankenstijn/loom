@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO map_element (id, map_id, element_type, props, station_id)\n             VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "20a3484562b90fb2c4250cd2d5274c7eb76c6ee791a3e399ddcda82beba8b683"
+}

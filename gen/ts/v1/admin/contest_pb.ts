@@ -13,7 +13,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file v1/admin/contest.proto.
  */
 export const file_v1_admin_contest: GenFile = /*@__PURE__*/
-  fileDesc("ChZ2MS9hZG1pbi9jb250ZXN0LnByb3RvEghhZG1pbi52MSLCAQoHQ29udGVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEjMKCnN0YXJ0X3RpbWUYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSACIAQESOQoIZW5kX3RpbWUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgu6SAjIAQGyAQJAARITCgZtYXBfaWQYBSABKAVIAYgBAUINCgtfc3RhcnRfdGltZUIJCgdfbWFwX2lkIlQKFlVwbG9hZFdhbGxwYXBlclJlcXVlc3QSEgoKY29udGVzdF9pZBgBIAEoCRIXCgppbWFnZV9kYXRhGAIgASgMSACIAQFCDQoLX2ltYWdlX2RhdGEibQocU2V0V2FsbHBhcGVyVGV4dENvbG9yUmVxdWVzdBISCgpjb250ZXN0X2lkGAEgASgJEjkKBWNvbG9yGAIgASgJQiq6SCdyJTIjXiM/KFtBLUZhLWYwLTldezN9fFtBLUZhLWYwLTldezZ9KSQiMwoNU2V0TWFwUmVxdWVzdBISCgpjb250ZXN0X2lkGAEgASgJEg4KBm1hcF9pZBgCIAEoBTKzAgoOQ29udGVzdFNlcnZpY2USPQoOR2V0TmV4dENvbnRlc3QSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaES5hZG1pbi52MS5Db250ZXN0IgASSgoMU2V0V2FsbHBhcGVyEiAuYWRtaW4udjEuVXBsb2FkV2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAElkKFVNldFdhbGxwYXBlclRleHRDb2xvchImLmFkbWluLnYxLlNldFdhbGxwYXBlclRleHRDb2xvclJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiABI7CgZTZXRNYXASFy5hZG1pbi52MS5TZXRNYXBSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5IgBClwEKDGNvbS5hZG1pbi52MUIMQ29udGVzdFByb3RvUAFaOGdpdGh1Yi5jb20vTHV1a0JsYW5rZW5zdGlqbi9sb29tL2dlbi9nby92MS9hZG1pbjthZG1pbnYxogIDQVhYqgIIQWRtaW4uVjHKAghBZG1pblxWMeICFEFkbWluXFYxXEdQQk1ldGFkYXRh6gIJQWRtaW46OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
+  fileDesc("ChZ2MS9hZG1pbi9jb250ZXN0LnByb3RvEghhZG1pbi52MSLuAQoHQ29udGVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEjMKCnN0YXJ0X3RpbWUYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSACIAQESOQoIZW5kX3RpbWUYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgu6SAjIAQGyAQJAARITCgZtYXBfaWQYBSABKAVIAYgBARIZCgx3YWxscGFwZXJfaWQYBiABKAVIAogBAUINCgtfc3RhcnRfdGltZUIJCgdfbWFwX2lkQg8KDV93YWxscGFwZXJfaWQiVQoTU2V0V2FsbHBhcGVyUmVxdWVzdBISCgpjb250ZXN0X2lkGAEgASgJEhkKDHdhbGxwYXBlcl9pZBgCIAEoBUgAiAEBQg8KDV93YWxscGFwZXJfaWQiMwoNU2V0TWFwUmVxdWVzdBISCgpjb250ZXN0X2lkGAEgASgJEg4KBm1hcF9pZBgCIAEoBTLVAQoOQ29udGVzdFNlcnZpY2USPQoOR2V0TmV4dENvbnRlc3QSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaES5hZG1pbi52MS5Db250ZXN0IgASRwoMU2V0V2FsbHBhcGVyEh0uYWRtaW4udjEuU2V0V2FsbHBhcGVyUmVxdWVzdBoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eSIAEjsKBlNldE1hcBIXLmFkbWluLnYxLlNldE1hcFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkiAEKXAQoMY29tLmFkbWluLnYxQgxDb250ZXN0UHJvdG9QAVo4Z2l0aHViLmNvbS9MdXVrQmxhbmtlbnN0aWpuL2xvb20vZ2VuL2dvL3YxL2FkbWluO2FkbWludjGiAgNBWFiqAghBZG1pbi5WMcoCCEFkbWluXFYx4gIUQWRtaW5cVjFcR1BCTWV0YWRhdGHqAglBZG1pbjo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_empty, file_google_protobuf_timestamp]);
 
 /**
  * @generated from message admin.v1.Contest
@@ -43,6 +43,11 @@ export type Contest = Message<"admin.v1.Contest"> & {
    * @generated from field: optional int32 map_id = 5;
    */
   mapId?: number | undefined;
+
+  /**
+   * @generated from field: optional int32 wallpaper_id = 6;
+   */
+  wallpaperId?: number | undefined;
 };
 
 /**
@@ -53,48 +58,26 @@ export const ContestSchema: GenMessage<Contest> = /*@__PURE__*/
   messageDesc(file_v1_admin_contest, 0);
 
 /**
- * @generated from message admin.v1.UploadWallpaperRequest
+ * @generated from message admin.v1.SetWallpaperRequest
  */
-export type UploadWallpaperRequest = Message<"admin.v1.UploadWallpaperRequest"> & {
+export type SetWallpaperRequest = Message<"admin.v1.SetWallpaperRequest"> & {
   /**
    * @generated from field: string contest_id = 1;
    */
   contestId: string;
 
   /**
-   * @generated from field: optional bytes image_data = 2;
+   * @generated from field: optional int32 wallpaper_id = 2;
    */
-  imageData?: Uint8Array | undefined;
+  wallpaperId?: number | undefined;
 };
 
 /**
- * Describes the message admin.v1.UploadWallpaperRequest.
- * Use `create(UploadWallpaperRequestSchema)` to create a new message.
+ * Describes the message admin.v1.SetWallpaperRequest.
+ * Use `create(SetWallpaperRequestSchema)` to create a new message.
  */
-export const UploadWallpaperRequestSchema: GenMessage<UploadWallpaperRequest> = /*@__PURE__*/
+export const SetWallpaperRequestSchema: GenMessage<SetWallpaperRequest> = /*@__PURE__*/
   messageDesc(file_v1_admin_contest, 1);
-
-/**
- * @generated from message admin.v1.SetWallpaperTextColorRequest
- */
-export type SetWallpaperTextColorRequest = Message<"admin.v1.SetWallpaperTextColorRequest"> & {
-  /**
-   * @generated from field: string contest_id = 1;
-   */
-  contestId: string;
-
-  /**
-   * @generated from field: string color = 2;
-   */
-  color: string;
-};
-
-/**
- * Describes the message admin.v1.SetWallpaperTextColorRequest.
- * Use `create(SetWallpaperTextColorRequestSchema)` to create a new message.
- */
-export const SetWallpaperTextColorRequestSchema: GenMessage<SetWallpaperTextColorRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_contest, 2);
 
 /**
  * @generated from message admin.v1.SetMapRequest
@@ -116,7 +99,7 @@ export type SetMapRequest = Message<"admin.v1.SetMapRequest"> & {
  * Use `create(SetMapRequestSchema)` to create a new message.
  */
 export const SetMapRequestSchema: GenMessage<SetMapRequest> = /*@__PURE__*/
-  messageDesc(file_v1_admin_contest, 3);
+  messageDesc(file_v1_admin_contest, 2);
 
 /**
  * @generated from service admin.v1.ContestService
@@ -133,23 +116,13 @@ export const ContestService: GenService<{
     output: typeof ContestSchema;
   },
   /**
-   * Sets the wallpaper for some contest
+   * Assigns a library wallpaper to some contest, clearing it when wallpaper_id is absent
    *
    * @generated from rpc admin.v1.ContestService.SetWallpaper
    */
   setWallpaper: {
     methodKind: "unary";
-    input: typeof UploadWallpaperRequestSchema;
-    output: typeof EmptySchema;
-  },
-  /**
-   * Sets the color of the text displayed on a wallpaper for some contest
-   *
-   * @generated from rpc admin.v1.ContestService.SetWallpaperTextColor
-   */
-  setWallpaperTextColor: {
-    methodKind: "unary";
-    input: typeof SetWallpaperTextColorRequestSchema;
+    input: typeof SetWallpaperRequestSchema;
     output: typeof EmptySchema;
   },
   /**

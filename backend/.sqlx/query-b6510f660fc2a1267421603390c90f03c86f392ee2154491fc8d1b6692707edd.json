@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT me.id AS \"id: Uuid\", me.element_type, s.ip AS \"ip?\", me.props FROM map_element AS me\n            LEFT JOIN stations AS s ON me.station_id = s.id\n            WHERE me.map_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: Uuid",
+        "ordinal": 0,
+        "type_info": "Blob"
+      },
+      {
+        "name": "element_type",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "ip?",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "props",
+        "ordinal": 3,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "b6510f660fc2a1267421603390c90f03c86f392ee2154491fc8d1b6692707edd"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM wallpapers WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "065edf1f1f08daa9f3b1df5eb6fcbab63649e432f58fcee2f70ad193c40f9e75"
+}

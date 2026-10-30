@@ -1,15 +1,10 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "INSERT INTO map_element (id, map_id, element_type, props)\n                 VALUES ($1, $2, $3, $4)\n                 ON CONFLICT (id) DO UPDATE SET\n                    element_type = EXCLUDED.element_type,\n                    props = EXCLUDED.props,\n                    map_id = EXCLUDED.map_id",
   "describe": {
     "columns": [],
     "parameters": {
-      "Left": [
-        "Uuid",
-        "Int4",
-        "Text",
-        "Jsonb"
-      ]
+      "Right": 4
     },
     "nullable": []
   },

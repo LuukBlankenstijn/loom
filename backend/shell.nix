@@ -11,5 +11,8 @@ pkgs.mkShell {
     rust-analyzer
 
     sqlx-cli
+
+    yt-dlp
+    ffmpeg-headless
   ];
 }

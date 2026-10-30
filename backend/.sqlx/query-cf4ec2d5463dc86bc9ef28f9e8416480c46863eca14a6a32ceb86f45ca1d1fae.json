@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE system_settings SET default_wallpaper_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "cf4ec2d5463dc86bc9ef28f9e8416480c46863eca14a6a32ceb86f45ca1d1fae"
+}

@@ -1,28 +1,26 @@
 {
-  "db_name": "PostgreSQL",
+  "db_name": "SQLite",
   "query": "SELECT t.id, t.name, s.ip as \"ip?\"\n             FROM teams t\n             JOIN contest_teams ct ON ct.team_id = t.id\n             LEFT JOIN stations s ON t.team_station = s.id\n             WHERE ct.contest_id = $1",
   "describe": {
     "columns": [
       {
-        "ordinal": 0,
         "name": "id",
+        "ordinal": 0,
         "type_info": "Text"
       },
       {
-        "ordinal": 1,
         "name": "name",
+        "ordinal": 1,
         "type_info": "Text"
       },
       {
-        "ordinal": 2,
         "name": "ip?",
+        "ordinal": 2,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": [
-        "Text"
-      ]
+      "Right": 1
     },
     "nullable": [
       false,

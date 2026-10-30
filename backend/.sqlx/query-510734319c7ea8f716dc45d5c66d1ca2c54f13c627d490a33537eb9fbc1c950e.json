@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT w.id AS \"id: i32\", w.name, w.kind, w.mime_type, w.url, w.text_color, w.audio AS \"audio: bool\",\n                      EXISTS (SELECT 1 FROM system_settings s WHERE s.default_wallpaper_id = w.id)\n                          AS \"is_default: bool\"\n               FROM wallpapers w\n               ORDER BY w.id DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: i32",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "kind",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "mime_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "url",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "text_color",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "audio: bool",
+        "ordinal": 6,
+        "type_info": "Bool"
+      },
+      {
+        "name": "is_default: bool",
+        "ordinal": 7,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "510734319c7ea8f716dc45d5c66d1ca2c54f13c627d490a33537eb9fbc1c950e"
+}

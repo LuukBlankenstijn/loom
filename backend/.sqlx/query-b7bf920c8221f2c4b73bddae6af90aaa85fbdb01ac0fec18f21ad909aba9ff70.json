@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT m.id AS \"id: i32\"\n             FROM contest_map m\n             JOIN contest_map_contest cmc ON cmc.map_id = m.id\n             WHERE cmc.contest_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id: i32",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b7bf920c8221f2c4b73bddae6af90aaa85fbdb01ac0fec18f21ad909aba9ff70"
+}

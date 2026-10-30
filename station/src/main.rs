@@ -25,28 +25,32 @@ async fn main() -> Result<()> {
 
     let (tx, _) = broadcast::channel::<Message>(32);
 
-    let registration_tool = RegistrationToolRunner::new(tx.clone(), args.clone());
-    tokio::spawn(async move {
-        if let Err(e) = registration_tool.run().await {
-            error!("Registration tool runner error: {}", e);
-        }
-    });
+    if !args.no_registration_tool {
+        let registration_tool = RegistrationToolRunner::new(tx.clone(), args.clone());
+        tokio::spawn(async move {
+            if let Err(e) = registration_tool.run().await {
+                error!("Registration tool runner error: {}", e);
+            }
+        });
+    }
 
-    let dbus_client = DbusClient::new(tx.clone(), args.server.clone()).await?;
-    tokio::spawn(async move {
-        if let Err(e) = dbus_client.run().await {
-            error!("Dbus client error: {}", e);
-        }
-    });
+    if !args.no_greeter {
+        let dbus_client = DbusClient::new(tx.clone(), args.server.clone()).await?;
+        tokio::spawn(async move {
+            if let Err(e) = dbus_client.run().await {
+                error!("Dbus client error: {}", e);
+            }
+        });
+    }
 
-    let rpc_client = RpcClient::new(args.server, args.auth, tx.clone());
+    let rpc_client = RpcClient::new(args.server, args.auth, args.label, tx.clone());
     tokio::spawn(async move {
         if let Err(e) = rpc_client.run().await {
             error!("Rpc client error: {}", e);
         }
     });
 
-    let command_runner = CommandRunner::new(tx);
+    let command_runner = CommandRunner::new(tx, !args.no_greeter);
     tokio::spawn(async move {
         if let Err(e) = command_runner.run().await {
             error!("Command runner error: {}", e);

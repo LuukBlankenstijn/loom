@@ -49,6 +49,36 @@ in
       '';
     };
 
+    enableRegistrationTool = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Whether loomd launches the registration tool on request. Disable on
+        machines that are not team stations.
+      '';
+    };
+
+    label = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "judgehost";
+      description = ''
+        Free-form label loomd reports for this station, e.g. "team",
+        "judgehost" or "service". It is trimmed and lowercased; an empty
+        string means no label. Admins can override it in the dashboard.
+      '';
+    };
+
+    greeter.enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Whether loomd integrates with the loom greeter. When disabled, loomd
+        does not connect to the greeter over dbus, always reports the station
+        as logged in and ignores logout requests.
+      '';
+    };
+
     includeSystemPackages = mkEnableOption "Put all system packages on the path of the loomd service. Allows to use systempackages when running remote commands";
   };
 
@@ -67,9 +97,12 @@ in
             registrationToolFlag = lib.optionalString (
               cfg.registrationTool != null
             ) "--registration-tool ${lib.escapeShellArg (lib.getExe cfg.registrationTool)}";
+            labelFlag = lib.optionalString (cfg.label != null) "--label=${lib.escapeShellArg cfg.label}";
+            greeterFlag = lib.optionalString (!cfg.greeter.enable) "--no-greeter";
+            noRegistrationToolFlag = lib.optionalString (!cfg.enableRegistrationTool) "--no-registration-tool";
           in
           pkgs.writeShellScript "start-loomd" ''
-            exec ${stationPackage}/bin/loomd --server ${lib.escapeShellArg cfg.server} ${authFlag} ${registrationToolFlag}
+            exec ${stationPackage}/bin/loomd --server ${lib.escapeShellArg cfg.server} ${authFlag} ${registrationToolFlag} ${labelFlag} ${greeterFlag} ${noRegistrationToolFlag}
           '';
         Restart = "on-failure";
         RestartSec = "5s";

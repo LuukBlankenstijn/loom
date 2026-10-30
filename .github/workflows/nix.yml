@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [loom-greeter, loomd, loom-station-registration]
+        package: [loom-greeter, loomd, loom-station-registration, loom-backend, loom-dashboard]
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31

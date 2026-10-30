@@ -4,6 +4,7 @@ import { adminClient } from "../lib/client";
 import { AssignModal } from "../components/AssignModal";
 import { StationActinoModal } from "../components/StationActionModal";
 import { StationTerminal } from "../components/StationTerminal";
+import { StationLabel } from "../components/StationLabel";
 import type { StationTarget } from "../lib/actions";
 import { useStationState } from "../context/station";
 import type { Station } from "@client/v1/admin/station_pb";
@@ -29,6 +30,16 @@ const DEFAULT_CONNECTION: Selection<ConnectionKey> = {
 };
 
 const DEFAULT_SESSION: Selection<SessionKey> = { in: true, out: true };
+
+const ALL_LABELS = "all";
+const NO_LABEL = "none";
+const LABEL_PREFIX = "label:";
+
+function matchesLabel(station: Station, filter: string) {
+  if (filter === ALL_LABELS) return true;
+  if (filter === NO_LABEL) return !station.label;
+  return !!station.label && filter === `${LABEL_PREFIX}${station.label}`;
+}
 
 function FilterMenu({
   connection,
@@ -192,6 +203,7 @@ export function StationsPage() {
   const [expandedIps, setExpandedIps] = useState<Set<string>>(new Set());
   const { getState: getStationsState, connectedCount } = useStationState();
   const [search, setSearch] = useState("");
+  const [labelFilter, setLabelFilter] = useState(ALL_LABELS);
   const [connection, setConnection] =
     useState<Selection<ConnectionKey>>(DEFAULT_CONNECTION);
   const [session, setSession] =
@@ -212,6 +224,25 @@ export function StationsPage() {
   });
 
   const stations = stationsData?.stations ?? [];
+
+  const connectedKey = `${connectedCount}:${stations
+    .filter((station) => getStationsState(station.ip).connected)
+    .map((station) => station.ip)
+    .sort()
+    .join(",")}`;
+  const lastConnectedKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!stationsData) return;
+    if (
+      lastConnectedKey.current !== null &&
+      lastConnectedKey.current !== connectedKey
+    ) {
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
+    }
+    lastConnectedKey.current = connectedKey;
+  }, [connectedKey, stationsData, queryClient]);
+
   const teams = teamsData?.teams ?? [];
 
   const ipToTeam = new Map(teams.filter((t) => t.ip).map((t) => [t.ip!, t]));
@@ -220,10 +251,26 @@ export function StationsPage() {
 
   const matchedStations = stations.filter((station) => {
     const { connected, loggedIn } = getStationsState(station.ip);
-    if (query && !station.ip.toLowerCase().includes(query)) return false;
+    if (
+      query &&
+      !station.ip.toLowerCase().includes(query) &&
+      !station.label?.includes(query)
+    )
+      return false;
+    if (!matchesLabel(station, labelFilter)) return false;
     if (!connection[connected ? "online" : "offline"]) return false;
     return session[loggedIn ? "in" : "out"];
   });
+
+  const selectedLabel = labelFilter.startsWith(LABEL_PREFIX)
+    ? [labelFilter.slice(LABEL_PREFIX.length)]
+    : [];
+  const labels = [
+    ...new Set([
+      ...stations.flatMap((station) => (station.label ? [station.label] : [])),
+      ...selectedLabel,
+    ]),
+  ].sort();
 
   const visibleStations = sort
     ? [...matchedStations].sort(
@@ -292,7 +339,7 @@ export function StationsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
         <div className="w-2 h-8 bg-linear-to-b from-emerald-400 to-emerald-600 rounded-full" />
         <h1 className="text-3xl font-semibold text-white">Stations</h1>
@@ -337,10 +384,27 @@ export function StationsPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search IP"
-            className="w-44 bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500"
+            placeholder="Search IP or label"
+            className="w-56 bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500"
           />
         </div>
+        <select
+          value={labelFilter}
+          onChange={(e) => setLabelFilter(e.target.value)}
+          className={`px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-primary-500 transition-colors ${
+            labelFilter === ALL_LABELS
+              ? "bg-surface-800 border-surface-600 text-gray-300"
+              : "bg-primary-500/10 border-primary-500/30 text-primary-400"
+          }`}
+        >
+          <option value={ALL_LABELS}>All labels</option>
+          {labels.map((label) => (
+            <option key={label} value={`${LABEL_PREFIX}${label}`}>
+              {label}
+            </option>
+          ))}
+          <option value={NO_LABEL}>No label</option>
+        </select>
         <FilterMenu
           connection={connection}
           session={session}
@@ -409,6 +473,9 @@ export function StationsPage() {
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-44">
                   IP Address
                 </th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300 w-44">
+                  Label
+                </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-300">
                   Team
                 </th>
@@ -469,6 +536,9 @@ export function StationsPage() {
                         {station.ip}
                       </td>
                       <td className="px-6 py-4">
+                        <StationLabel station={station} />
+                      </td>
+                      <td className="px-6 py-4">
                         {team ? (
                           <div className="flex items-center gap-3">
                             <span className="text-gray-200 bg-purple-500/10 px-2 py-1 rounded">
@@ -498,7 +568,7 @@ export function StationsPage() {
                         ) : (
                           <button
                             onClick={() => openAssignModal(station)}
-                            className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors"
+                            className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
                           >
                             Assign Team
                           </button>
@@ -574,7 +644,7 @@ export function StationsPage() {
                     </tr>
                     {expandedIps.has(station.ip) && (
                       <tr>
-                        <td colSpan={6} className="p-0">
+                        <td colSpan={7} className="p-0">
                           <StationTerminal ip={station.ip} />
                         </td>
                       </tr>

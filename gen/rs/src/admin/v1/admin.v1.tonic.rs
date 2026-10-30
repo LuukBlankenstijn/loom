@@ -103,11 +103,11 @@ pub mod contest_service_client {
                 .insert(GrpcMethod::new("admin.v1.ContestService", "GetNextContest"));
             self.inner.unary(req, path, codec).await
         }
-        /** Sets the wallpaper for some contest
+        /** Assigns a library wallpaper to some contest, clearing it when wallpaper_id is absent
 */
         pub async fn set_wallpaper(
             &mut self,
-            request: impl tonic::IntoRequest<super::UploadWallpaperRequest>,
+            request: impl tonic::IntoRequest<super::SetWallpaperRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
             self.inner
                 .ready()
@@ -124,31 +124,6 @@ pub mod contest_service_client {
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("admin.v1.ContestService", "SetWallpaper"));
-            self.inner.unary(req, path, codec).await
-        }
-        /** Sets the color of the text displayed on a wallpaper for some contest
-*/
-        pub async fn set_wallpaper_text_color(
-            &mut self,
-            request: impl tonic::IntoRequest<super::SetWallpaperTextColorRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/admin.v1.ContestService/SetWallpaperTextColor",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("admin.v1.ContestService", "SetWallpaperTextColor"),
-                );
             self.inner.unary(req, path, codec).await
         }
         /** Sets the map for some contest, does not error of either does not exist
@@ -195,17 +170,11 @@ pub mod contest_service_server {
             &self,
             request: tonic::Request<()>,
         ) -> std::result::Result<tonic::Response<super::Contest>, tonic::Status>;
-        /** Sets the wallpaper for some contest
+        /** Assigns a library wallpaper to some contest, clearing it when wallpaper_id is absent
 */
         async fn set_wallpaper(
             &self,
-            request: tonic::Request<super::UploadWallpaperRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
-        /** Sets the color of the text displayed on a wallpaper for some contest
-*/
-        async fn set_wallpaper_text_color(
-            &self,
-            request: tonic::Request<super::SetWallpaperTextColorRequest>,
+            request: tonic::Request<super::SetWallpaperRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
         /** Sets the map for some contest, does not error of either does not exist
 */
@@ -337,7 +306,7 @@ pub mod contest_service_server {
                     struct SetWallpaperSvc<T: ContestService>(pub Arc<T>);
                     impl<
                         T: ContestService,
-                    > tonic::server::UnaryService<super::UploadWallpaperRequest>
+                    > tonic::server::UnaryService<super::SetWallpaperRequest>
                     for SetWallpaperSvc<T> {
                         type Response = ();
                         type Future = BoxFuture<
@@ -346,7 +315,7 @@ pub mod contest_service_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::UploadWallpaperRequest>,
+                            request: tonic::Request<super::SetWallpaperRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
@@ -362,55 +331,6 @@ pub mod contest_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = SetWallpaperSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/admin.v1.ContestService/SetWallpaperTextColor" => {
-                    #[allow(non_camel_case_types)]
-                    struct SetWallpaperTextColorSvc<T: ContestService>(pub Arc<T>);
-                    impl<
-                        T: ContestService,
-                    > tonic::server::UnaryService<super::SetWallpaperTextColorRequest>
-                    for SetWallpaperTextColorSvc<T> {
-                        type Response = ();
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::SetWallpaperTextColorRequest>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as ContestService>::set_wallpaper_text_color(
-                                        &inner,
-                                        request,
-                                    )
-                                    .await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = SetWallpaperTextColorSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -664,6 +584,29 @@ pub mod station_service_client {
                 .insert(GrpcMethod::new("admin.v1.StationService", "AssignTeam"));
             self.inner.unary(req, path, codec).await
         }
+        /** Overrides the label of a station, stored lowercased
+*/
+        pub async fn set_station_label(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SetStationLabelRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.StationService/SetStationLabel",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.StationService", "SetStationLabel"));
+            self.inner.unary(req, path, codec).await
+        }
         /** Sends a command to the backend that is sent to one or more stations
 */
         pub async fn send_command(
@@ -748,6 +691,12 @@ pub mod station_service_server {
         async fn assign_team(
             &self,
             request: tonic::Request<super::AssignTeamRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        /** Overrides the label of a station, stored lowercased
+*/
+        async fn set_station_label(
+            &self,
+            request: tonic::Request<super::SetStationLabelRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
         /** Sends a command to the backend that is sent to one or more stations
 */
@@ -978,6 +927,52 @@ pub mod station_service_server {
                     };
                     Box::pin(fut)
                 }
+                "/admin.v1.StationService/SetStationLabel" => {
+                    #[allow(non_camel_case_types)]
+                    struct SetStationLabelSvc<T: StationService>(pub Arc<T>);
+                    impl<
+                        T: StationService,
+                    > tonic::server::UnaryService<super::SetStationLabelRequest>
+                    for SetStationLabelSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::SetStationLabelRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as StationService>::set_station_label(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = SetStationLabelSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 "/admin.v1.StationService/SendCommand" => {
                     #[allow(non_camel_case_types)]
                     struct SendCommandSvc<T: StationService>(pub Arc<T>);
@@ -1106,383 +1101,6 @@ pub mod station_service_server {
     /// Generated gRPC service name
     pub const SERVICE_NAME: &str = "admin.v1.StationService";
     impl<T> tonic::server::NamedService for StationServiceServer<T> {
-        const NAME: &'static str = SERVICE_NAME;
-    }
-}
-/// Generated client implementations.
-pub mod system_service_client {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value,
-    )]
-    use tonic::codegen::*;
-    use tonic::codegen::http::Uri;
-    ///
-    #[derive(Debug, Clone)]
-    pub struct SystemServiceClient<T> {
-        inner: tonic::client::Grpc<T>,
-    }
-    impl<T> SystemServiceClient<T>
-    where
-        T: tonic::client::GrpcService<tonic::body::Body>,
-        T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
-    {
-        pub fn new(inner: T) -> Self {
-            let inner = tonic::client::Grpc::new(inner);
-            Self { inner }
-        }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
-            let inner = tonic::client::Grpc::with_origin(inner, origin);
-            Self { inner }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> SystemServiceClient<InterceptedService<T, F>>
-        where
-            F: tonic::service::Interceptor,
-            T::ResponseBody: Default,
-            T: tonic::codegen::Service<
-                http::Request<tonic::body::Body>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
-                >,
-            >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::Body>,
-            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
-        {
-            SystemServiceClient::new(InterceptedService::new(inner, interceptor))
-        }
-        /// Compress requests with the given encoding.
-        ///
-        /// This requires the server to support it otherwise it might respond with an
-        /// error.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.send_compressed(encoding);
-            self
-        }
-        /// Enable decompressing responses.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.accept_compressed(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_decoding_message_size(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_encoding_message_size(limit);
-            self
-        }
-        /** Sets the wallpaper served when a contest has none, clearing it when image_data is absent
-*/
-        pub async fn set_default_wallpaper(
-            &mut self,
-            request: impl tonic::IntoRequest<super::SetDefaultWallpaperRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/admin.v1.SystemService/SetDefaultWallpaper",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("admin.v1.SystemService", "SetDefaultWallpaper"),
-                );
-            self.inner.unary(req, path, codec).await
-        }
-        /** Sets the color of the text displayed on the default wallpaper
-*/
-        pub async fn set_default_wallpaper_text_color(
-            &mut self,
-            request: impl tonic::IntoRequest<super::SetDefaultWallpaperTextColorRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/admin.v1.SystemService/SetDefaultWallpaperTextColor",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "admin.v1.SystemService",
-                        "SetDefaultWallpaperTextColor",
-                    ),
-                );
-            self.inner.unary(req, path, codec).await
-        }
-    }
-}
-/// Generated server implementations.
-pub mod system_service_server {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value,
-    )]
-    use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with SystemServiceServer.
-    #[async_trait]
-    pub trait SystemService: std::marker::Send + std::marker::Sync + 'static {
-        /** Sets the wallpaper served when a contest has none, clearing it when image_data is absent
-*/
-        async fn set_default_wallpaper(
-            &self,
-            request: tonic::Request<super::SetDefaultWallpaperRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
-        /** Sets the color of the text displayed on the default wallpaper
-*/
-        async fn set_default_wallpaper_text_color(
-            &self,
-            request: tonic::Request<super::SetDefaultWallpaperTextColorRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
-    }
-    ///
-    #[derive(Debug)]
-    pub struct SystemServiceServer<T> {
-        inner: Arc<T>,
-        accept_compression_encodings: EnabledCompressionEncodings,
-        send_compression_encodings: EnabledCompressionEncodings,
-        max_decoding_message_size: Option<usize>,
-        max_encoding_message_size: Option<usize>,
-    }
-    impl<T> SystemServiceServer<T> {
-        pub fn new(inner: T) -> Self {
-            Self::from_arc(Arc::new(inner))
-        }
-        pub fn from_arc(inner: Arc<T>) -> Self {
-            Self {
-                inner,
-                accept_compression_encodings: Default::default(),
-                send_compression_encodings: Default::default(),
-                max_decoding_message_size: None,
-                max_encoding_message_size: None,
-            }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> InterceptedService<Self, F>
-        where
-            F: tonic::service::Interceptor,
-        {
-            InterceptedService::new(Self::new(inner), interceptor)
-        }
-        /// Enable decompressing requests with the given encoding.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.accept_compression_encodings.enable(encoding);
-            self
-        }
-        /// Compress responses with the given encoding, if the client supports it.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.send_compression_encodings.enable(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.max_decoding_message_size = Some(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.max_encoding_message_size = Some(limit);
-            self
-        }
-    }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for SystemServiceServer<T>
-    where
-        T: SystemService,
-        B: Body + std::marker::Send + 'static,
-        B::Error: Into<StdError> + std::marker::Send + 'static,
-    {
-        type Response = http::Response<tonic::body::Body>;
-        type Error = std::convert::Infallible;
-        type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
-            Poll::Ready(Ok(()))
-        }
-        fn call(&mut self, req: http::Request<B>) -> Self::Future {
-            match req.uri().path() {
-                "/admin.v1.SystemService/SetDefaultWallpaper" => {
-                    #[allow(non_camel_case_types)]
-                    struct SetDefaultWallpaperSvc<T: SystemService>(pub Arc<T>);
-                    impl<
-                        T: SystemService,
-                    > tonic::server::UnaryService<super::SetDefaultWallpaperRequest>
-                    for SetDefaultWallpaperSvc<T> {
-                        type Response = ();
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::SetDefaultWallpaperRequest>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as SystemService>::set_default_wallpaper(&inner, request)
-                                    .await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = SetDefaultWallpaperSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/admin.v1.SystemService/SetDefaultWallpaperTextColor" => {
-                    #[allow(non_camel_case_types)]
-                    struct SetDefaultWallpaperTextColorSvc<T: SystemService>(pub Arc<T>);
-                    impl<
-                        T: SystemService,
-                    > tonic::server::UnaryService<
-                        super::SetDefaultWallpaperTextColorRequest,
-                    > for SetDefaultWallpaperTextColorSvc<T> {
-                        type Response = ();
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<
-                                super::SetDefaultWallpaperTextColorRequest,
-                            >,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as SystemService>::set_default_wallpaper_text_color(
-                                        &inner,
-                                        request,
-                                    )
-                                    .await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = SetDefaultWallpaperTextColorSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                _ => {
-                    Box::pin(async move {
-                        let mut response = http::Response::new(
-                            tonic::body::Body::default(),
-                        );
-                        let headers = response.headers_mut();
-                        headers
-                            .insert(
-                                tonic::Status::GRPC_STATUS,
-                                (tonic::Code::Unimplemented as i32).into(),
-                            );
-                        headers
-                            .insert(
-                                http::header::CONTENT_TYPE,
-                                tonic::metadata::GRPC_CONTENT_TYPE,
-                            );
-                        Ok(response)
-                    })
-                }
-            }
-        }
-    }
-    impl<T> Clone for SystemServiceServer<T> {
-        fn clone(&self) -> Self {
-            let inner = self.inner.clone();
-            Self {
-                inner,
-                accept_compression_encodings: self.accept_compression_encodings,
-                send_compression_encodings: self.send_compression_encodings,
-                max_decoding_message_size: self.max_decoding_message_size,
-                max_encoding_message_size: self.max_encoding_message_size,
-            }
-        }
-    }
-    /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "admin.v1.SystemService";
-    impl<T> tonic::server::NamedService for SystemServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }
@@ -1838,6 +1456,601 @@ pub mod team_service_server {
     /// Generated gRPC service name
     pub const SERVICE_NAME: &str = "admin.v1.TeamService";
     impl<T> tonic::server::NamedService for TeamServiceServer<T> {
+        const NAME: &'static str = SERVICE_NAME;
+    }
+}
+/// Generated client implementations.
+pub mod wallpaper_service_client {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    ///
+    #[derive(Debug, Clone)]
+    pub struct WallpaperServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl<T> WallpaperServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::Body>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> WallpaperServiceClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
+        {
+            WallpaperServiceClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        /** Lists every wallpaper in the library with where it is in use
+*/
+        pub async fn list_wallpapers(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::ListWallpapersResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.WallpaperService/ListWallpapers",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.WallpaperService", "ListWallpapers"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Adds an uploaded image, an image URL or a YouTube video to the library
+*/
+        pub async fn create_wallpaper(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<super::Wallpaper>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.WallpaperService/CreateWallpaper",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.WallpaperService", "CreateWallpaper"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Renames a wallpaper, changes the colour of text drawn over it or turns its sound on or off
+*/
+        pub async fn update_wallpaper(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.WallpaperService/UpdateWallpaper",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.WallpaperService", "UpdateWallpaper"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Deletes a wallpaper, unassigning it from contests and the system default
+*/
+        pub async fn delete_wallpaper(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeleteWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.WallpaperService/DeleteWallpaper",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("admin.v1.WallpaperService", "DeleteWallpaper"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** Sets the wallpaper served when a contest has none, clearing it when wallpaper_id is absent
+*/
+        pub async fn set_default_wallpaper(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SetDefaultWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/admin.v1.WallpaperService/SetDefaultWallpaper",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("admin.v1.WallpaperService", "SetDefaultWallpaper"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+    }
+}
+/// Generated server implementations.
+pub mod wallpaper_service_server {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    /// Generated trait containing gRPC methods that should be implemented for use with WallpaperServiceServer.
+    #[async_trait]
+    pub trait WallpaperService: std::marker::Send + std::marker::Sync + 'static {
+        /** Lists every wallpaper in the library with where it is in use
+*/
+        async fn list_wallpapers(
+            &self,
+            request: tonic::Request<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::ListWallpapersResponse>,
+            tonic::Status,
+        >;
+        /** Adds an uploaded image, an image URL or a YouTube video to the library
+*/
+        async fn create_wallpaper(
+            &self,
+            request: tonic::Request<super::CreateWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<super::Wallpaper>, tonic::Status>;
+        /** Renames a wallpaper, changes the colour of text drawn over it or turns its sound on or off
+*/
+        async fn update_wallpaper(
+            &self,
+            request: tonic::Request<super::UpdateWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        /** Deletes a wallpaper, unassigning it from contests and the system default
+*/
+        async fn delete_wallpaper(
+            &self,
+            request: tonic::Request<super::DeleteWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+        /** Sets the wallpaper served when a contest has none, clearing it when wallpaper_id is absent
+*/
+        async fn set_default_wallpaper(
+            &self,
+            request: tonic::Request<super::SetDefaultWallpaperRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
+    }
+    ///
+    #[derive(Debug)]
+    pub struct WallpaperServiceServer<T> {
+        inner: Arc<T>,
+        accept_compression_encodings: EnabledCompressionEncodings,
+        send_compression_encodings: EnabledCompressionEncodings,
+        max_decoding_message_size: Option<usize>,
+        max_encoding_message_size: Option<usize>,
+    }
+    impl<T> WallpaperServiceServer<T> {
+        pub fn new(inner: T) -> Self {
+            Self::from_arc(Arc::new(inner))
+        }
+        pub fn from_arc(inner: Arc<T>) -> Self {
+            Self {
+                inner,
+                accept_compression_encodings: Default::default(),
+                send_compression_encodings: Default::default(),
+                max_decoding_message_size: None,
+                max_encoding_message_size: None,
+            }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> InterceptedService<Self, F>
+        where
+            F: tonic::service::Interceptor,
+        {
+            InterceptedService::new(Self::new(inner), interceptor)
+        }
+        /// Enable decompressing requests with the given encoding.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.accept_compression_encodings.enable(encoding);
+            self
+        }
+        /// Compress responses with the given encoding, if the client supports it.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.send_compression_encodings.enable(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.max_decoding_message_size = Some(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.max_encoding_message_size = Some(limit);
+            self
+        }
+    }
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for WallpaperServiceServer<T>
+    where
+        T: WallpaperService,
+        B: Body + std::marker::Send + 'static,
+        B::Error: Into<StdError> + std::marker::Send + 'static,
+    {
+        type Response = http::Response<tonic::body::Body>;
+        type Error = std::convert::Infallible;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(
+            &mut self,
+            _cx: &mut Context<'_>,
+        ) -> Poll<std::result::Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            match req.uri().path() {
+                "/admin.v1.WallpaperService/ListWallpapers" => {
+                    #[allow(non_camel_case_types)]
+                    struct ListWallpapersSvc<T: WallpaperService>(pub Arc<T>);
+                    impl<T: WallpaperService> tonic::server::UnaryService<()>
+                    for ListWallpapersSvc<T> {
+                        type Response = super::ListWallpapersResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as WallpaperService>::list_wallpapers(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = ListWallpapersSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/admin.v1.WallpaperService/CreateWallpaper" => {
+                    #[allow(non_camel_case_types)]
+                    struct CreateWallpaperSvc<T: WallpaperService>(pub Arc<T>);
+                    impl<
+                        T: WallpaperService,
+                    > tonic::server::UnaryService<super::CreateWallpaperRequest>
+                    for CreateWallpaperSvc<T> {
+                        type Response = super::Wallpaper;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::CreateWallpaperRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as WallpaperService>::create_wallpaper(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = CreateWallpaperSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/admin.v1.WallpaperService/UpdateWallpaper" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateWallpaperSvc<T: WallpaperService>(pub Arc<T>);
+                    impl<
+                        T: WallpaperService,
+                    > tonic::server::UnaryService<super::UpdateWallpaperRequest>
+                    for UpdateWallpaperSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UpdateWallpaperRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as WallpaperService>::update_wallpaper(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateWallpaperSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/admin.v1.WallpaperService/DeleteWallpaper" => {
+                    #[allow(non_camel_case_types)]
+                    struct DeleteWallpaperSvc<T: WallpaperService>(pub Arc<T>);
+                    impl<
+                        T: WallpaperService,
+                    > tonic::server::UnaryService<super::DeleteWallpaperRequest>
+                    for DeleteWallpaperSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::DeleteWallpaperRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as WallpaperService>::delete_wallpaper(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = DeleteWallpaperSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/admin.v1.WallpaperService/SetDefaultWallpaper" => {
+                    #[allow(non_camel_case_types)]
+                    struct SetDefaultWallpaperSvc<T: WallpaperService>(pub Arc<T>);
+                    impl<
+                        T: WallpaperService,
+                    > tonic::server::UnaryService<super::SetDefaultWallpaperRequest>
+                    for SetDefaultWallpaperSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::SetDefaultWallpaperRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as WallpaperService>::set_default_wallpaper(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = SetDefaultWallpaperSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => {
+                    Box::pin(async move {
+                        let mut response = http::Response::new(
+                            tonic::body::Body::default(),
+                        );
+                        let headers = response.headers_mut();
+                        headers
+                            .insert(
+                                tonic::Status::GRPC_STATUS,
+                                (tonic::Code::Unimplemented as i32).into(),
+                            );
+                        headers
+                            .insert(
+                                http::header::CONTENT_TYPE,
+                                tonic::metadata::GRPC_CONTENT_TYPE,
+                            );
+                        Ok(response)
+                    })
+                }
+            }
+        }
+    }
+    impl<T> Clone for WallpaperServiceServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self {
+                inner,
+                accept_compression_encodings: self.accept_compression_encodings,
+                send_compression_encodings: self.send_compression_encodings,
+                max_decoding_message_size: self.max_decoding_message_size,
+                max_encoding_message_size: self.max_encoding_message_size,
+            }
+        }
+    }
+    /// Generated gRPC service name
+    pub const SERVICE_NAME: &str = "admin.v1.WallpaperService";
+    impl<T> tonic::server::NamedService for WallpaperServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }

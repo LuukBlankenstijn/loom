@@ -13,6 +13,7 @@ let
     mkOption
     types
     mkIf
+    mkDefault
     ;
 
   tomlFormat = pkgs.formats.toml { };
@@ -142,6 +143,18 @@ in
       description = "Contest API URL returning JSON with start_time (RFC3339).";
       example = "https://api.example.com/contest";
     };
+
+    videoStreamPort = mkOption {
+      type = types.port;
+      default = 5004;
+      description = "UDP port of the multicast video wallpaper stream sent by the backend.";
+    };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Open the video stream port; needed to receive video wallpapers.";
+    };
   };
 
   config = mkIf cfg.enable (
@@ -154,7 +167,14 @@ in
             user = "greeter";
           };
         };
+        boot.kernel.sysctl."net.core.rmem_max" = mkDefault 4194304;
+        users.users.greeter.extraGroups = [ "audio" ];
       }
+      (mkIf cfg.openFirewall {
+        networking.firewall.allowedUDPPorts = [ cfg.videoStreamPort ];
+        networking.firewall.extraInputRules = mkIf config.networking.nftables.enable "ip protocol igmp accept";
+        networking.firewall.extraCommands = mkIf (!config.networking.nftables.enable) "iptables -A nixos-fw -p igmp -j nixos-fw-accept";
+      })
       # Only add D-Bus if enabled
       (mkIf cfg.enableDbus {
         services.dbus.packages = [

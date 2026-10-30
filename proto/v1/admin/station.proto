@@ -8,6 +8,16 @@ import "v1/command/command.proto";
 
 message Station {
   string ip = 2 [(buf.validate.field).string.ip = true];
+  // Label shown in the dashboard: the admin override if set, otherwise the one the agent reported
+  optional string label = 3;
+  optional string reported_label = 4;
+  bool label_overridden = 5;
+}
+
+message SetStationLabelRequest {
+  string ip = 1;
+  // Absent or empty clears the override so the agent-reported label is used again
+  optional string label = 2;
 }
 
 message StationsResponse {
@@ -56,6 +66,8 @@ service StationService {
   rpc DeleteStation(DeleteStationRequest) returns (google.protobuf.Empty) {}
   // Tries to assign a team to each of the stations
   rpc AssignTeam(AssignTeamRequest) returns (google.protobuf.Empty) {}
+  // Overrides the label of a station, stored lowercased
+  rpc SetStationLabel(SetStationLabelRequest) returns (google.protobuf.Empty) {}
   // Sends a command to the backend that is sent to one or more stations
   rpc SendCommand(AdminEvent) returns (google.protobuf.Empty) {}
   // Stream to receive custom command outputs

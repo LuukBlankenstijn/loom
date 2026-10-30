@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use loom_core::contest::Contest;
-use sqlx::PgPool;
+use sqlx::SqlitePool;
 
 use crate::{config::IcpcApiConfig, domain::ContestRepository, error::AppError};
 
 mod http;
-mod pg;
+mod sqlite;
 
 #[async_trait]
 trait InnerRepo: Send + Sync {
@@ -13,16 +13,16 @@ trait InnerRepo: Send + Sync {
 }
 
 pub struct ContestRepo {
-    pool: PgPool,
+    pool: SqlitePool,
     inner: Box<dyn InnerRepo>,
 }
 
 impl ContestRepo {
-    pub fn new(pool: PgPool, client: reqwest::Client, config: Option<IcpcApiConfig>) -> Self {
+    pub fn new(pool: SqlitePool, client: reqwest::Client, config: Option<IcpcApiConfig>) -> Self {
         let inner: Box<dyn InnerRepo> = if let Some(config) = config {
             Box::new(http::HttpContestRepo::new(config, client))
         } else {
-            Box::new(pg::PgContestRepo::new(pool.clone()))
+            Box::new(sqlite::SqliteContestRepo::new(pool.clone()))
         };
         Self { pool, inner }
     }

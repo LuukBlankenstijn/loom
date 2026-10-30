@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contest_wallpaper (contest_id, wallpaper_id) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c1a624def8e54d6ce9475815c9d26537d01e604d7814d6296f5d4b03831f5678"
+}

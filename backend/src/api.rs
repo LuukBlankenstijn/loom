@@ -25,7 +25,7 @@ use utoipa::{OpenApi, ToSchema};
     tags(
         (name = "station", description = "Consumed by station machines"),
         (name = "map", description = "Seating map rendering"),
-        (name = "system", description = "Deployment-wide settings")
+        (name = "wallpaper", description = "Wallpaper library content")
     )
 )]
 pub struct ApiDoc;
@@ -41,6 +41,7 @@ impl IntoResponse for AppError {
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
             AppError::InvalidArgument(msg) => (StatusCode::BAD_REQUEST, msg),
             AppError::FailedPrecondition(msg) => (StatusCode::PRECONDITION_FAILED, msg),
+            AppError::Unavailable(msg) => (StatusCode::SERVICE_UNAVAILABLE, msg),
             AppError::Internal(msg) => {
                 tracing::error!("Internal server error: {}", msg);
                 (
@@ -73,6 +74,7 @@ impl From<AppError> for Status {
             AppError::InvalidArgument(msg) => Status::invalid_argument(msg.clone()),
             AppError::AlreadyExists(msg) => Status::already_exists(msg.clone()),
             AppError::FailedPrecondition(msg) => Status::failed_precondition(msg.clone()),
+            AppError::Unavailable(msg) => Status::unavailable(msg.clone()),
             AppError::Internal(msg) => {
                 tracing::error!(error = %msg, "internal error");
                 Status::internal("internal server error")
@@ -87,6 +89,7 @@ impl From<AppError> for Status {
 
 pub fn combined_auth_interceptor(
     secret_option: Option<String>,
+    trusted_proxy_header: bool,
 ) -> impl Fn(Request<()>) -> Result<Request<()>, Status> + Clone {
     let expected_header = secret_option.map(|s| format!("Bearer {}", s));
     move |req: Request<()>| {
@@ -97,7 +100,7 @@ pub fn combined_auth_interceptor(
 
         let metadata = req.metadata();
 
-        if metadata.contains_key("x-proxy-authorized") {
+        if trusted_proxy_header && metadata.contains_key("x-proxy-authorized") {
             return Ok(req);
         }
 

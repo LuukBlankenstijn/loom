@@ -2,18 +2,24 @@ use std::time::Duration;
 
 use anyhow::Result;
 use tokio::{process::Command, sync::broadcast, time::timeout};
+use tracing::debug;
 
 use crate::messages::Message;
 
 pub struct CommandRunner {
     sender: broadcast::Sender<Message>,
     receiver: broadcast::Receiver<Message>,
+    greeter: bool,
 }
 
 impl CommandRunner {
-    pub fn new(sender: broadcast::Sender<Message>) -> Self {
+    pub fn new(sender: broadcast::Sender<Message>, greeter: bool) -> Self {
         let receiver = sender.subscribe();
-        Self { sender, receiver }
+        Self {
+            sender,
+            receiver,
+            greeter,
+        }
     }
 
     pub async fn run(mut self) -> Result<()> {
@@ -42,10 +48,14 @@ impl CommandRunner {
                         });
                     });
                 }
-                Message::Logout => {
+                Message::Logout if self.greeter => {
                     tokio::spawn(async move {
                         run_with_timeout("systemctl restart greetd").await;
                     });
+                }
+                Message::Logout => debug!("Ignoring logout: greeter integration is disabled"),
+                Message::RequestLoginStatus if !self.greeter => {
+                    let _ = self.sender.send(Message::LoggedIn);
                 }
                 _ => {}
             }

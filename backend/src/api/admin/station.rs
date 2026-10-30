@@ -2,10 +2,11 @@ use derive_more::derive::Constructor;
 use futures::{Stream, future::try_join_all};
 use loom_core::event::admin::AdminEvent;
 use loom_core::event::broadcast::StationAssignment;
+use loom_core::station::normalize_label;
 use loom_proto_bridge::{IntoProto, TryIntoCore};
 use loom_rpc::admin::v1::{
     self as pb, AssignTeamRequest, CommandOutputRequest, DeleteStationRequest,
-    station_service_server::StationService,
+    SetStationLabelRequest, station_service_server::StationService,
 };
 use std::{pin::Pin, sync::Arc};
 use tokio_stream::StreamExt as _;
@@ -56,6 +57,19 @@ impl StationService for StationHandler {
             }
         }
         self.station_repo.delete(&req.ip).await?;
+
+        Ok(Response::new(()))
+    }
+
+    async fn set_station_label(
+        &self,
+        request: Request<SetStationLabelRequest>,
+    ) -> Result<Response<()>, Status> {
+        let req = request.into_inner();
+        let label = req.label.as_deref().and_then(normalize_label);
+        self.station_repo
+            .set_label_override(&req.ip, label.as_deref())
+            .await?;
 
         Ok(Response::new(()))
     }
